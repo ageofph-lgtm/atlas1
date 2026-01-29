@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { OrdemServico, Notificacao, FrotaACP } from "@/entities/all";
 import { Plus, AlertCircle, Clock, CheckCircle2, AlertTriangle, Search, Truck, Star, Settings, Wrench } from "lucide-react";
@@ -322,7 +321,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <style jsx global>{`
+      <style>{`
         .kanban-card-clip {
           clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
         }
