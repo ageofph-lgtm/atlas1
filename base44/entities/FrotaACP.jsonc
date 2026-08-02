@@ -1,0 +1,166 @@
+{
+  "name": "FrotaACP",
+  "type": "object",
+  "properties": {
+    "origem": {
+      "type": "string",
+      "enum": [
+        "nova",
+        "sts",
+        "uts"
+      ],
+      "description": "Origem/Categoria da m\u00e1quina"
+    },
+    "modelo": {
+      "type": "string",
+      "description": "Modelo da m\u00e1quina"
+    },
+    "serie": {
+      "type": "string",
+      "description": "N\u00famero de s\u00e9rie"
+    },
+    "ano": {
+      "type": "number",
+      "description": "Ano de fabrico"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "Dispon\u00edvel",
+        "Preparada",
+        "Em Aluguer",
+        "Em Manuten\u00e7\u00e3o"
+      ],
+      "default": "Dispon\u00edvel",
+      "description": "Estado atual da m\u00e1quina"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": [
+        "Empilhador",
+        "Retrateis",
+        "Order Picker",
+        "Stacker",
+        "Outros"
+      ],
+      "description": "Categoria da m\u00e1quina baseada no modelo"
+    },
+    "reserva": {
+      "type": "object",
+      "properties": {
+        "cliente": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string",
+          "format": "date"
+        },
+        "comercial": {
+          "type": "string",
+          "description": "Nome do comercial que fez a reserva"
+        }
+      },
+      "description": "Detalhes da reserva (independente do estado)"
+    },
+    "dataInicioAluguer": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora em que a m\u00e1quina foi colocada em aluguer"
+    },
+    "caracteristicas": {
+      "type": "object",
+      "properties": {
+        "mastro": {
+          "type": "string",
+          "enum": [
+            "triplex",
+            "telescopico",
+            "niho"
+          ],
+          "description": "Tipo de mastro"
+        },
+        "viasMastro": {
+          "type": "number",
+          "enum": [
+            3,
+            4,
+            5
+          ],
+          "description": "N\u00famero de vias do mastro"
+        },
+        "corPneus": {
+          "type": "string",
+          "enum": [
+            "preto",
+            "branco"
+          ],
+          "description": "Cor dos pneus"
+        },
+        "joystick": {
+          "type": "string",
+          "enum": [
+            "alavanca",
+            "minilever",
+            "4plus",
+            "fingertrip"
+          ],
+          "description": "Tipo de joystick"
+        },
+        "acessorio": {
+          "type": "string",
+          "enum": [
+            "posicionador_2_garfos",
+            "posicionador_4_garfos",
+            "sideshift",
+            "pinca",
+            "volteador"
+          ],
+          "description": "Acess\u00f3rio da m\u00e1quina"
+        }
+      },
+      "description": "Caracter\u00edsticas t\u00e9cnicas da m\u00e1quina"
+    },
+    "historico": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "saida_cliente",
+              "retorno_cliente",
+              "manutencao",
+              "estado_change",
+              "reserva",
+              "cancelar_reserva"
+            ]
+          },
+          "data": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "cliente": {
+            "type": "string"
+          },
+          "responsavel": {
+            "type": "string"
+          },
+          "diasUtilizacao": {
+            "type": "number",
+            "description": "N\u00famero de dias que esteve alugada (apenas para retornos)"
+          }
+        }
+      },
+      "description": "Hist\u00f3rico de movimenta\u00e7\u00f5es"
+    }
+  },
+  "required": [
+    "origem",
+    "modelo",
+    "serie"
+  ]
+}

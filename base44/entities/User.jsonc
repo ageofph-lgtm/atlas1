@@ -1,0 +1,45 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "perfil": {
+      "type": "string",
+      "enum": [
+        "comercial",
+        "oficina",
+        "logistica",
+        "gestor_frota",
+        "coordenador_comercial",
+        "administrador"
+      ],
+      "default": "oficina",
+      "description": "Perfil do utilizador"
+    },
+    "departamento": {
+      "type": "string",
+      "description": "Departamento do utilizador"
+    },
+    "nome_comercial": {
+      "type": "string",
+      "description": "Nome espec\u00edfico do comercial (extra\u00eddo da senha)"
+    },
+    "password": {
+      "type": "string",
+      "description": "Senha do perfil"
+    },
+    "ultimo_acesso": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltimo acesso ao sistema"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o perfil est\u00e1 ativo"
+    }
+  },
+  "required": [
+    "perfil",
+    "departamento"
+  ]
+}
