@@ -400,7 +400,7 @@ export default function Entrada({ currentUser }) {
         <div className="space-y-5">
           <div>
             <h2 className="text-lg font-bold text-slate-100 mb-1">Classificação</h2>
-            <p className="text-sm text-slate-400">Categoria e cone de identificação</p>
+            <p className="text-sm text-slate-400">Categoria (cone atribuído automaticamente)</p>
           </div>
 
           <div>
@@ -422,29 +422,9 @@ export default function Entrada({ currentUser }) {
             </div>
           </div>
 
-          <div>
-            <h3 className="text-sm font-medium text-slate-300 mb-2">Cone — Cor</h3>
-            <div className="grid grid-cols-6 gap-2">
-              {CONE_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  onClick={() => setConeCor(c.value)}
-                  className={`h-12 rounded-lg ${c.bg} ${coneCor === c.value ? "ring-2 ring-offset-2 ring-offset-slate-900 " + c.ring : ""} transition-all`}
-                  title={c.label}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-slate-400 mb-1.5 block">Cone — Número</label>
-            <input
-              type="text"
-              value={coneNumero}
-              onChange={(e) => setConeNumero(e.target.value)}
-              placeholder="Nº do cone"
-              className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
-            />
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-xs text-slate-500 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            Cone atribuído automaticamente conforme a categoria.
           </div>
 
           {canChooseEstado && (
