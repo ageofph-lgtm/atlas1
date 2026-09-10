@@ -5,7 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User } from "lucide-react";
+import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap } from "lucide-react";
+import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
+import { autoAssignCone } from "@/components/atlas/coneUtils";
 import { format } from "date-fns";
 
 export default function Saida({ currentUser }) {
@@ -19,6 +21,7 @@ export default function Saida({ currentUser }) {
   const [acting, setActing] = useState(null);
   const [saidaModal, setSaidaModal] = useState(null); // ciclo being given saída
   const [cliente, setCliente] = useState("");
+  const [saidaRapidaOpen, setSaidaRapidaOpen] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -94,10 +97,13 @@ export default function Saida({ currentUser }) {
       const dias = ciclo.data_saida
         ? Math.ceil((new Date(now) - new Date(ciclo.data_saida)) / (1000 * 60 * 60 * 24))
         : 0;
+      const { cone_cor, cone_numero } = await autoAssignCone(ciclo.categoria);
       await base44.entities.Ciclo.update(ciclo.id, {
         estado: "fechado",
         data_retorno: now,
         dias_alugada: dias,
+        cone_cor,
+        cone_numero,
       });
       await base44.entities.EventoCiclo.create({
         ciclo_id: ciclo.id,
@@ -125,6 +131,17 @@ export default function Saida({ currentUser }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* SAÍDA RÁPIDA */}
+      <div className="lg:col-span-2">
+        <button
+          onClick={() => setSaidaRapidaOpen(true)}
+          className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg flex items-center justify-center gap-2 transition-colors"
+        >
+          <Zap className="w-5 h-5" />
+          SAÍDA RÁPIDA
+        </button>
+      </div>
+
       {/* Panel A: Prontas */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -223,6 +240,15 @@ export default function Saida({ currentUser }) {
           </div>
         )}
       </div>
+
+      {/* Saída rápida modal */}
+      <SaidaRapidaModal
+        open={saidaRapidaOpen}
+        preselectedCiclo={null}
+        currentUser={currentUser}
+        onClose={() => setSaidaRapidaOpen(false)}
+        onDone={loadData}
+      />
 
       {/* Saída modal */}
       <Dialog open={!!saidaModal} onOpenChange={() => setSaidaModal(null)}>

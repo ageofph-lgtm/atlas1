@@ -46,8 +46,8 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Ciclo deve estar classificada ou em manutenção' }, { status: 400 });
       }
 
-      if (ciclo.categoria === 'sucata') {
-        return Response.json({ error: 'Sucata não vai para o Watcher' }, { status: 400 });
+      if (ciclo.categoria === 'sucata' || ciclo.categoria === 'indefinida') {
+        return Response.json({ error: 'Categoria indefinida — a gestora tem de definir o caminho da máquina' }, { status: 400 });
       }
 
       // Load the Maquina for modelo/ano
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       }
 
       // Map categoria → Watcher tipo
-      const tipoMap = { str: 'aluguer', nts: 'nova', uts: 'usada' };
+      const tipoMap = { str: 'aluguer', uts: 'usada', recon: 'recon' };
       const tipo = tipoMap[ciclo.categoria];
 
       // POST to Watcher

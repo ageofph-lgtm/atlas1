@@ -34,6 +34,18 @@
       "type": "string",
       "description": "Cor do pneu (preto, branco)"
     },
+    "h3": {
+      "type": "string",
+      "description": "Altura m\u00e1xima do mastro em mm (H3)"
+    },
+    "bateria": {
+      "type": "string",
+      "enum": [
+        "chumbo",
+        "litio"
+      ],
+      "description": "Tipo de bateria (chumbo, litio)"
+    },
     "acessorios": {
       "type": "array",
       "items": {

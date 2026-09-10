@@ -4,7 +4,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Search, Check, ArrowRight, ArrowLeft, Package, Info } from "lucide-react";
 import { format } from "date-fns";
 import PhotoCapture from "@/components/atlas/PhotoCapture";
-import { SPEC_OPTIONS, CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
+import { SPEC_OPTIONS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
+import { autoAssignCone } from "@/components/atlas/coneUtils";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -35,11 +36,9 @@ export default function Entrada({ currentUser }) {
   const [passagens, setPassagens] = useState(0);
   const [ultimaSaida, setUltimaSaida] = useState(null);
   const [searching, setSearching] = useState(false);
-  const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [] });
+  const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
   const [categoria, setCategoria] = useState("");
   const [estadoInicial, setEstadoInicial] = useState("classificada");
-  const [coneCor, setConeCor] = useState("");
-  const [coneNumero, setConeNumero] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Live search when serie changes
@@ -63,6 +62,8 @@ export default function Entrada({ currentUser }) {
             joystick: m.joystick || "",
             tipo_pneu: m.tipo_pneu || "",
             acessorios: m.acessorios || [],
+            h3: m.h3 || "",
+            bateria: m.bateria || "",
           });
           if (m.modelo) setModelo(m.modelo);
           if (m.ano) setAno(m.ano);
@@ -107,7 +108,7 @@ export default function Entrada({ currentUser }) {
   };
 
   const canProceedStep1 = serie.length >= 3;
-  const canSubmit = categoria && coneCor && coneNumero;
+  const canSubmit = !!categoria;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -126,6 +127,8 @@ export default function Entrada({ currentUser }) {
           joystick: specs.joystick || "",
           tipo_pneu: specs.tipo_pneu || "",
           acessorios: specs.acessorios || [],
+          h3: specs.h3 || "",
+          bateria: specs.bateria || "",
         });
         maquinaId = newMaquina.id;
       } else {
@@ -138,16 +141,19 @@ export default function Entrada({ currentUser }) {
           joystick: specs.joystick || existingMaquina.joystick,
           tipo_pneu: specs.tipo_pneu || existingMaquina.tipo_pneu,
           acessorios: specs.acessorios?.length ? specs.acessorios : existingMaquina.acessorios,
+          h3: specs.h3 || existingMaquina.h3 || "",
+          bateria: specs.bateria || existingMaquina.bateria || "",
         });
       }
 
       const now = new Date().toISOString();
+      const { cone_cor, cone_numero } = await autoAssignCone(categoria);
       const cicloData = {
         maquina_id: maquinaId,
         serie,
         categoria,
-        cone_cor: coneCor,
-        cone_numero: coneNumero,
+        cone_cor,
+        cone_numero,
         estado: estadoInicial,
         data_entrada: now,
         data_classificacao: now,
@@ -190,11 +196,9 @@ export default function Entrada({ currentUser }) {
       setExistingMaquina(null);
       setPassagens(0);
       setUltimaSaida(null);
-      setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [] });
+      setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
       setCategoria("");
       setEstadoInicial("classificada");
-      setConeCor("");
-      setConeNumero("");
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
     }
@@ -321,6 +325,18 @@ export default function Entrada({ currentUser }) {
           </div>
 
           <div>
+            <h3 className="text-sm font-medium text-slate-300 mb-2">H3 — Altura máxima (mm) <span className="text-slate-600 font-normal">(opcional)</span></h3>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={specs.h3}
+              onChange={(e) => setSpecs((prev) => ({ ...prev, h3: e.target.value }))}
+              placeholder="ex. 4455"
+              className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
+            />
+          </div>
+
+          <div>
             <h3 className="text-sm font-medium text-slate-300 mb-2">Vias do Mastro</h3>
             <div className="grid grid-cols-3 gap-2">
               {SPEC_OPTIONS.vias_mastro.map((o) => (
@@ -343,6 +359,15 @@ export default function Entrada({ currentUser }) {
             <div className="grid grid-cols-2 gap-2">
               {SPEC_OPTIONS.tipo_pneu.map((o) => (
                 <OptionButton key={o.value} option={o} isSelected={specs.tipo_pneu === o.value} onClick={(v) => handleSpecSelect("tipo_pneu", v)} />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-slate-300 mb-2">Bateria <span className="text-slate-600 font-normal">(opcional)</span></h3>
+            <div className="grid grid-cols-2 gap-2">
+              {SPEC_OPTIONS.bateria.map((o) => (
+                <OptionButton key={o.value} option={o} isSelected={specs.bateria === o.value} onClick={(v) => handleSpecSelect("bateria", v)} />
               ))}
             </div>
           </div>

@@ -17,10 +17,19 @@ export const ESTADO_ORDER = [
 ];
 
 export const CATEGORIA_CONFIG = {
-  str:    { label: 'STR',    text: 'text-amber-400',  bg: 'bg-amber-500/15',  border: 'border-amber-500/40' },
-  nts:    { label: 'NTS',    text: 'text-blue-400',   bg: 'bg-blue-500/15',   border: 'border-blue-500/40' },
-  uts:    { label: 'UTS',    text: 'text-purple-400', bg: 'bg-purple-500/15', border: 'border-purple-500/40' },
-  sucata: { label: 'SUCATA', text: 'text-slate-400',  bg: 'bg-slate-500/15',  border: 'border-slate-500/40' },
+  str:        { label: 'STR',       text: 'text-amber-400',  bg: 'bg-amber-500/15',  border: 'border-amber-500/40' },
+  uts:        { label: 'UTS',       text: 'text-purple-400', bg: 'bg-purple-500/15', border: 'border-purple-500/40' },
+  recon:      { label: 'RECON',     text: 'text-blue-400',   bg: 'bg-blue-500/15',   border: 'border-blue-500/40' },
+  indefinida: { label: 'INDEFINIDA',text: 'text-slate-400',  bg: 'bg-slate-600/15',  border: 'border-slate-600/40' },
+  sucata:     { label: 'SUCATA',    text: 'text-slate-500',  bg: 'bg-slate-500/15',  border: 'border-slate-500/40' },
+};
+
+export const CATEGORIA_CONE_MAP = {
+  str: 'amarelo',
+  uts: 'vermelho',
+  recon: 'azul',
+  indefinida: null,
+  sucata: null,
 };
 
 export const CONE_COLORS = [
@@ -53,6 +62,10 @@ export const SPEC_OPTIONS = {
     { value: 'preto',  label: 'Preto',  icon: '⚫' },
     { value: 'branco', label: 'Branco', icon: '⚪' }
   ],
+  bateria: [
+    { value: 'chumbo', label: 'Chumbo', icon: '🔋' },
+    { value: 'litio',  label: 'Lítio',  icon: '⚡' }
+  ],
   acessorios: [
     { value: 'posicionador_2_garfos', label: 'Pos. 2 Garfos', icon: '🔀' },
     { value: 'posicionador_4_garfos', label: 'Pos. 4 Garfos', icon: '🔁' },
@@ -67,6 +80,7 @@ export const SPEC_LABELS = {
   vias_mastro: { '3': '3V', '4': '4V', '5': '5V' },
   joystick: { alavanca: 'Alav.', minilever: 'Mini.', '4plus': '4+', fingertrip: 'Fing.' },
   tipo_pneu: { preto: 'Pn.Preto', branco: 'Pn.Branco' },
+  bateria: { chumbo: 'Chumbo', litio: 'Lítio' },
   acessorios: {
     posicionador_2_garfos: 'Pos2G',
     posicionador_4_garfos: 'Pos4G',
@@ -80,8 +94,9 @@ export const FILTER_OPTIONS = {
   categoria: [
     { value: 'all', label: 'Todas' },
     { value: 'str', label: 'STR' },
-    { value: 'nts', label: 'NTS' },
     { value: 'uts', label: 'UTS' },
+    { value: 'recon', label: 'RECON' },
+    { value: 'indefinida', label: 'INDEFINIDA' },
     { value: 'sucata', label: 'SUCATA' }
   ],
   estado: [
@@ -111,6 +126,7 @@ export const FILTER_OPTIONS = {
 export const INVENTARIO_TABS = [
   { key: 'por_fazer', label: 'POR FAZER' },
   { key: 'prontas', label: 'PRONTAS' },
+  { key: 'recon', label: 'RECON' },
   { key: 'uts', label: 'UTS' },
   { key: 'sucata', label: 'SUCATA' },
   { key: 'em_aluguer', label: 'EM ALUGUER' }

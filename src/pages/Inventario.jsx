@@ -7,6 +7,8 @@ import FilterBar from "@/components/atlas/FilterBar";
 import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
 import DeleteMaquinaModal from "@/components/atlas/DeleteMaquinaModal";
+import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
+import { autoAssignCone } from "@/components/atlas/coneUtils";
 import { INVENTARIO_TABS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 
 const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
@@ -22,7 +24,9 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all" });
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
+  const [editCiclo, setEditCiclo] = useState(null);
   const [deleteMaquina, setDeleteMaquina] = useState(null);
+  const [saidaRapidaCiclo, setSaidaRapidaCiclo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
@@ -61,6 +65,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   const tabCounts = useMemo(() => ({
     por_fazer: ciclos.filter((c) => POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata").length,
     prontas: ciclos.filter((c) => c.estado === "pronta").length,
+    recon: ciclos.filter((c) => c.categoria === "recon").length,
     uts: ciclos.filter((c) => c.categoria === "uts").length,
     sucata: ciclos.filter((c) => c.categoria === "sucata").length,
     em_aluguer: ciclos.filter((c) => c.estado === "em_aluguer").length,
@@ -74,7 +79,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     const fields = [
       ciclo?.serie, ciclo?.categoria, ciclo?.cone_cor, ciclo?.cone_numero, ciclo?.reserva_cliente,
       maquina?.modelo, maquina?.ano, maquina?.mastro, maquina?.vias_mastro,
-      maquina?.joystick, maquina?.tipo_pneu, ...(maquina?.acessorios || []),
+      maquina?.joystick, maquina?.tipo_pneu, maquina?.h3, maquina?.bateria, ...(maquina?.acessorios || []),
     ].filter(Boolean).map((f) => String(f).toLowerCase());
     return tokens.every((token) => fields.some((f) => f.includes(token)));
   };
@@ -94,6 +99,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     switch (activeTab) {
       case "por_fazer": return ciclos.filter((c) => POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata");
       case "prontas": return ciclos.filter((c) => c.estado === "pronta");
+      case "recon": return ciclos.filter((c) => c.categoria === "recon");
       case "uts": return ciclos.filter((c) => c.categoria === "uts");
       case "sucata": return ciclos.filter((c) => c.categoria === "sucata");
       case "em_aluguer": return ciclos.filter((c) => c.estado === "em_aluguer");
@@ -148,7 +154,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   };
 
   // Maquina edit
-  const handleMaquinaEdit = async (specs) => {
+  const handleMaquinaEdit = async (specs, newCategoria) => {
     if (!editMaquina) return;
     try {
       await base44.entities.Maquina.update(editMaquina.id, {
@@ -157,7 +163,26 @@ export default function Inventario({ currentUser, userPermissions }) {
         joystick: specs.joystick || "",
         tipo_pneu: specs.tipo_pneu || "",
         acessorios: specs.acessorios || [],
+        h3: specs.h3 || "",
+        bateria: specs.bateria || "",
       });
+      if (newCategoria && editCiclo && newCategoria !== editCiclo.categoria) {
+        const coneData = await autoAssignCone(newCategoria);
+        await base44.entities.Ciclo.update(editCiclo.id, {
+          categoria: newCategoria,
+          cone_cor: coneData.cone_cor,
+          cone_numero: coneData.cone_numero,
+        });
+        const coneLabel = coneData.cone_cor ? `${coneData.cone_cor} ${coneData.cone_numero}` : "sem cone";
+        await base44.entities.EventoCiclo.create({
+          ciclo_id: editCiclo.id,
+          serie: editCiclo.serie,
+          de_estado: editCiclo.categoria,
+          para_estado: newCategoria,
+          autor,
+          nota: `Categoria definida: ${newCategoria} → cone ${coneLabel}`,
+        });
+      }
       toast({ title: "✓ Máquina atualizada", description: `NS: ${editMaquina.serie}` });
       loadData();
     } catch (err) {
@@ -244,9 +269,11 @@ export default function Inventario({ currentUser, userPermissions }) {
               canEditMaquina={userPermissions?.canEditMaquina}
               canReservar={userPermissions?.canReservar}
               canDeleteMaquina={userPermissions?.canDeleteMaquina}
-              onEdit={userPermissions?.canEditMaquina ? (ciclo, maquina) => setEditMaquina(maquina) : null}
+              canSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") && c.estado === "pronta"}
+              onEdit={userPermissions?.canEditMaquina ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
               onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
               onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}
+              onSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") ? (ciclo) => setSaidaRapidaCiclo(ciclo) : null}
             />
           ))}
         </div>
@@ -262,17 +289,26 @@ export default function Inventario({ currentUser, userPermissions }) {
       />
       <EditMaquinaModal
         maquina={editMaquina}
+        ciclo={editCiclo}
+        currentUser={currentUser}
         open={!!editMaquina}
-        onClose={() => setEditMaquina(null)}
+        onClose={() => { setEditMaquina(null); setEditCiclo(null); }}
         onSave={handleMaquinaEdit}
         canDeleteMaquina={userPermissions?.canDeleteMaquina}
-        onDelete={userPermissions?.canDeleteMaquina ? (maquina) => { setEditMaquina(null); setDeleteMaquina(maquina); } : null}
+        onDelete={userPermissions?.canDeleteMaquina ? (maquina) => { setEditMaquina(null); setEditCiclo(null); setDeleteMaquina(maquina); } : null}
       />
       <DeleteMaquinaModal
         maquina={deleteMaquina}
         open={!!deleteMaquina}
         onClose={() => setDeleteMaquina(null)}
         onConfirm={handleDeleteMaquina}
+      />
+      <SaidaRapidaModal
+        open={!!saidaRapidaCiclo}
+        preselectedCiclo={saidaRapidaCiclo}
+        currentUser={currentUser}
+        onClose={() => setSaidaRapidaCiclo(null)}
+        onDone={loadData}
       />
     </div>
   );

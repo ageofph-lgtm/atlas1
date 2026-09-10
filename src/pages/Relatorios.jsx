@@ -6,8 +6,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const CATEGORIA_COLORS = {
   str: "#f59e0b",
-  nts: "#3b82f6",
   uts: "#a855f7",
+  recon: "#3b82f6",
+  indefinida: "#94a3b8",
   sucata: "#64748b",
 };
 
@@ -56,8 +57,9 @@ export default function Relatorios({ currentUser, userPermissions }) {
 
     const activeByCategoria = {
       str: ciclos.filter((c) => c.categoria === "str" && c.estado !== "fechado").length,
-      nts: ciclos.filter((c) => c.categoria === "nts" && c.estado !== "fechado").length,
       uts: ciclos.filter((c) => c.categoria === "uts" && c.estado !== "fechado").length,
+      recon: ciclos.filter((c) => c.categoria === "recon" && c.estado !== "fechado").length,
+      indefinida: ciclos.filter((c) => c.categoria === "indefinida" && c.estado !== "fechado").length,
       sucata: ciclos.filter((c) => c.categoria === "sucata" && c.estado !== "fechado").length,
     };
 
@@ -102,8 +104,9 @@ export default function Relatorios({ currentUser, userPermissions }) {
   // Categoria donut data
   const categoriaData = useMemo(() => [
     { name: "STR", value: stats.activeByCategoria.str, fill: CATEGORIA_COLORS.str },
-    { name: "NTS", value: stats.activeByCategoria.nts, fill: CATEGORIA_COLORS.nts },
     { name: "UTS", value: stats.activeByCategoria.uts, fill: CATEGORIA_COLORS.uts },
+    { name: "RECON", value: stats.activeByCategoria.recon, fill: CATEGORIA_COLORS.recon },
+    { name: "INDEF.", value: stats.activeByCategoria.indefinida, fill: CATEGORIA_COLORS.indefinida },
     { name: "SUCATA", value: stats.activeByCategoria.sucata, fill: CATEGORIA_COLORS.sucata },
   ], [stats]);
 

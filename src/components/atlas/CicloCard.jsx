@@ -1,11 +1,11 @@
 import React from "react";
-import { AlertTriangle, Pencil, CalendarClock, Trash2 } from "lucide-react";
+import { AlertTriangle, Pencil, CalendarClock, Trash2, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
 
-export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, canReservar, canDeleteMaquina, onEdit, onReservar, onDelete }) {
+export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, canReservar, canDeleteMaquina, canSaidaRapida, onEdit, onReservar, onDelete, onSaidaRapida }) {
   const estadoCfg = ESTADO_CONFIG[ciclo.estado] || ESTADO_CONFIG.entrada;
-  const catCfg = CATEGORIA_CONFIG[ciclo.categoria] || CATEGORIA_CONFIG.nts;
+  const catCfg = CATEGORIA_CONFIG[ciclo.categoria] || CATEGORIA_CONFIG.indefinida;
   const coneColor = CONE_COLORS.find((c) => c.value === ciclo.cone_cor);
 
   // Compact specs row
@@ -14,6 +14,8 @@ export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, can
   if (maquina?.vias_mastro) specs.push(SPEC_LABELS.vias_mastro?.[maquina.vias_mastro] || maquina.vias_mastro + "V");
   if (maquina?.joystick) specs.push(SPEC_LABELS.joystick?.[maquina.joystick] || maquina.joystick);
   if (maquina?.tipo_pneu) specs.push(SPEC_LABELS.tipo_pneu?.[maquina.tipo_pneu] || maquina.tipo_pneu);
+  if (maquina?.h3) specs.push("H3 " + maquina.h3);
+  if (maquina?.bateria) specs.push(SPEC_LABELS.bateria?.[maquina.bateria] || maquina.bateria);
   if (maquina?.acessorios?.length) {
     maquina.acessorios.forEach((a) => specs.push(SPEC_LABELS.acessorios?.[a] || a));
   }
@@ -28,6 +30,7 @@ export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, can
   const showReservarBtn = canReservar && onReservar && ciclo.estado === "pronta";
   const showGerirBtn = canReservar && onReservar && ciclo.reserva_cliente;
   const showDeleteBtn = canDeleteMaquina && onDelete;
+  const showSaidaRapidaBtn = canSaidaRapida && onSaidaRapida && ciclo.estado === "pronta";
 
   return (
     <div
@@ -72,6 +75,11 @@ export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, can
             {ciclo.cone_numero}
           </span>
         )}
+        {ciclo.categoria === "indefinida" && !ciclo.cone_cor && (
+          <span className="px-2 py-0.5 rounded text-xs bg-slate-700/30 text-slate-500 border border-slate-600/30">
+            SEM CONE
+          </span>
+        )}
       </div>
 
       {/* Specs row */}
@@ -113,7 +121,7 @@ export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, can
       )}
 
       {/* Action buttons */}
-      {(showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn) && (
+      {(showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showSaidaRapidaBtn) && (
         <div className="flex gap-2 mt-2 pt-2 border-t border-slate-700/50">
           {showEditBtn && (
             <button
@@ -146,6 +154,18 @@ export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, can
               className="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-cyan-400 rounded text-xs font-medium"
             >
               GERIR RESERVA
+            </button>
+          )}
+          {showSaidaRapidaBtn && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaidaRapida(ciclo);
+              }}
+              className="px-2 py-1.5 bg-green-600/20 hover:bg-green-600/40 text-green-400 rounded text-xs font-medium flex items-center justify-center"
+              title="Saída rápida"
+            >
+              <Truck className="w-3 h-3" />
             </button>
           )}
           {showDeleteBtn && (
