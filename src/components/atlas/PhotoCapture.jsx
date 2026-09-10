@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Camera, Loader2, AlertCircle, Zap, RefreshCw, X } from "lucide-react";
-import { UploadFile, ExtractDataFromUploadedFile } from "@/integrations/Core";
+import { base44 } from "@/api/base44Client";
 
 export default function PhotoCapture({ onSuccess }) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,9 +26,9 @@ export default function PhotoCapture({ onSuccess }) {
     setError(null);
 
     try {
-      const { file_url } = await UploadFile({ file: selectedFile });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: selectedFile });
 
-      const extractionResult = await ExtractDataFromUploadedFile({
+      const extractionResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
         json_schema: {
           type: "object",
