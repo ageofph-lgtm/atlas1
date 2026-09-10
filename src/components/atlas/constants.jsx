@@ -74,3 +74,42 @@ export const SPEC_LABELS = {
     volteador: 'Volt.'
   }
 };
+
+export const FILTER_OPTIONS = {
+  categoria: [
+    { value: 'all', label: 'Todas' },
+    { value: 'str', label: 'STR' },
+    { value: 'nts', label: 'NTS' },
+    { value: 'uts', label: 'UTS' },
+    { value: 'sucata', label: 'SUCATA' }
+  ],
+  estado: [
+    { value: 'all', label: 'Todos' },
+    { value: 'entrada', label: 'Entrada' },
+    { value: 'classificada', label: 'Classificada' },
+    { value: 'autorizada', label: 'Autorizada' },
+    { value: 'em_execucao', label: 'Em Execução' },
+    { value: 'pronta', label: 'Pronta' },
+    { value: 'em_aluguer', label: 'Em Aluguer' }
+  ],
+  mastro: [
+    { value: 'all', label: 'Todos' },
+    ...SPEC_OPTIONS.mastro.map(o => ({ value: o.value, label: o.label }))
+  ],
+  vias_mastro: [
+    { value: 'all', label: 'Todos' },
+    ...SPEC_OPTIONS.vias_mastro.map(o => ({ value: o.value, label: o.label }))
+  ],
+  tipo_pneu: [
+    { value: 'all', label: 'Todos' },
+    ...SPEC_OPTIONS.tipo_pneu.map(o => ({ value: o.value, label: o.label }))
+  ]
+};
+
+export const INVENTARIO_TABS = [
+  { key: 'por_fazer', label: 'POR FAZER' },
+  { key: 'prontas', label: 'PRONTAS' },
+  { key: 'uts', label: 'UTS' },
+  { key: 'sucata', label: 'SUCATA' },
+  { key: 'em_aluguer', label: 'EM ALUGUER' }
+];

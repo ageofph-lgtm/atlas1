@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { User, Briefcase, Truck, Settings, Crown, Shield, AlertCircle, Lock } from 'lucide-react';
+import { User, Briefcase, Truck, Settings, Crown, Shield, AlertCircle, Lock, Eye } from 'lucide-react';
 import { User as UserEntity } from '@/entities/User';
 import { motion } from 'framer-motion';
 
@@ -48,6 +48,13 @@ const PROFILES = {
     icon: Shield,
     color: 'border-white/30',
     password: '1618'
+  },
+  visitante: {
+    title: 'VISITANTE',
+    description: 'Observação apenas',
+    icon: Eye,
+    color: 'border-white/30',
+    password: 'guest'
   }
 };
 
@@ -239,7 +246,7 @@ export default function ProfileSelector({ onLogin }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
         >
           {Object.entries(PROFILES).slice(3).map(([key, profile], index) => {
             const ProfileIcon = profile.icon;

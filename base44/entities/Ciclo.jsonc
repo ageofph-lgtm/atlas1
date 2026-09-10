@@ -86,6 +86,19 @@
       "type": "number",
       "description": "Dias que esteve alugada"
     },
+    "reserva_cliente": {
+      "type": "string",
+      "description": "Cliente da reserva"
+    },
+    "reserva_data": {
+      "type": "string",
+      "format": "date",
+      "description": "Data prevista de sa\u00edda da reserva"
+    },
+    "reserva_comercial": {
+      "type": "string",
+      "description": "Nome do comercial que fez a reserva"
+    },
     "observacoes": {
       "type": "string",
       "description": "Observa\u00e7\u00f5es do ciclo"

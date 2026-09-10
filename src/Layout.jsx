@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Menu, X, Cog } from "lucide-react";
+import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Menu, X, Cog, BarChart3 } from "lucide-react";
 import { User } from "@/entities/all";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import ProfileSelector from "./components/auth/ProfileSelector";
@@ -11,6 +11,7 @@ const ALL_NAV_ITEMS = [
   { key: "Inventario", title: "Inventário", url: createPageUrl("Inventario"), icon: LayoutGrid, permKey: "canInventario" },
   { key: "Autorizacao", title: "Autorização", url: createPageUrl("Autorizacao"), icon: ShieldCheck, permKey: "canAutorizacao" },
   { key: "Saida", title: "Saída", url: createPageUrl("Saida"), icon: Truck, permKey: "canSaida" },
+  { key: "Relatorios", title: "Relatórios", url: createPageUrl("Relatorios"), icon: BarChart3, permKey: "canRelatorios" },
 ];
 
 const PAGE_TITLES = {
@@ -18,6 +19,7 @@ const PAGE_TITLES = {
   Inventario: "INVENTÁRIO",
   Autorizacao: "AUTORIZAÇÃO",
   Saida: "SAÍDA / RETORNO",
+  Relatorios: "RELATÓRIOS",
 };
 
 export default function Layout({ children, currentPageName }) {

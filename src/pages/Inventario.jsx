@@ -1,14 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, RefreshCw, Package } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { RefreshCw, Package } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
-import { ESTADO_CONFIG, ESTADO_ORDER, CATEGORIA_CONFIG } from "@/components/atlas/constants";
+import FilterBar from "@/components/atlas/FilterBar";
+import ReservaModal from "@/components/atlas/ReservaModal";
+import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
+import { INVENTARIO_TABS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 
-export default function Inventario() {
+const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao"];
+
+export default function Inventario({ currentUser, userPermissions }) {
+  const { toast } = useToast();
+  const autor = currentUser?.full_name || currentUser?.perfil || "system";
+
   const [ciclos, setCiclos] = useState([]);
   const [maquinas, setMaquinas] = useState([]);
+  const [activeTab, setActiveTab] = useState("por_fazer");
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoriaFilter, setCategoriaFilter] = useState("all");
+  const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all" });
+  const [reservaCiclo, setReservaCiclo] = useState(null);
+  const [editMaquina, setEditMaquina] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
@@ -29,33 +41,128 @@ export default function Inventario() {
     loadData();
   }, []);
 
-  const maquinaMap = {};
-  maquinas.forEach((m) => {
-    maquinaMap[m.id] = m;
-    if (m.serie) maquinaMap["serie:" + m.serie] = m;
-  });
+  const maquinaMap = useMemo(() => {
+    const map = {};
+    maquinas.forEach((m) => {
+      map[m.id] = m;
+      if (m.serie) map["serie:" + m.serie] = m;
+    });
+    return map;
+  }, [maquinas]);
 
-  const getMaquina = (ciclo) => {
-    if (ciclo.maquina_id && maquinaMap[ciclo.maquina_id]) return maquinaMap[ciclo.maquina_id];
-    if (ciclo.serie && maquinaMap["serie:" + ciclo.serie]) return maquinaMap["serie:" + ciclo.serie];
-    return null;
+  const getMaquina = (ciclo) =>
+    (ciclo.maquina_id && maquinaMap[ciclo.maquina_id]) ||
+    (ciclo.serie && maquinaMap["serie:" + ciclo.serie]) ||
+    null;
+
+  // Tab counts (unfiltered)
+  const tabCounts = useMemo(() => ({
+    por_fazer: ciclos.filter((c) => POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata").length,
+    prontas: ciclos.filter((c) => c.estado === "pronta").length,
+    uts: ciclos.filter((c) => c.categoria === "uts").length,
+    sucata: ciclos.filter((c) => c.categoria === "sucata").length,
+    em_aluguer: ciclos.filter((c) => c.estado === "em_aluguer").length,
+  }), [ciclos]);
+
+  // Search: tokenized, case-insensitive, across all fields
+  const matchesSearch = (ciclo, maquina, query) => {
+    if (!query || !query.trim()) return true;
+    const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return true;
+    const fields = [
+      ciclo?.serie, ciclo?.categoria, ciclo?.cone_cor, ciclo?.cone_numero, ciclo?.reserva_cliente,
+      maquina?.modelo, maquina?.ano, maquina?.mastro, maquina?.vias_mastro,
+      maquina?.joystick, maquina?.tipo_pneu, ...(maquina?.acessorios || []),
+    ].filter(Boolean).map((f) => String(f).toLowerCase());
+    return tokens.every((token) => fields.some((f) => f.includes(token)));
   };
 
-  const filtered = ciclos.filter((c) => {
-    if (categoriaFilter !== "all" && c.categoria !== categoriaFilter) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      const m = getMaquina(c);
-      if (!c.serie?.toLowerCase().includes(q) && !m?.modelo?.toLowerCase().includes(q)) return false;
-    }
+  // Filter pills
+  const passesFilters = (ciclo, maquina) => {
+    if (filters.categoria !== "all" && ciclo.categoria !== filters.categoria) return false;
+    if (filters.estado !== "all" && ciclo.estado !== filters.estado) return false;
+    if (filters.mastro !== "all" && maquina?.mastro !== filters.mastro) return false;
+    if (filters.vias_mastro !== "all" && maquina?.vias_mastro !== filters.vias_mastro) return false;
+    if (filters.tipo_pneu !== "all" && maquina?.tipo_pneu !== filters.tipo_pneu) return false;
     return true;
-  });
+  };
 
-  const grouped = {};
-  ESTADO_ORDER.forEach((estado) => {
-    grouped[estado] = filtered.filter((c) => c.estado === estado && c.categoria !== "sucata");
-  });
-  const sucataCiclos = filtered.filter((c) => c.categoria === "sucata");
+  // Tab filter
+  const getTabCiclos = () => {
+    switch (activeTab) {
+      case "por_fazer": return ciclos.filter((c) => POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata");
+      case "prontas": return ciclos.filter((c) => c.estado === "pronta");
+      case "uts": return ciclos.filter((c) => c.categoria === "uts");
+      case "sucata": return ciclos.filter((c) => c.categoria === "sucata");
+      case "em_aluguer": return ciclos.filter((c) => c.estado === "em_aluguer");
+      default: return [];
+    }
+  };
+
+  // Sort: priority first, then oldest
+  const sortCiclos = (items) => {
+    return [...items].sort((a, b) => {
+      if (a.prioridade !== b.prioridade) return a.prioridade ? -1 : 1;
+      return new Date(a.data_entrada || a.created_date) - new Date(b.data_entrada || b.created_date);
+    });
+  };
+
+  const filteredCiclos = useMemo(() => {
+    const tabItems = getTabCiclos();
+    const filtered = tabItems.filter((c) => {
+      const m = getMaquina(c);
+      return passesFilters(c, m) && matchesSearch(c, m, searchQuery);
+    });
+    return sortCiclos(filtered);
+  }, [ciclos, maquinas, activeTab, filters, searchQuery]);
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Reserva save
+  const handleReservaSave = async (data) => {
+    if (!reservaCiclo) return;
+    try {
+      const updateData = {
+        reserva_cliente: data.reserva_cliente,
+        reserva_data: data.reserva_data,
+      };
+      if (data.reserva_cliente) {
+        updateData.reserva_comercial = autor;
+      } else {
+        updateData.reserva_comercial = null;
+      }
+      if (data.reserva_nota) {
+        updateData.observacoes = data.reserva_nota;
+      }
+      await base44.entities.Ciclo.update(reservaCiclo.id, updateData);
+      toast({ title: "✓ Reserva guardada", description: `NS: ${reservaCiclo.serie}` });
+      loadData();
+    } catch (err) {
+      toast({ variant: "destructive", title: "Erro", description: err.message });
+      throw err;
+    }
+  };
+
+  // Maquina edit
+  const handleMaquinaEdit = async (specs) => {
+    if (!editMaquina) return;
+    try {
+      await base44.entities.Maquina.update(editMaquina.id, {
+        mastro: specs.mastro || "",
+        vias_mastro: specs.vias_mastro || "",
+        joystick: specs.joystick || "",
+        tipo_pneu: specs.tipo_pneu || "",
+        acessorios: specs.acessorios || [],
+      });
+      toast({ title: "✓ Máquina atualizada", description: `NS: ${editMaquina.serie}` });
+      loadData();
+    } catch (err) {
+      toast({ variant: "destructive", title: "Erro", description: err.message });
+      throw err;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -66,84 +173,74 @@ export default function Inventario() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar série ou modelo..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
-          />
-        </div>
-        <div className="flex gap-2 flex-wrap">
+    <div className="space-y-4">
+      {/* Filter bar */}
+      <FilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+      />
+
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b border-slate-700 overflow-x-auto">
+        {INVENTARIO_TABS.map((tab) => (
           <button
-            onClick={() => setCategoriaFilter("all")}
-            className={`px-3 py-2.5 rounded-lg text-sm font-medium ${categoriaFilter === "all" ? "bg-amber-500 text-slate-900" : "bg-slate-800 text-slate-400 border border-slate-700"}`}
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === tab.key
+                ? "border-amber-500 text-amber-400"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
           >
-            Todas
+            {tab.label}
+            <span className={`text-xs px-1.5 py-0.5 rounded ${activeTab === tab.key ? "bg-amber-500/20 text-amber-400" : "bg-slate-700 text-slate-500"}`}>
+              {tabCounts[tab.key]}
+            </span>
           </button>
-          {Object.entries(CATEGORIA_CONFIG).map(([key, cfg]) => (
-            <button
-              key={key}
-              onClick={() => setCategoriaFilter(key)}
-              className={`px-3 py-2.5 rounded-lg text-sm font-medium ${categoriaFilter === key ? `${cfg.bg} ${cfg.text} ${cfg.border} border-2` : "bg-slate-800 text-slate-400 border border-slate-700"}`}
-            >
-              {cfg.label}
-            </button>
-          ))}
-        </div>
-        <button onClick={loadData} className="p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400">
+        ))}
+        <button onClick={loadData} className="ml-auto p-2 text-slate-400 hover:text-amber-400">
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Estado sections */}
-      {ESTADO_ORDER.map((estado) => {
-        const items = grouped[estado];
-        if (items.length === 0) return null;
-        const cfg = ESTADO_CONFIG[estado];
-        return (
-          <div key={estado}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">{cfg.label}</h2>
-              <span className="text-xs text-slate-500">({items.length})</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {items.map((c) => (
-                <CicloCard key={c.id} ciclo={c} maquina={getMaquina(c)} />
-              ))}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Sucata section */}
-      {sucataCiclos.length > 0 && (
-        <div className="border-t border-slate-700 pt-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-slate-500" />
-            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">Sucata</h2>
-            <span className="text-xs text-slate-500">({sucataCiclos.length})</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {sucataCiclos.map((c) => (
-              <CicloCard key={c.id} ciclo={c} maquina={getMaquina(c)} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+      {/* Cards */}
+      {filteredCiclos.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-slate-500">
           <Package className="w-12 h-12 mb-3 opacity-30" />
           <p>Nenhuma máquina encontrada</p>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filteredCiclos.map((c) => (
+            <CicloCard
+              key={c.id}
+              ciclo={c}
+              maquina={getMaquina(c)}
+              canEditMaquina={userPermissions?.canEditMaquina}
+              canReservar={userPermissions?.canReservar}
+              onEdit={userPermissions?.canEditMaquina ? (ciclo, maquina) => setEditMaquina(maquina) : null}
+              onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
+            />
+          ))}
+        </div>
       )}
+
+      {/* Modals */}
+      <ReservaModal
+        ciclo={reservaCiclo}
+        open={!!reservaCiclo}
+        onClose={() => setReservaCiclo(null)}
+        onSave={handleReservaSave}
+        canEdit={userPermissions?.canEditReserva}
+      />
+      <EditMaquinaModal
+        maquina={editMaquina}
+        open={!!editMaquina}
+        onClose={() => setEditMaquina(null)}
+        onSave={handleMaquinaEdit}
+      />
     </div>
   );
 }
