@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Trash2 } from "lucide-react";
 import { SPEC_OPTIONS } from "@/components/atlas/constants";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
@@ -19,7 +19,7 @@ const OptionButton = ({ option, isSelected, onClick }) => (
   </button>
 );
 
-export default function EditMaquinaModal({ maquina, open, onClose, onSave }) {
+export default function EditMaquinaModal({ maquina, open, onClose, onSave, canDeleteMaquina, onDelete }) {
   const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [] });
   const [saving, setSaving] = useState(false);
 
@@ -114,7 +114,16 @@ export default function EditMaquinaModal({ maquina, open, onClose, onSave }) {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {canDeleteMaquina && onDelete && (
+            <Button
+              variant="destructive"
+              onClick={() => { onClose(); onDelete(maquina); }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Trash2 className="w-4 h-4 mr-1" /> Eliminar
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             disabled={saving}

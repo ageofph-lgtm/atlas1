@@ -6,9 +6,10 @@ import CicloCard from "@/components/atlas/CicloCard";
 import FilterBar from "@/components/atlas/FilterBar";
 import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
+import DeleteMaquinaModal from "@/components/atlas/DeleteMaquinaModal";
 import { INVENTARIO_TABS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 
-const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao"];
+const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
 
 export default function Inventario({ currentUser, userPermissions }) {
   const { toast } = useToast();
@@ -21,6 +22,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all" });
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
+  const [deleteMaquina, setDeleteMaquina] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
@@ -164,6 +166,27 @@ export default function Inventario({ currentUser, userPermissions }) {
     }
   };
 
+  const handleDeleteMaquina = async () => {
+    if (!deleteMaquina) return;
+    try {
+      const ciclosByMaquina = await base44.entities.Ciclo.filter({ maquina_id: deleteMaquina.id });
+      const ciclosBySerie = await base44.entities.Ciclo.filter({ serie: deleteMaquina.serie });
+      const allCiclos = [...new Map([...ciclosByMaquina, ...ciclosBySerie].map((c) => [c.id, c])).values()];
+      for (const ciclo of allCiclos) {
+        await base44.entities.EventoCiclo.deleteMany({ ciclo_id: ciclo.id });
+      }
+      for (const ciclo of allCiclos) {
+        await base44.entities.Ciclo.delete(ciclo.id);
+      }
+      await base44.entities.Maquina.delete(deleteMaquina.id);
+      toast({ title: "✓ Máquina eliminada", description: `NS: ${deleteMaquina.serie}` });
+      loadData();
+    } catch (err) {
+      toast({ variant: "destructive", title: "Erro", description: err.message });
+      throw err;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -220,8 +243,10 @@ export default function Inventario({ currentUser, userPermissions }) {
               maquina={getMaquina(c)}
               canEditMaquina={userPermissions?.canEditMaquina}
               canReservar={userPermissions?.canReservar}
+              canDeleteMaquina={userPermissions?.canDeleteMaquina}
               onEdit={userPermissions?.canEditMaquina ? (ciclo, maquina) => setEditMaquina(maquina) : null}
               onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
+              onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}
             />
           ))}
         </div>
@@ -240,6 +265,14 @@ export default function Inventario({ currentUser, userPermissions }) {
         open={!!editMaquina}
         onClose={() => setEditMaquina(null)}
         onSave={handleMaquinaEdit}
+        canDeleteMaquina={userPermissions?.canDeleteMaquina}
+        onDelete={userPermissions?.canDeleteMaquina ? (maquina) => { setEditMaquina(null); setDeleteMaquina(maquina); } : null}
+      />
+      <DeleteMaquinaModal
+        maquina={deleteMaquina}
+        open={!!deleteMaquina}
+        onClose={() => setDeleteMaquina(null)}
+        onConfirm={handleDeleteMaquina}
       />
     </div>
   );

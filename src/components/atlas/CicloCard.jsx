@@ -1,9 +1,9 @@
 import React from "react";
-import { AlertTriangle, Pencil, CalendarClock } from "lucide-react";
+import { AlertTriangle, Pencil, CalendarClock, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
 
-export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, canReservar, onEdit, onReservar }) {
+export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, canReservar, canDeleteMaquina, onEdit, onReservar, onDelete }) {
   const estadoCfg = ESTADO_CONFIG[ciclo.estado] || ESTADO_CONFIG.entrada;
   const catCfg = CATEGORIA_CONFIG[ciclo.categoria] || CATEGORIA_CONFIG.nts;
   const coneColor = CONE_COLORS.find((c) => c.value === ciclo.cone_cor);
@@ -27,6 +27,7 @@ export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, can
   const showEditBtn = canEditMaquina && onEdit;
   const showReservarBtn = canReservar && onReservar && ciclo.estado === "pronta";
   const showGerirBtn = canReservar && onReservar && ciclo.reserva_cliente;
+  const showDeleteBtn = canDeleteMaquina && onDelete;
 
   return (
     <div
@@ -112,7 +113,7 @@ export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, can
       )}
 
       {/* Action buttons */}
-      {(showEditBtn || showReservarBtn || showGerirBtn) && (
+      {(showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn) && (
         <div className="flex gap-2 mt-2 pt-2 border-t border-slate-700/50">
           {showEditBtn && (
             <button
@@ -145,6 +146,17 @@ export default function CicloCard({ ciclo, maquina, onClick, canEditMaquina, can
               className="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-cyan-400 rounded text-xs font-medium"
             >
               GERIR RESERVA
+            </button>
+          )}
+          {showDeleteBtn && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(maquina);
+              }}
+              className="px-2 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded text-xs font-medium flex items-center justify-center"
+            >
+              <Trash2 className="w-3 h-3" />
             </button>
           )}
         </div>

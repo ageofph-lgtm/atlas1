@@ -37,6 +37,7 @@
         "em_execucao",
         "pronta",
         "em_aluguer",
+        "manutencao",
         "retorno",
         "fechado"
       ],

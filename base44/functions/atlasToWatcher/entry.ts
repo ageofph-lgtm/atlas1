@@ -42,8 +42,8 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Ciclo não encontrado' }, { status: 404 });
       }
 
-      if (ciclo.estado !== 'classificada') {
-        return Response.json({ error: 'Ciclo não está no estado classificada' }, { status: 400 });
+      if (ciclo.estado !== 'classificada' && ciclo.estado !== 'manutencao') {
+        return Response.json({ error: 'Ciclo deve estar classificada ou em manutenção' }, { status: 400 });
       }
 
       if (ciclo.categoria === 'sucata') {

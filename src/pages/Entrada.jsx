@@ -24,6 +24,7 @@ const OptionButton = ({ option, isSelected, onClick }) => (
 export default function Entrada({ currentUser }) {
   const { toast } = useToast();
   const autor = currentUser?.full_name || currentUser?.perfil || "system";
+  const canChooseEstado = currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador";
 
   const [step, setStep] = useState(1);
   const [serie, setSerie] = useState("");
@@ -36,6 +37,7 @@ export default function Entrada({ currentUser }) {
   const [searching, setSearching] = useState(false);
   const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [] });
   const [categoria, setCategoria] = useState("");
+  const [estadoInicial, setEstadoInicial] = useState("classificada");
   const [coneCor, setConeCor] = useState("");
   const [coneNumero, setConeNumero] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -140,17 +142,21 @@ export default function Entrada({ currentUser }) {
       }
 
       const now = new Date().toISOString();
-      const newCiclo = await base44.entities.Ciclo.create({
+      const cicloData = {
         maquina_id: maquinaId,
         serie,
         categoria,
         cone_cor: coneCor,
         cone_numero: coneNumero,
-        estado: "classificada",
+        estado: estadoInicial,
         data_entrada: now,
         data_classificacao: now,
         prioridade: false,
-      });
+      };
+      if (estadoInicial === "pronta") {
+        cicloData.data_pronta = now;
+      }
+      const newCiclo = await base44.entities.Ciclo.create(cicloData);
 
       await base44.entities.EventoCiclo.create({
         ciclo_id: newCiclo.id,
@@ -164,9 +170,14 @@ export default function Entrada({ currentUser }) {
         ciclo_id: newCiclo.id,
         serie,
         de_estado: "entrada",
-        para_estado: "classificada",
+        para_estado: estadoInicial,
         autor,
-        nota: "Classificação",
+        nota:
+          estadoInicial === "pronta"
+            ? "Entrada direta — pronta"
+            : estadoInicial === "manutencao"
+            ? "Entrada direta — manutenção"
+            : "Classificação",
       });
 
       toast({ title: "✓ Registo concluído", description: `NS: ${serie}` });
@@ -181,6 +192,7 @@ export default function Entrada({ currentUser }) {
       setUltimaSaida(null);
       setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [] });
       setCategoria("");
+      setEstadoInicial("classificada");
       setConeCor("");
       setConeNumero("");
     } catch (err) {
@@ -409,6 +421,34 @@ export default function Entrada({ currentUser }) {
               className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
             />
           </div>
+
+          {canChooseEstado && (
+            <div>
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Estado inicial</h3>
+              <div className="space-y-2">
+                {[
+                  { value: "classificada", label: "A FAZER", hint: "aguarda autorização da gestora" },
+                  { value: "pronta", label: "PRONTA", hint: "disponível de imediato" },
+                  { value: "manutencao", label: "EM MANUTENÇÃO", hint: "em manutenção, sem O.S. no Watcher" },
+                ].map((o) => (
+                  <button
+                    key={o.value}
+                    onClick={() => setEstadoInicial(o.value)}
+                    className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                      estadoInicial === o.value
+                        ? "border-amber-500 bg-amber-500/10"
+                        : "border-slate-700 bg-slate-800 hover:border-slate-600"
+                    }`}
+                  >
+                    <span className={`text-sm font-bold ${estadoInicial === o.value ? "text-amber-400" : "text-slate-300"}`}>
+                      {o.label}
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">{o.hint}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 space-y-1 text-sm">
             <p className="text-slate-400">NS: <span className="text-slate-100 font-bold">{serie}</span></p>

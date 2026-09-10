@@ -1,12 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { RefreshCw, Zap, AlertTriangle, Loader2 } from "lucide-react";
+import { RefreshCw, Zap, AlertTriangle, Loader2, Check } from "lucide-react";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 
-export default function Autorizacao({ currentUser }) {
+export default function Autorizacao({ currentUser, userPermissions }) {
   const { toast } = useToast();
   const autor = currentUser?.full_name || currentUser?.perfil || "system";
+  const canMarcarPronta = currentUser?.perfil === "gestor_frota" || currentUser?.perfil === "administrador";
+
+  const handleMarcarPronta = async (ciclo) => {
+    try {
+      const now = new Date().toISOString();
+      await base44.entities.Ciclo.update(ciclo.id, {
+        estado: "pronta",
+        data_pronta: now,
+      });
+      await base44.entities.EventoCiclo.create({
+        ciclo_id: ciclo.id,
+        serie: ciclo.serie,
+        de_estado: ciclo.estado,
+        para_estado: "pronta",
+        autor,
+        nota: "Marcada como pronta (sem O.S. no Watcher)",
+      });
+      toast({ title: "✓ Marcada como pronta", description: `NS: ${ciclo.serie}` });
+      loadData();
+    } catch (err) {
+      toast({ variant: "destructive", title: "Erro", description: err.message });
+    }
+  };
 
   const [classificadas, setClassificadas] = useState([]);
   const [emAndamento, setEmAndamento] = useState([]);
@@ -19,8 +42,10 @@ export default function Autorizacao({ currentUser }) {
     setIsLoading(true);
     try {
       const cls = await base44.entities.Ciclo.filter({ estado: "classificada" });
-      cls.sort((a, b) => (b.prioridade ? 1 : 0) - (a.prioridade ? 1 : 0));
-      setClassificadas(cls);
+      const manut = await base44.entities.Ciclo.filter({ estado: "manutencao" });
+      const all = [...cls, ...manut];
+      all.sort((a, b) => (b.prioridade ? 1 : 0) - (a.prioridade ? 1 : 0));
+      setClassificadas(all);
 
       const aut = await base44.entities.Ciclo.filter({ estado: "autorizada" });
       const exec = await base44.entities.Ciclo.filter({ estado: "em_execucao" });
@@ -138,6 +163,11 @@ export default function Autorizacao({ currentUser }) {
                         {c.cone_cor && c.cone_numero && (
                           <span className="text-xs text-slate-400">Cone: {c.cone_cor} {c.cone_numero}</span>
                         )}
+                        {c.estado === "manutencao" && (
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-600/20 text-amber-300 border border-amber-600/40">
+                            EM MANUTENÇÃO
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -160,6 +190,15 @@ export default function Autorizacao({ currentUser }) {
                         >
                           {authorizing === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                           AUTORIZAR
+                        </button>
+                      )}
+                      {canMarcarPronta && (
+                        <button
+                          onClick={() => handleMarcarPronta(c)}
+                          className="px-3 py-2 bg-slate-700 hover:bg-green-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium flex items-center gap-1.5"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          MARCAR PRONTA
                         </button>
                       )}
                     </div>
@@ -186,10 +225,21 @@ export default function Autorizacao({ currentUser }) {
                     <h4 className="text-lg font-bold text-slate-200">{c.serie}</h4>
                     <p className="text-xs text-slate-500">Watcher: {c.watcher_os_id?.slice(-8) || "—"}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${cfg.bg} ${cfg.text} flex items-center gap-1`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                    {cfg.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {canMarcarPronta && c.estado === "em_execucao" && (
+                      <button
+                        onClick={() => handleMarcarPronta(c)}
+                        className="px-3 py-1.5 bg-slate-700 hover:bg-green-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        MARCAR PRONTA
+                      </button>
+                    )}
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${cfg.bg} ${cfg.text} flex items-center gap-1`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                      {cfg.label}
+                    </span>
+                  </div>
                 </div>
               );
             })}

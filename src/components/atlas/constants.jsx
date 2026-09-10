@@ -7,12 +7,13 @@ export const ESTADO_CONFIG = {
   em_execucao:   { label: 'Em Execução',   short: 'EXEC',  dot: 'bg-orange-500',  text: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/30' },
   pronta:        { label: 'Pronta',        short: 'PRONTA',dot: 'bg-green-500',   text: 'text-green-400',   bg: 'bg-green-500/10',   border: 'border-green-500/30' },
   em_aluguer:    { label: 'Em Aluguer',    short: 'ALUG',  dot: 'bg-cyan-500',    text: 'text-cyan-400',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/30' },
+  manutencao:    { label: 'Manutenção',   short: 'MANUT', dot: 'bg-amber-600',   text: 'text-amber-300',   bg: 'bg-amber-600/10',   border: 'border-amber-600/30' },
   retorno:       { label: 'Retorno',       short: 'RET',   dot: 'bg-yellow-500',  text: 'text-yellow-400',  bg: 'bg-yellow-500/10',  border: 'border-yellow-500/30' },
   fechado:       { label: 'Fechado',       short: 'FECH',  dot: 'bg-slate-500',   text: 'text-slate-400',   bg: 'bg-slate-500/10',   border: 'border-slate-500/30' },
 };
 
 export const ESTADO_ORDER = [
-  'entrada', 'classificada', 'autorizada', 'em_execucao', 'pronta', 'em_aluguer'
+  'entrada', 'classificada', 'autorizada', 'em_execucao', 'manutencao', 'pronta', 'em_aluguer'
 ];
 
 export const CATEGORIA_CONFIG = {
@@ -89,6 +90,7 @@ export const FILTER_OPTIONS = {
     { value: 'classificada', label: 'Classificada' },
     { value: 'autorizada', label: 'Autorizada' },
     { value: 'em_execucao', label: 'Em Execução' },
+    { value: 'manutencao', label: 'Manutenção' },
     { value: 'pronta', label: 'Pronta' },
     { value: 'em_aluguer', label: 'Em Aluguer' }
   ],
