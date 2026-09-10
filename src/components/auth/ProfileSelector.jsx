@@ -19,42 +19,42 @@ const PROFILES = {
     description: 'Reserva e propostas',
     icon: Briefcase,
     color: 'border-red-400/50',
-    passwords: ['2Nuno', '2Guedes', '2Neves', '2Carlos']
+    password: '1'
   },
   logistica: {
     title: 'LOGÍSTICA',
     description: 'Gestão de frota e entregas',
     icon: Truck,
     color: 'border-white/30',
-    password: '3'
+    password: '1'
   },
   gestor_frota: {
     title: 'Gestor de Frota',
     description: 'Gestão STS/UTS e criação de O.S.',
     icon: Crown,
     color: 'border-white/30',
-    password: '4'
+    password: '1'
   },
   coordenador_comercial: {
     title: 'Coordenador Comercial',
     description: 'Gestão completa comercial',
     icon: User,
     color: 'border-white/30',
-    password: '5'
+    password: '1'
   },
   administrador: {
     title: 'Administrador',
     description: 'Controlo total do sistema',
     icon: Shield,
     color: 'border-white/30',
-    password: '1618'
+    password: '1'
   },
   visitante: {
     title: 'VISITANTE',
     description: 'Observação apenas',
     icon: Eye,
     color: 'border-white/30',
-    password: 'guest'
+    password: '1'
   }
 };
 

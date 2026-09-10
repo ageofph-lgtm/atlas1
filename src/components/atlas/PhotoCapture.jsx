@@ -80,7 +80,8 @@ export default function PhotoCapture({ onSuccess }) {
         type="file"
         accept="image/*"
         onChange={handleFileSelect}
-        className="hidden"
+        className="absolute opacity-0 pointer-events-none"
+        style={{ left: '-9999px', top: '0', width: '1px', height: '1px' }}
         capture="environment"
       />
 
