@@ -26,7 +26,7 @@ export default function ReservaModal({ ciclo, open, onClose, onSave, canEdit }) 
     try {
       await onSave({
         reserva_cliente: cliente,
-        reserva_data: data ? new Date(data).toISOString() : null,
+        reserva_data: data || null,
         reserva_nota: nota || null,
       });
       onClose();
