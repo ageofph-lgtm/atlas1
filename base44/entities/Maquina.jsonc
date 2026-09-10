@@ -1,0 +1,52 @@
+{
+  "name": "Maquina",
+  "type": "object",
+  "properties": {
+    "serie": {
+      "type": "string",
+      "description": "N\u00famero de s\u00e9rie \u2014 chave de identifica\u00e7\u00e3o"
+    },
+    "modelo": {
+      "type": "string",
+      "description": "Modelo da m\u00e1quina"
+    },
+    "ano": {
+      "type": "string",
+      "description": "Ano de fabrico"
+    },
+    "foto_url": {
+      "type": "string",
+      "description": "URL da foto da m\u00e1quina/placa"
+    },
+    "mastro": {
+      "type": "string",
+      "description": "Tipo de mastro (triplex, telescopico, niho)"
+    },
+    "vias_mastro": {
+      "type": "string",
+      "description": "N\u00famero de vias do mastro (3, 4, 5)"
+    },
+    "joystick": {
+      "type": "string",
+      "description": "Tipo de joystick (alavanca, minilever, 4plus, fingertrip)"
+    },
+    "tipo_pneu": {
+      "type": "string",
+      "description": "Cor do pneu (preto, branco)"
+    },
+    "acessorios": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lista de acess\u00f3rios"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es gerais"
+    }
+  },
+  "required": [
+    "serie"
+  ]
+}

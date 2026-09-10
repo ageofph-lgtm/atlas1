@@ -1,0 +1,56 @@
+{
+  "name": "Pedido",
+  "type": "object",
+  "properties": {
+    "cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "comercial": {
+      "type": "string",
+      "description": "Nome do comercial"
+    },
+    "mastro": {
+      "type": "string",
+      "description": "Tipo de mastro pretendido"
+    },
+    "vias_mastro": {
+      "type": "string",
+      "description": "N\u00famero de vias do mastro pretendido"
+    },
+    "tipo_pneu": {
+      "type": "string",
+      "description": "Tipo de pneu pretendido"
+    },
+    "acessorios": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Acess\u00f3rios pretendidos"
+    },
+    "data_necessaria": {
+      "type": "string",
+      "format": "date",
+      "description": "Data necess\u00e1ria"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "aberto",
+        "alocado",
+        "cancelado"
+      ],
+      "default": "aberto",
+      "description": "Estado do pedido"
+    },
+    "ciclo_alocado_id": {
+      "type": "string",
+      "description": "ID do Ciclo alocado ao pedido"
+    }
+  },
+  "required": [
+    "cliente",
+    "estado"
+  ]
+}

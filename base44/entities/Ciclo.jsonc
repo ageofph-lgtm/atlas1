@@ -1,0 +1,99 @@
+{
+  "name": "Ciclo",
+  "type": "object",
+  "properties": {
+    "maquina_id": {
+      "type": "string",
+      "description": "ID da M\u00e1quina associada"
+    },
+    "serie": {
+      "type": "string",
+      "description": "S\u00e9rie denormalizada para busca"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": [
+        "str",
+        "nts",
+        "uts",
+        "sucata"
+      ],
+      "description": "Categoria de classifica\u00e7\u00e3o"
+    },
+    "cone_cor": {
+      "type": "string",
+      "description": "Cor do cone de identifica\u00e7\u00e3o"
+    },
+    "cone_numero": {
+      "type": "string",
+      "description": "N\u00famero do cone"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "entrada",
+        "classificada",
+        "autorizada",
+        "em_execucao",
+        "pronta",
+        "em_aluguer",
+        "retorno",
+        "fechado"
+      ],
+      "default": "entrada",
+      "description": "Estado atual do ciclo"
+    },
+    "prioridade": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 prioridade"
+    },
+    "watcher_os_id": {
+      "type": "string",
+      "description": "ID do registo FrotaACP criado no Watcher"
+    },
+    "data_entrada": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de entrada no p\u00e1tio"
+    },
+    "data_classificacao": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de classifica\u00e7\u00e3o"
+    },
+    "data_autorizacao": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de autoriza\u00e7\u00e3o"
+    },
+    "data_pronta": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data em que ficou pronta"
+    },
+    "data_saida": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de sa\u00edda para aluguer"
+    },
+    "data_retorno": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de retorno"
+    },
+    "dias_alugada": {
+      "type": "number",
+      "description": "Dias que esteve alugada"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es do ciclo"
+    }
+  },
+  "required": [
+    "serie",
+    "categoria",
+    "estado"
+  ]
+}
