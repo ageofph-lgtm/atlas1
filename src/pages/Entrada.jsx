@@ -4,8 +4,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Search, Check, ArrowRight, ArrowLeft, Package, Info } from "lucide-react";
 import { format } from "date-fns";
 import PhotoCapture from "@/components/atlas/PhotoCapture";
-import { SPEC_OPTIONS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
-import { autoAssignCone } from "@/components/atlas/coneUtils";
+import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
+import { validateConeNumber } from "@/components/atlas/coneUtils";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -39,6 +39,8 @@ export default function Entrada({ currentUser }) {
   const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
   const [categoria, setCategoria] = useState("");
   const [estadoInicial, setEstadoInicial] = useState("classificada");
+  const [coneNumero, setConeNumero] = useState("");
+  const [coneError, setConeError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Live search when serie changes
@@ -108,7 +110,19 @@ export default function Entrada({ currentUser }) {
   };
 
   const canProceedStep1 = serie.length >= 3;
-  const canSubmit = !!categoria;
+  const coneCor = CATEGORIA_CONE_MAP[categoria] || null;
+  const needsCone = !!coneCor;
+  const canSubmit = categoria && (!needsCone || (coneNumero && !coneError));
+
+  const validateCone = async () => {
+    if (!needsCone || !coneNumero) { setConeError(""); return; }
+    const result = await validateConeNumber(categoria, coneNumero);
+    if (!result.free) {
+      setConeError(`Cone ${coneNumero} ${coneCor} já está em uso — NS ${result.conflito.serie}`);
+    } else {
+      setConeError("");
+    }
+  };
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -147,13 +161,12 @@ export default function Entrada({ currentUser }) {
       }
 
       const now = new Date().toISOString();
-      const { cone_cor, cone_numero } = await autoAssignCone(categoria);
       const cicloData = {
         maquina_id: maquinaId,
         serie,
         categoria,
-        cone_cor,
-        cone_numero,
+        cone_cor: coneCor,
+        cone_numero: needsCone ? coneNumero : null,
         estado: estadoInicial,
         data_entrada: now,
         data_classificacao: now,
@@ -199,6 +212,8 @@ export default function Entrada({ currentUser }) {
       setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
       setCategoria("");
       setEstadoInicial("classificada");
+      setConeNumero("");
+      setConeError("");
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
     }
@@ -400,7 +415,7 @@ export default function Entrada({ currentUser }) {
         <div className="space-y-5">
           <div>
             <h2 className="text-lg font-bold text-slate-100 mb-1">Classificação</h2>
-            <p className="text-sm text-slate-400">Categoria (cone atribuído automaticamente)</p>
+            <p className="text-sm text-slate-400">Categoria e cone de identificação</p>
           </div>
 
           <div>
@@ -422,10 +437,35 @@ export default function Entrada({ currentUser }) {
             </div>
           </div>
 
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-xs text-slate-500 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            Cone atribuído automaticamente conforme a categoria.
-          </div>
+          {needsCone ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-400">CONE:</span>
+                <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-700/50 text-slate-200 text-sm font-bold uppercase">
+                  <span className={`w-3 h-3 rounded-full ${CONE_COLORS.find((c) => c.value === coneCor)?.bg}`} />
+                  {coneCor}
+                </span>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-400 mb-1.5 block">Nº do cone (digite o número físico)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={coneNumero}
+                  onChange={(e) => { setConeNumero(e.target.value); setConeError(""); }}
+                  onBlur={validateCone}
+                  placeholder="Nº do cone"
+                  className={`w-full px-3 py-2.5 bg-slate-800 border rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none text-sm ${coneError ? "border-red-500" : "border-slate-700 focus:border-amber-500"}`}
+                />
+                {coneError && <p className="text-xs text-red-400 mt-1">{coneError}</p>}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-xs text-slate-500 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-500" />
+              Sem cone para esta categoria.
+            </div>
+          )}
 
           {canChooseEstado && (
             <div>

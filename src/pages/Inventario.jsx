@@ -8,7 +8,6 @@ import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
 import DeleteMaquinaModal from "@/components/atlas/DeleteMaquinaModal";
 import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
-import { autoAssignCone } from "@/components/atlas/coneUtils";
 import { INVENTARIO_TABS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 
 const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
@@ -33,9 +32,11 @@ export default function Inventario({ currentUser, userPermissions }) {
     setIsLoading(true);
     try {
       const allCiclos = await base44.entities.Ciclo.list("-created_date", 500);
-      const active = allCiclos.filter((c) => c.estado !== "fechado");
+      const visibleCiclos = currentUser?.perfil === "administrador"
+        ? allCiclos
+        : allCiclos.filter((c) => c.estado !== "fechado");
       const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
-      setCiclos(active);
+      setCiclos(visibleCiclos);
       setMaquinas(allMaquinas);
     } catch (e) {
       console.error(e);
@@ -69,6 +70,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     uts: ciclos.filter((c) => c.categoria === "uts").length,
     sucata: ciclos.filter((c) => c.categoria === "sucata").length,
     em_aluguer: ciclos.filter((c) => c.estado === "em_aluguer").length,
+    fechados: ciclos.filter((c) => c.estado === "fechado").length,
   }), [ciclos]);
 
   // Search: tokenized, case-insensitive, across all fields
@@ -103,6 +105,7 @@ export default function Inventario({ currentUser, userPermissions }) {
       case "uts": return ciclos.filter((c) => c.categoria === "uts");
       case "sucata": return ciclos.filter((c) => c.categoria === "sucata");
       case "em_aluguer": return ciclos.filter((c) => c.estado === "em_aluguer");
+      case "fechados": return ciclos.filter((c) => c.estado === "fechado");
       default: return [];
     }
   };
@@ -154,7 +157,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   };
 
   // Maquina edit
-  const handleMaquinaEdit = async (specs, newCategoria) => {
+  const handleMaquinaEdit = async (specs, cicloUpdates = {}) => {
     if (!editMaquina) return;
     try {
       await base44.entities.Maquina.update(editMaquina.id, {
@@ -166,22 +169,29 @@ export default function Inventario({ currentUser, userPermissions }) {
         h3: specs.h3 || "",
         bateria: specs.bateria || "",
       });
-      if (newCategoria && editCiclo && newCategoria !== editCiclo.categoria) {
-        const coneData = await autoAssignCone(newCategoria);
-        await base44.entities.Ciclo.update(editCiclo.id, {
-          categoria: newCategoria,
-          cone_cor: coneData.cone_cor,
-          cone_numero: coneData.cone_numero,
-        });
-        const coneLabel = coneData.cone_cor ? `${coneData.cone_cor} ${coneData.cone_numero}` : "sem cone";
-        await base44.entities.EventoCiclo.create({
-          ciclo_id: editCiclo.id,
-          serie: editCiclo.serie,
-          de_estado: editCiclo.categoria,
-          para_estado: newCategoria,
-          autor,
-          nota: `Categoria definida: ${newCategoria} → cone ${coneLabel}`,
-        });
+      if (editCiclo && Object.keys(cicloUpdates).length > 0) {
+        await base44.entities.Ciclo.update(editCiclo.id, cicloUpdates);
+        if (cicloUpdates.categoria && cicloUpdates.categoria !== editCiclo.categoria) {
+          const coneLabel = cicloUpdates.cone_cor ? `${cicloUpdates.cone_cor} ${cicloUpdates.cone_numero || ""}`.trim() : "sem cone";
+          await base44.entities.EventoCiclo.create({
+            ciclo_id: editCiclo.id,
+            serie: editCiclo.serie,
+            de_estado: editCiclo.categoria,
+            para_estado: cicloUpdates.categoria,
+            autor,
+            nota: `Categoria definida: ${cicloUpdates.categoria} → cone ${coneLabel}`,
+          });
+        }
+        if (cicloUpdates.estado && cicloUpdates.estado !== editCiclo.estado) {
+          await base44.entities.EventoCiclo.create({
+            ciclo_id: editCiclo.id,
+            serie: editCiclo.serie,
+            de_estado: editCiclo.estado,
+            para_estado: cicloUpdates.estado,
+            autor,
+            nota: "Estado alterado (admin)",
+          });
+        }
       }
       toast({ title: "✓ Máquina atualizada", description: `NS: ${editMaquina.serie}` });
       loadData();
@@ -232,7 +242,7 @@ export default function Inventario({ currentUser, userPermissions }) {
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-slate-700 overflow-x-auto">
-        {INVENTARIO_TABS.map((tab) => (
+        {INVENTARIO_TABS.filter((t) => !t.adminOnly || currentUser?.perfil === "administrador").map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}

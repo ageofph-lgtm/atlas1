@@ -129,5 +129,6 @@ export const INVENTARIO_TABS = [
   { key: 'recon', label: 'RECON' },
   { key: 'uts', label: 'UTS' },
   { key: 'sucata', label: 'SUCATA' },
-  { key: 'em_aluguer', label: 'EM ALUGUER' }
+  { key: 'em_aluguer', label: 'EM ALUGUER' },
+  { key: 'fechados', label: 'FECHADOS', adminOnly: true }
 ];

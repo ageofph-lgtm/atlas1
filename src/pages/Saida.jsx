@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap } from "lucide-react";
 import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
-import { autoAssignCone } from "@/components/atlas/coneUtils";
+import { validateConeNumber } from "@/components/atlas/coneUtils";
+import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
 
 export default function Saida({ currentUser }) {
@@ -22,6 +23,9 @@ export default function Saida({ currentUser }) {
   const [saidaModal, setSaidaModal] = useState(null); // ciclo being given saída
   const [cliente, setCliente] = useState("");
   const [saidaRapidaOpen, setSaidaRapidaOpen] = useState(false);
+  const [retornoModal, setRetornoModal] = useState(null);
+  const [retornoConeNumero, setRetornoConeNumero] = useState("");
+  const [retornoConeError, setRetornoConeError] = useState("");
 
   const loadData = async () => {
     setIsLoading(true);
@@ -90,30 +94,53 @@ export default function Saida({ currentUser }) {
     setActing(null);
   };
 
-  const handleRetorno = async (ciclo) => {
-    setActing(ciclo.id);
+  const openRetornoModal = (ciclo) => {
+    setRetornoModal(ciclo);
+    setRetornoConeNumero("");
+    setRetornoConeError("");
+  };
+
+  const validateRetornoCone = async () => {
+    if (!retornoModal) return;
+    const cor = CATEGORIA_CONE_MAP[retornoModal.categoria];
+    if (!cor || !retornoConeNumero) { setRetornoConeError(""); return; }
+    const result = await validateConeNumber(retornoModal.categoria, retornoConeNumero, retornoModal.id);
+    if (!result.free) {
+      setRetornoConeError(`Cone ${retornoConeNumero} ${cor} já está em uso — NS ${result.conflito.serie}`);
+    } else {
+      setRetornoConeError("");
+    }
+  };
+
+  const handleRetorno = async () => {
+    if (!retornoModal || retornoConeError) return;
+    setActing(retornoModal.id);
     try {
       const now = new Date().toISOString();
-      const dias = ciclo.data_saida
-        ? Math.ceil((new Date(now) - new Date(ciclo.data_saida)) / (1000 * 60 * 60 * 24))
+      const dias = retornoModal.data_saida
+        ? Math.ceil((new Date(now) - new Date(retornoModal.data_saida)) / (1000 * 60 * 60 * 24))
         : 0;
-      const { cone_cor, cone_numero } = await autoAssignCone(ciclo.categoria);
-      await base44.entities.Ciclo.update(ciclo.id, {
+      const cor = CATEGORIA_CONE_MAP[retornoModal.categoria];
+      const coneNumero = cor ? retornoConeNumero : null;
+      await base44.entities.Ciclo.update(retornoModal.id, {
         estado: "fechado",
         data_retorno: now,
         dias_alugada: dias,
-        cone_cor,
-        cone_numero,
+        cone_cor: cor,
+        cone_numero: coneNumero,
       });
       await base44.entities.EventoCiclo.create({
-        ciclo_id: ciclo.id,
-        serie: ciclo.serie,
+        ciclo_id: retornoModal.id,
+        serie: retornoModal.serie,
         de_estado: "em_aluguer",
         para_estado: "fechado",
         autor,
         nota: `Retorno — ${dias} dias alugada`,
       });
-      toast({ title: "✓ Retorno registado", description: `${ciclo.serie} — ${dias} dias` });
+      toast({ title: "✓ Retorno registado", description: `${retornoModal.serie} — ${dias} dias` });
+      setRetornoModal(null);
+      setRetornoConeNumero("");
+      setRetornoConeError("");
       loadData();
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
@@ -227,7 +254,7 @@ export default function Saida({ currentUser }) {
                     )}
                   </div>
                   <button
-                    onClick={() => handleRetorno(c)}
+                    onClick={() => openRetornoModal(c)}
                     disabled={acting === c.id}
                     className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                   >
@@ -240,6 +267,54 @@ export default function Saida({ currentUser }) {
           </div>
         )}
       </div>
+
+      {/* Retorno modal */}
+      <Dialog open={!!retornoModal} onOpenChange={() => setRetornoModal(null)}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-slate-100">
+          <DialogHeader>
+            <DialogTitle className="text-slate-100">Registar Retorno — {retornoModal?.serie}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {retornoModal && CATEGORIA_CONE_MAP[retornoModal.categoria] && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-400">CONE:</span>
+                  <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-700/50 text-slate-200 text-sm font-bold uppercase">
+                    <span className={`w-3 h-3 rounded-full ${CONE_COLORS.find((c) => c.value === CATEGORIA_CONE_MAP[retornoModal.categoria])?.bg}`} />
+                    {CATEGORIA_CONE_MAP[retornoModal.categoria]}
+                  </span>
+                </div>
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1.5 block">Nº do cone (número físico)</Label>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={retornoConeNumero}
+                    onChange={(e) => { setRetornoConeNumero(e.target.value); setRetornoConeError(""); }}
+                    onBlur={validateRetornoCone}
+                    placeholder="Nº do cone"
+                    className={`bg-slate-900 border-slate-700 text-slate-100 ${retornoConeError ? "border-red-500" : ""}`}
+                  />
+                  {retornoConeError && (
+                    <p className="text-xs text-red-400 mt-1">{retornoConeError}</p>
+                  )}
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-slate-500">A máquina fica fechada e o cone fica disponível para reutilização.</p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleRetorno}
+              disabled={acting === retornoModal?.id || !!retornoConeError}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white"
+            >
+              {acting === retornoModal?.id ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <ArrowLeft className="w-4 h-4 mr-1" />}
+              Confirmar Retorno
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Saída rápida modal */}
       <SaidaRapidaModal
