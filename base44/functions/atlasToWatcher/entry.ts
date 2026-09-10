@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.EventoCiclo.create({
         ciclo_id: ciclo_id,
         serie: ciclo.serie,
-        de_estado: 'classificada',
+        de_estado: ciclo.estado,
         para_estado: 'autorizada',
         autor: autorName,
         nota: 'O.S. criada no Watcher'
