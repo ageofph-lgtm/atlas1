@@ -28,8 +28,8 @@ export default function Saida({ currentUser }) {
   const [retornoConeNumero, setRetornoConeNumero] = useState("");
   const [retornoConeError, setRetornoConeError] = useState("");
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const p = await base44.entities.Ciclo.filter({ estado: "pronta" });
       setProntas(p);
@@ -40,7 +40,7 @@ export default function Saida({ currentUser }) {
     } catch (e) {
       console.error(e);
     }
-    setIsLoading(false);
+    if (!silent) setIsLoading(false);
   };
 
   useEffect(() => {

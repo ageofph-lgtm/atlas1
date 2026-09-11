@@ -42,8 +42,8 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const [tarefasCiclo, setTarefasCiclo] = useState(null);
   const [syncing, setSyncing] = useState(false);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const cls = await base44.entities.Ciclo.filter({ estado: "classificada" });
       const manut = await base44.entities.Ciclo.filter({ estado: "manutencao" });
@@ -60,7 +60,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     } catch (e) {
       console.error(e);
     }
-    setIsLoading(false);
+    if (!silent) setIsLoading(false);
   };
 
   useEffect(() => {

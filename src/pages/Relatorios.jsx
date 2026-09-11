@@ -19,8 +19,8 @@ export default function Relatorios({ currentUser, userPermissions }) {
   const [maquinas, setMaquinas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const allCiclos = await base44.entities.Ciclo.list("-created_date", 1000);
       setCiclos(allCiclos);
@@ -29,7 +29,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
     } catch (e) {
       console.error(e);
     }
-    setIsLoading(false);
+    if (!silent) setIsLoading(false);
   };
 
   useEffect(() => {

@@ -11,6 +11,7 @@ import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
 import TarefasModal from "@/components/atlas/TarefasModal";
 import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
+import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { INVENTARIO_TABS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 
 const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
@@ -34,8 +35,8 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [syncing, setSyncing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const allCiclos = await base44.entities.Ciclo.list("-created_date", 500);
       const visibleCiclos = currentUser?.perfil === "administrador"
@@ -47,7 +48,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     } catch (e) {
       console.error(e);
     }
-    setIsLoading(false);
+    if (!silent) setIsLoading(false);
   };
 
   useEffect(() => {
@@ -314,12 +315,12 @@ export default function Inventario({ currentUser, userPermissions }) {
               key={c.id}
               ciclo={c}
               maquina={getMaquina(c)}
-              canEditMaquina={userPermissions?.canEditMaquina}
+              canEditMaquina={canEditMaquinaRecord(currentUser, getMaquina(c))}
               canReservar={userPermissions?.canReservar}
               canDeleteMaquina={userPermissions?.canDeleteMaquina}
               canSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") && c.estado === "pronta"}
               canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
-              onEdit={userPermissions?.canEditMaquina ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
+              onEdit={canEditMaquinaRecord(currentUser, getMaquina(c)) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
               onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
               onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}
               onSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") ? (ciclo) => setSaidaRapidaCiclo(ciclo) : null}

@@ -6,13 +6,12 @@
       "type": "string",
       "enum": [
         "comercial",
-        "oficina",
         "logistica",
         "gestor_frota",
-        "coordenador_comercial",
-        "administrador"
+        "administrador",
+        "visitante"
       ],
-      "default": "oficina",
+      "default": "visitante",
       "description": "Perfil do utilizador"
     },
     "departamento": {

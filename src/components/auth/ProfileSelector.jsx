@@ -2,18 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { User, Briefcase, Truck, Settings, Crown, Shield, AlertCircle, Lock, Eye } from 'lucide-react';
+import { Briefcase, Truck, Crown, Shield, AlertCircle, Lock, Eye } from 'lucide-react';
 import { User as UserEntity } from '@/entities/User';
 import { motion } from 'framer-motion';
 
 const PROFILES = {
-  oficina: {
-    title: 'OFICINA',
-    description: 'Gestão de ordens de serviço',
-    icon: Settings,
-    color: 'border-white/30',
-    password: '1'
-  },
   comercial: {
     title: 'COMERCIAL',
     description: 'Reserva e propostas',
@@ -32,13 +25,6 @@ const PROFILES = {
     title: 'Gestor de Frota',
     description: 'Gestão STS/UTS e criação de O.S.',
     icon: Crown,
-    color: 'border-white/30',
-    password: '1'
-  },
-  coordenador_comercial: {
-    title: 'Coordenador Comercial',
-    description: 'Gestão completa comercial',
-    icon: User,
     color: 'border-white/30',
     password: '1'
   },
