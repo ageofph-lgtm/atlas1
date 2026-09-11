@@ -111,7 +111,8 @@ export default function ProfileSelector({ onLogin }) {
 
   return (
     <div className="min-h-screen overflow-y-auto p-4 py-8 flex flex-col items-center justify-start">
-      <div className="fixed top-4 right-4 z-10"><ThemeSwitcher /></div>
+      <div className="fixed top-4 right-4 z-10 hidden sm:block"><ThemeSwitcher /></div>
+      <div className="flex justify-end w-full mb-2 sm:hidden"><ThemeSwitcher /></div>
 
       <motion.div
         initial={{ opacity: 0, y: 40 }}
@@ -138,7 +139,7 @@ export default function ProfileSelector({ onLogin }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8"
+          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-6 mb-4 sm:mb-8"
         >
           {Object.entries(PROFILES).slice(0, 3).map(([key, profile], index) => {
             const ProfileIcon = profile.icon;
@@ -150,13 +151,13 @@ export default function ProfileSelector({ onLogin }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 + index * 0.1, duration: 0.6 }}
                 onClick={() => { setSelectedProfile(key); setPassword(''); setError(''); }}
-                className={`glass border-2 rounded-lg p-5 sm:p-6 md:p-8 text-center min-h-[48px] transition-all hover:scale-[1.02] ${
+                className={`glass border-2 rounded-lg p-3 sm:p-6 md:p-8 text-center min-h-[48px] transition-all hover:scale-[1.02] ${
                   isSelected ? 'border-amber-500 ring-2 ring-amber-500/30' : 'border-slate-700 hover:border-slate-600'
                 }`}
               >
-                <ProfileIcon className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-4 sm:mb-6 ${isSelected ? 'text-amber-400' : 'text-slate-300'}`} />
-                <h3 className={`font-bold text-lg sm:text-xl mb-2 sm:mb-3 ${isSelected ? 'text-amber-400' : 'text-slate-100'}`}>{profile.title}</h3>
-                <p className="text-sm text-slate-400">{profile.description}</p>
+                <ProfileIcon className={`w-9 h-9 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-2 sm:mb-6 ${isSelected ? 'text-amber-400' : 'text-slate-300'}`} />
+                <h3 className={`font-bold text-sm sm:text-xl mb-1 sm:mb-3 ${isSelected ? 'text-amber-400' : 'text-slate-100'}`}>{profile.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-400">{profile.description}</p>
               </motion.button>
             );
           })}
@@ -166,7 +167,7 @@ export default function ProfileSelector({ onLogin }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12"
+          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-6 mb-6 sm:mb-12"
         >
           {Object.entries(PROFILES).slice(3).map(([key, profile], index) => {
             const ProfileIcon = profile.icon;
@@ -178,13 +179,13 @@ export default function ProfileSelector({ onLogin }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9 + index * 0.1, duration: 0.6 }}
                 onClick={() => { setSelectedProfile(key); setPassword(''); setError(''); }}
-                className={`glass border-2 rounded-lg p-5 sm:p-6 md:p-8 text-center min-h-[48px] transition-all hover:scale-[1.02] ${
+                className={`glass border-2 rounded-lg p-3 sm:p-6 md:p-8 text-center min-h-[48px] transition-all hover:scale-[1.02] ${
                   isSelected ? 'border-amber-500 ring-2 ring-amber-500/30' : 'border-slate-700 hover:border-slate-600'
                 }`}
               >
-                <ProfileIcon className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-4 sm:mb-6 ${isSelected ? 'text-amber-400' : 'text-slate-300'}`} />
-                <h3 className={`font-bold text-lg sm:text-xl mb-2 sm:mb-3 ${isSelected ? 'text-amber-400' : 'text-slate-100'}`}>{profile.title}</h3>
-                <p className="text-sm text-slate-400">{profile.description}</p>
+                <ProfileIcon className={`w-9 h-9 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-2 sm:mb-6 ${isSelected ? 'text-amber-400' : 'text-slate-300'}`} />
+                <h3 className={`font-bold text-sm sm:text-xl mb-1 sm:mb-3 ${isSelected ? 'text-amber-400' : 'text-slate-100'}`}>{profile.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-400">{profile.description}</p>
               </motion.button>
             );
           })}
@@ -196,9 +197,9 @@ export default function ProfileSelector({ onLogin }) {
           transition={{ delay: 1.2, duration: 0.6 }}
           className="max-w-md mx-auto"
         >
-          <form onSubmit={handleLogin} className="glass border border-slate-700 rounded-lg p-6 sm:p-8 md:p-10">
-            <div className="mb-6 sm:mb-8">
-              <div className="flex items-center gap-3 mb-6 sm:mb-8 justify-center">
+          <form onSubmit={handleLogin} className="glass border border-slate-700 rounded-lg p-4 sm:p-8 md:p-10">
+            <div className="mb-4 sm:mb-8">
+              <div className="flex items-center gap-3 mb-4 sm:mb-8 justify-center">
                 <Lock className="w-6 h-6 text-slate-300" />
                 <h3 className="text-xl font-bold text-slate-100">Autenticação</h3>
               </div>
