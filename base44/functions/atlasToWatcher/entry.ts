@@ -174,7 +174,8 @@ Deno.serve(async (req) => {
           if (!watcherResponse.ok) continue;
 
           const watcherResult = await watcherResponse.json();
-          const { novoEstado, updateData } = mapEstado(watcherResult.estado);
+          const record = watcherResult.result ?? watcherResult;
+          const { novoEstado, updateData } = mapEstado(record.estado);
 
           if (await applyTransition(ciclo, novoEstado, updateData, 'Sync com Watcher')) {
             updates.push({
