@@ -1,15 +1,15 @@
 // ATLAS shared constants — dark industrial theme
 
 export const ESTADO_CONFIG = {
-  entrada:       { label: 'Entrada',       short: 'ENT',   dot: 'bg-blue-500',    text: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/30' },
-  classificada:  { label: 'Classificada',  short: 'CLS',   dot: 'bg-amber-500',   text: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/30' },
-  autorizada:    { label: 'Autorizada',    short: 'AUT',   dot: 'bg-purple-500',  text: 'text-purple-400',  bg: 'bg-purple-500/10',  border: 'border-purple-500/30' },
-  em_execucao:   { label: 'Em Execução',   short: 'EXEC',  dot: 'bg-orange-500',  text: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/30' },
-  pronta:        { label: 'Pronta',        short: 'PRONTA',dot: 'bg-green-500',   text: 'text-green-400',   bg: 'bg-green-500/10',   border: 'border-green-500/30' },
-  em_aluguer:    { label: 'Em Aluguer',    short: 'ALUG',  dot: 'bg-cyan-500',    text: 'text-cyan-400',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/30' },
-  manutencao:    { label: 'Manutenção',   short: 'MANUT', dot: 'bg-amber-600',   text: 'text-amber-300',   bg: 'bg-amber-600/10',   border: 'border-amber-600/30' },
-  retorno:       { label: 'Retorno',       short: 'RET',   dot: 'bg-yellow-500',  text: 'text-yellow-400',  bg: 'bg-yellow-500/10',  border: 'border-yellow-500/30' },
-  fechado:       { label: 'Fechado',       short: 'FECH',  dot: 'bg-slate-500',   text: 'text-slate-400',   bg: 'bg-slate-500/10',   border: 'border-slate-500/30' },
+  entrada:       { label: 'Entrada',       short: 'ENT',    dot: 'bg-kn',   text: 'text-kn',   bg: 'bg-kn/10',   border: 'border-kn/30' },
+  classificada:  { label: 'Classificada',  short: 'CLS',    dot: 'bg-ccla', text: 'text-ccla', bg: 'bg-ccla/10', border: 'border-ccla/30' },
+  autorizada:    { label: 'Autorizada',    short: 'AUT',    dot: 'bg-caut', text: 'text-caut', bg: 'bg-caut/10', border: 'border-caut/30' },
+  em_execucao:   { label: 'Em Execução',   short: 'EXEC',   dot: 'bg-cexe', text: 'text-cexe', bg: 'bg-cexe/10', border: 'border-cexe/30' },
+  pronta:        { label: 'Pronta',        short: 'PRONTA',  dot: 'bg-cpro', text: 'text-cpro', bg: 'bg-cpro/10', border: 'border-cpro/30' },
+  em_aluguer:    { label: 'Em Aluguer',    short: 'ALUG',   dot: 'bg-calu', text: 'text-calu', bg: 'bg-calu/10', border: 'border-calu/30' },
+  manutencao:    { label: 'Manutenção',    short: 'MANUT',   dot: 'bg-ccla', text: 'text-ccla', bg: 'bg-ccla/10', border: 'border-ccla/30' },
+  retorno:       { label: 'Retorno',       short: 'RET',     dot: 'bg-ka',   text: 'text-ka',   bg: 'bg-ka/10',   border: 'border-ka/30' },
+  fechado:       { label: 'Fechado',       short: 'FECH',    dot: 'bg-kn',   text: 'text-kn',   bg: 'bg-kn/10',   border: 'border-kn/30' },
 };
 
 export const ESTADO_ORDER = [
@@ -17,11 +17,11 @@ export const ESTADO_ORDER = [
 ];
 
 export const CATEGORIA_CONFIG = {
-  str:        { label: 'STR',       text: 'text-amber-400',  bg: 'bg-amber-500/15',  border: 'border-amber-500/40' },
-  uts:        { label: 'UTS',       text: 'text-purple-400', bg: 'bg-purple-500/15', border: 'border-purple-500/40' },
-  recon:      { label: 'RECON',     text: 'text-blue-400',   bg: 'bg-blue-500/15',   border: 'border-blue-500/40' },
-  indefinida: { label: 'INDEFINIDA',text: 'text-slate-400',  bg: 'bg-slate-600/15',  border: 'border-slate-600/40' },
-  sucata:     { label: 'SUCATA',    text: 'text-slate-500',  bg: 'bg-slate-500/15',  border: 'border-slate-500/40' },
+  str:        { label: 'STR',        text: 'text-ka',  bg: 'bg-ka/15',  border: 'border-ka/40' },
+  uts:        { label: 'UTS',        text: 'text-kv',  bg: 'bg-kv/15',  border: 'border-kv/40' },
+  recon:      { label: 'RECON',      text: 'text-kz',  bg: 'bg-kz/15',  border: 'border-kz/40' },
+  indefinida: { label: 'INDEFINIDA', text: 'text-kn',  bg: 'bg-kn/15',  border: 'border-kn/40' },
+  sucata:     { label: 'SUCATA',     text: 'text-kn',  bg: 'bg-kn/15',  border: 'border-kn/40' },
 };
 
 export const CATEGORIA_CONE_MAP = {

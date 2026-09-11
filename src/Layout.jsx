@@ -5,6 +5,7 @@ import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Menu, X, Cog, BarChart3
 import { User } from "@/entities/all";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import ProfileSelector from "./components/auth/ProfileSelector";
+import ThemeSwitcher from "./components/atlas/ThemeSwitcher";
 
 const ALL_NAV_ITEMS = [
   { key: "Entrada", title: "Entrada", url: createPageUrl("Entrada"), icon: Camera, permKey: "canEntrada" },
@@ -91,11 +92,11 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
       {/* Top Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-800/90 backdrop-blur-md border-b border-slate-700">
+      <nav className="atlas-nav fixed top-0 left-0 right-0 z-50 glass border-b border-slate-700">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
+            {/* Logo + brand chip */}
+            <div className="flex items-center">
               <div className="w-9 h-9 flex-shrink-0">
                 <img
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/dc340a4ed_LogoGeomtricoATLAScomOlhoCircular-Photoroom.png"
@@ -103,7 +104,7 @@ export default function Layout({ children, currentPageName }) {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <h1 className="text-lg font-bold text-slate-100 tracking-wider">ATLAS</h1>
+              <span className="brand-chip ml-3">ATLAS</span>
             </div>
 
             {/* Desktop Nav */}
@@ -151,6 +152,7 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               )}
 
+              <ThemeSwitcher />
               {/* Mobile menu button */}
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -227,7 +229,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Page Title */}
       <div className="pt-20 px-4 sm:px-6 lg:px-8 pb-4">
-        <h1 className="text-lg md:text-xl font-bold tracking-wide text-slate-300">
+        <h1 className="page-title text-lg md:text-xl font-bold tracking-wide text-slate-300">
           {PAGE_TITLES[currentPageName] || currentPageName?.toUpperCase() || "ATLAS"}
         </h1>
       </div>

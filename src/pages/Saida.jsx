@@ -195,9 +195,9 @@ export default function Saida({ currentUser }) {
             {prontas.map((c) => {
               const m = getMaquina(c);
               return (
-                <div key={c.id} className="bg-slate-800/60 border border-green-500/20 rounded-lg p-4">
+                <div key={c.id} className="glass border border-green-500/20 rounded-lg p-4">
                   <div className="mb-2">
-                    <h3 className="text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
+                    <h3 className="num text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
                     <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
                     {c.data_pronta && (
                       <p className="text-xs text-slate-500 mt-1">Pronta desde: {format(new Date(c.data_pronta), "dd/MM HH:mm")}</p>
@@ -245,9 +245,9 @@ export default function Saida({ currentUser }) {
               const m = getMaquina(c);
               const dias = c.data_saida ? Math.ceil((new Date() - new Date(c.data_saida)) / (1000 * 60 * 60 * 24)) : 0;
               return (
-                <div key={c.id} className="bg-slate-800/60 border border-cyan-500/20 rounded-lg p-4">
+                <div key={c.id} className="glass border border-cyan-500/20 rounded-lg p-4">
                   <div className="mb-2">
-                    <h3 className="text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
+                    <h3 className="num text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
                     <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
                     <p className="text-xs text-cyan-400 mt-1">
                       Saída: {c.data_saida ? format(new Date(c.data_saida), "dd/MM HH:mm") : "—"} · {dias} dias
@@ -273,7 +273,7 @@ export default function Saida({ currentUser }) {
 
       {/* Retorno modal */}
       <Dialog open={!!retornoModal} onOpenChange={() => setRetornoModal(null)}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="glass border-slate-700 text-slate-100 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-slate-100">Registar Retorno — {retornoModal?.serie}</DialogTitle>
           </DialogHeader>
@@ -330,7 +330,7 @@ export default function Saida({ currentUser }) {
 
       {/* Saída modal */}
       <Dialog open={!!saidaModal} onOpenChange={() => setSaidaModal(null)}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="glass border-slate-700 text-slate-100 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-slate-100">Dar Saída — {saidaModal?.serie}</DialogTitle>
           </DialogHeader>

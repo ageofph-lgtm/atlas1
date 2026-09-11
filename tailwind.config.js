@@ -5,9 +5,19 @@ module.exports = {
   theme: {
   	extend: {
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			lg: 'var(--rl)',
+  			md: 'var(--rm)',
+  			sm: 'var(--rp)',
+  			DEFAULT: 'var(--rm)',
+  			xl: 'var(--rl)',
+  			'2xl': 'var(--rl)'
+  		},
+  		fontFamily: {
+  			sans: ['var(--fui)', 'sans-serif'],
+  			body: ['var(--fui)', 'sans-serif'],
+  			heading: ['var(--fdis)', 'sans-serif'],
+  			display: ['var(--fdis)', 'sans-serif'],
+  			mono: ['var(--fnum)', 'monospace']
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -59,25 +69,38 @@ module.exports = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
-  			}
+  			},
+  			/* ATLAS themed scales — RGB channels, opacity modifiers supported */
+  			slate: {
+  				100: 'rgb(var(--tx) / <alpha-value>)',
+  				200: 'rgb(var(--tx) / <alpha-value>)',
+  				300: 'rgb(var(--tx2) / <alpha-value>)',
+  				400: 'rgb(var(--mu) / <alpha-value>)',
+  				500: 'rgb(var(--mu2) / <alpha-value>)',
+  				600: 'rgb(var(--bd-solid) / <alpha-value>)',
+  				700: 'rgb(var(--surface2) / <alpha-value>)',
+  				800: 'rgb(var(--surface) / <alpha-value>)',
+  				900: 'rgb(var(--bg) / <alpha-value>)'
+  			},
+  			amber: {
+  				300: 'rgb(var(--acc) / <alpha-value>)',
+  				400: 'rgb(var(--acc) / <alpha-value>)',
+  				500: 'rgb(var(--pribg) / <alpha-value>)',
+  				600: 'rgb(var(--pribg) / <alpha-value>)'
+  			},
+  			ka: 'rgb(var(--ka) / <alpha-value>)',
+  			kv: 'rgb(var(--kv) / <alpha-value>)',
+  			kz: 'rgb(var(--kz) / <alpha-value>)',
+  			kn: 'rgb(var(--kn) / <alpha-value>)',
+  			caut: 'rgb(var(--c-aut) / <alpha-value>)',
+  			cexe: 'rgb(var(--c-exe) / <alpha-value>)',
+  			ccla: 'rgb(var(--c-cla) / <alpha-value>)',
+  			cpro: 'rgb(var(--c-pro) / <alpha-value>)',
+  			calu: 'rgb(var(--c-alu) / <alpha-value>)'
   		},
   		keyframes: {
-  			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
-  			},
-  			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			}
+  			'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
+  			'accordion-up': { from: { height: 'var(--radix-accordion-content-height)' }, to: { height: '0' } }
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',

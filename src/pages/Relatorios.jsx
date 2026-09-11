@@ -178,11 +178,11 @@ export default function Relatorios({ currentUser, userPermissions }) {
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+            <div key={card.label} className="glass border border-slate-700 rounded-lg p-4">
               <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center mb-2`}>
                 <Icon className={`w-4 h-4 ${card.color}`} />
               </div>
-              <p className="text-2xl font-bold text-slate-100">{card.value}</p>
+              <p className="kpi-num text-slate-100">{card.value}</p>
               <p className="text-xs text-slate-500 mt-0.5">{card.label}</p>
             </div>
           );
@@ -192,7 +192,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
       {/* Active by categoria (inline stat) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {Object.entries(stats.activeByCategoria).map(([cat, count]) => (
-          <div key={cat} className="bg-slate-800/60 border border-slate-700 rounded-lg p-3 flex items-center gap-3">
+          <div key={cat} className="glass border border-slate-700 rounded-lg p-3 flex items-center gap-3">
             <div className="w-3 h-3 rounded-full" style={{ background: CATEGORIA_COLORS[cat] }} />
             <div>
               <p className="text-lg font-bold text-slate-100">{count}</p>
@@ -205,7 +205,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Entradas vs saídas por dia */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+        <div className="glass border border-slate-700 rounded-lg p-4">
           <h3 className="text-sm font-bold text-slate-300 mb-4">Entradas vs Saídas por dia</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={dailyData}>
@@ -221,7 +221,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
         </div>
 
         {/* Distribuição por categoria */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+        <div className="glass border border-slate-700 rounded-lg p-4">
           <h3 className="text-sm font-bold text-slate-300 mb-4">Distribuição por categoria (ativas)</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -239,7 +239,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
 
       {/* Top máquinas por dias alugados */}
       {topMaquinasData.length > 0 && (
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+        <div className="glass border border-slate-700 rounded-lg p-4">
           <h3 className="text-sm font-bold text-slate-300 mb-4">Top máquinas por dias alugados</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={topMaquinasData} layout="vertical">
@@ -254,7 +254,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
       )}
 
       {/* Histórico de saídas table */}
-      <div className="bg-slate-800/60 border border-slate-700 rounded-lg overflow-hidden">
+      <div className="glass border border-slate-700 rounded-lg overflow-hidden">
         <h3 className="text-sm font-bold text-slate-300 p-4 border-b border-slate-700">Histórico de saídas</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

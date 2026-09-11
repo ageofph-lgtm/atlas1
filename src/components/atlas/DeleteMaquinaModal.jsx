@@ -29,7 +29,7 @@ export default function DeleteMaquinaModal({ maquina, open, onClose, onConfirm }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-slate-100">
+      <DialogContent className="glass border-slate-700 text-slate-100">
         <DialogHeader>
           <DialogTitle className="text-red-400 flex items-center gap-2">
             <Trash2 className="w-5 h-5" /> Eliminar Máquina

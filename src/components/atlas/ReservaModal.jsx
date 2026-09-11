@@ -55,7 +55,7 @@ export default function ReservaModal({ ciclo, open, onClose, onSave, canEdit }) 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-slate-100">
+      <DialogContent className="glass border-slate-700 text-slate-100">
         <DialogHeader>
           <DialogTitle className="text-slate-100">
             {hasReserva ? "Editar Reserva" : "Reservar Máquina"}

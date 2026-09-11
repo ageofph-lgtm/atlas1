@@ -158,10 +158,10 @@ export default function Autorizacao({ currentUser, userPermissions }) {
               const m = getMaquina(c);
               const catCfg = CATEGORIA_CONFIG[c.categoria] || CATEGORIA_CONFIG.nts;
               return (
-                <div key={c.id} className={`bg-slate-800/60 border border-slate-700 rounded-lg p-4 ${c.prioridade ? "border-red-500/40" : ""}`}>
+                <div key={c.id} className={`glass border border-slate-700 rounded-lg p-4 ${c.prioridade ? "border-red-500/40" : ""}`}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h4>
+                      <h4 className="num text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h4>
                       <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <span className={`px-2 py-0.5 rounded text-xs font-bold ${catCfg.bg} ${catCfg.text}`}>{catCfg.label}</span>
@@ -225,9 +225,9 @@ export default function Autorizacao({ currentUser, userPermissions }) {
             {emAndamento.map((c) => {
               const cfg = ESTADO_CONFIG[c.estado];
               return (
-                <div key={c.id} className="bg-slate-800/40 border border-slate-700 rounded-lg p-3 flex items-center justify-between">
+                <div key={c.id} className="glass border border-slate-700 rounded-lg p-3 flex items-center justify-between">
                   <div>
-                    <h4 className="text-lg font-bold text-slate-200">{c.serie}</h4>
+                    <h4 className="num text-lg font-bold text-slate-200">{c.serie}</h4>
                     <p className="text-xs text-slate-500">Watcher: {c.watcher_os_id?.slice(-8) || "—"}</p>
                   </div>
                   <div className="flex items-center gap-2">

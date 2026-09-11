@@ -47,7 +47,7 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="glass border-slate-700 text-slate-100 max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-slate-100 flex items-center gap-2">
             <Zap className="w-5 h-5 text-amber-400" />

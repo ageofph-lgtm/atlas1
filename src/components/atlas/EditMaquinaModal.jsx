@@ -107,7 +107,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-w-lg">
+      <DialogContent className="glass border-slate-700 text-slate-100 max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-slate-100">Editar Máquina — {maquina?.serie}</DialogTitle>
         </DialogHeader>

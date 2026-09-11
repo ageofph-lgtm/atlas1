@@ -36,7 +36,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Pesquisar série, modelo, specs, cone, cliente..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
+            className="w-full pl-10 pr-4 py-2.5 glass border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
           />
         </div>
         {onSync && (
@@ -44,7 +44,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
             onClick={onSync}
             disabled={syncing}
             title="Sincronizar com o Watcher"
-            className="flex-shrink-0 px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/40 flex items-center gap-1.5 disabled:opacity-50"
+            className="flex-shrink-0 px-3 py-2.5 glass border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/40 flex items-center gap-1.5 disabled:opacity-50"
           >
             {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             <span className="text-xs font-medium hidden sm:inline">SINCRONIZAR</span>
@@ -100,7 +100,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
 
       {/* Advanced filters panel */}
       {showFilters && (
-        <div className="flex items-center gap-3 flex-wrap pb-1 bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-3 flex-wrap pb-1 glass border border-slate-700 rounded-lg px-3 py-2">
           {ADVANCED_FILTERS.map((key) => (
             <div key={key} className="flex items-center gap-1.5">
               <span className="text-[10px] uppercase tracking-wide text-slate-600">

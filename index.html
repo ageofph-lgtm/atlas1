@@ -1,11 +1,25 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="https://base44.com/logo_v2.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Base44 APP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>ATLAS — Oficina Inteligente</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('atlas-theme') || 'still-dark';
+          if (!['still-light', 'still-dark', 'retro-light', 'retro-dark'].includes(t)) t = 'still-dark';
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'still-dark';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

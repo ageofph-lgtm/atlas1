@@ -43,7 +43,7 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   return (
     <div
       onClick={() => setExpanded((v) => !v)}
-      className={`relative bg-slate-800/60 border ${estadoCfg.border} rounded-lg p-4 cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-lg hover:shadow-black/30 hover:border-slate-600`}
+      className={`relative glass cat-${ciclo.categoria} border ${estadoCfg.border} rounded-lg p-4 cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-lg hover:shadow-black/30 hover:border-slate-600`}
     >
       {ciclo.prioridade && (
         <div className="absolute -top-px -right-px bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg rounded-tr-lg flex items-center gap-1 z-10">
@@ -54,7 +54,7 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
 
       {/* NS — visual hero + photo */}
       <div className="flex items-start justify-between gap-2 mb-1">
-        <h3 className="text-2xl font-black tracking-wider text-slate-100 leading-none break-all">
+        <h3 className="ns-num tracking-wider text-slate-100 leading-none break-all">
           {ciclo.serie}
         </h3>
         {maquina?.foto_url && (
@@ -72,7 +72,7 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
       {hasCone ? (
         <div className="flex items-center gap-2.5 bg-slate-900/70 border border-slate-600/40 rounded-lg px-3 py-2 mb-2">
           <ConeIcon color={ciclo.cone_cor} size={30} />
-          <span className="text-2xl font-black tracking-wider text-slate-100 leading-none">
+          <span className="num text-2xl font-black tracking-wider text-slate-100 leading-none">
             {ciclo.cone_numero}
           </span>
           <span className="text-[10px] text-slate-500 uppercase ml-auto tracking-wide">{ciclo.cone_cor}</span>
@@ -91,7 +91,7 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
           {catCfg.label}
         </span>
         <span className={`px-2 py-0.5 rounded text-xs font-medium ${estadoCfg.bg} ${estadoCfg.text} flex items-center gap-1`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${estadoCfg.dot}`} />
+          <span className={`w-1.5 h-1.5 rounded-full state-dot ${estadoCfg.dot}`} />
           {estadoCfg.label}
         </span>
       </div>
