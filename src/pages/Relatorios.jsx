@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { RefreshCw, TrendingUp, TrendingDown, Package, Clock, Calendar } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
+import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const CATEGORIA_COLORS = {
@@ -34,6 +35,8 @@ export default function Relatorios({ currentUser, userPermissions }) {
   useEffect(() => {
     loadData();
   }, []);
+
+  useSyncWatcher(loadData);
 
   const maquinaMap = useMemo(() => {
     const map = {};

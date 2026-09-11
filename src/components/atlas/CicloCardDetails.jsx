@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckSquare, Square } from "lucide-react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { SPEC_LABELS } from "./constants";
@@ -76,6 +76,23 @@ export default function CicloCardDetails({ ciclo, maquina }) {
                   {fmt(e.value)}
                   {e.extra && <span className="text-slate-500 ml-1">· {e.extra}</span>}
                 </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tarefas da O.S. */}
+      {ciclo.tarefas?.length > 0 && (
+        <div>
+          <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide mb-2">Tarefas da O.S.</h4>
+          <div className="space-y-1.5">
+            {ciclo.tarefas.map((t, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                {t.concluida
+                  ? <CheckSquare className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  : <Square className="w-4 h-4 text-slate-600 flex-shrink-0" />}
+                <span className={t.concluida ? "text-slate-500 line-through" : "text-slate-300"}>{t.texto}</span>
               </div>
             ))}
           </div>

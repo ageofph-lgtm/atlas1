@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Pencil, CalendarClock, Trash2, Truck, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, Pencil, CalendarClock, Trash2, Truck, ChevronDown, ChevronUp, Zap } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
 import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
 
-export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canSaidaRapida, onEdit, onReservar, onDelete, onSaidaRapida }) {
+export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canSaidaRapida, canAutorizar, onEdit, onReservar, onDelete, onSaidaRapida, onAutorizar }) {
   const [expanded, setExpanded] = useState(false);
 
   const estadoCfg = ESTADO_CONFIG[ciclo.estado] || ESTADO_CONFIG.entrada;
@@ -35,7 +35,10 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   const showGerirBtn = canReservar && onReservar && ciclo.reserva_cliente;
   const showDeleteBtn = canDeleteMaquina && onDelete;
   const showSaidaRapidaBtn = canSaidaRapida && onSaidaRapida && ciclo.estado === "pronta";
-  const hasActions = showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showSaidaRapidaBtn;
+  const canAutorizeState = ciclo.estado === "classificada" || ciclo.estado === "manutencao";
+  const canAutorizeCategoria = ciclo.categoria !== "sucata" && ciclo.categoria !== "indefinida";
+  const showAutorizarBtn = canAutorizar && onAutorizar && canAutorizeState && canAutorizeCategoria;
+  const hasActions = showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showSaidaRapidaBtn || showAutorizarBtn;
 
   return (
     <div
@@ -134,6 +137,14 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
       {/* Action buttons */}
       {hasActions && (
         <div className="flex gap-2 mt-2 pt-2 border-t border-slate-700/50" onClick={(e) => e.stopPropagation()}>
+          {showAutorizarBtn && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onAutorizar(ciclo); }}
+              className="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded text-xs font-bold flex items-center justify-center gap-1"
+            >
+              <Zap className="w-3 h-3" /> AUTORIZAR
+            </button>
+          )}
           {showEditBtn && (
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(ciclo, maquina); }}

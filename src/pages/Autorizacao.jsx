@@ -3,6 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { RefreshCw, Zap, AlertTriangle, Loader2, Check } from "lucide-react";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "@/components/atlas/constants";
+import TarefasModal from "@/components/atlas/TarefasModal";
+import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
+import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 
 export default function Autorizacao({ currentUser, userPermissions }) {
   const { toast } = useToast();
@@ -36,6 +39,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const [maquinas, setMaquinas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [authorizing, setAuthorizing] = useState(null);
+  const [tarefasCiclo, setTarefasCiclo] = useState(null);
   const [syncing, setSyncing] = useState(false);
 
   const loadData = async () => {
@@ -63,6 +67,8 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     loadData();
   }, []);
 
+  useSyncWatcher(loadData);
+
   const maquinaMap = {};
   maquinas.forEach((m) => {
     maquinaMap[m.id] = m;
@@ -84,18 +90,17 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     }
   };
 
-  const handleAuthorize = async (ciclo) => {
-    setAuthorizing(ciclo.id);
-    try {
-      const res = await base44.functions.invoke("atlasToWatcher", {
-        action: "authorize",
-        ciclo_id: ciclo.id,
-        autor,
-      });
-      const data = res?.data !== undefined ? res.data : res;
-      if (data.error) throw new Error(data.error);
+  const handleAuthorize = (ciclo) => {
+    setTarefasCiclo(ciclo);
+  };
 
+  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress }) => {
+    if (!tarefasCiclo) return;
+    setAuthorizing(tarefasCiclo.id);
+    try {
+      const data = await authorizeCiclo(tarefasCiclo.id, autor, { tarefas, isVps, isExpress });
       toast({ title: "✓ Autorizada", description: `Watcher O.S.: ${data.watcher_os_id}` });
+      setTarefasCiclo(null);
       loadData();
     } catch (err) {
       toast({ variant: "destructive", title: "Erro na autorização", description: err.message });
@@ -154,7 +159,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
               const catCfg = CATEGORIA_CONFIG[c.categoria] || CATEGORIA_CONFIG.nts;
               return (
                 <div key={c.id} className={`bg-slate-800/60 border border-slate-700 rounded-lg p-4 ${c.prioridade ? "border-red-500/40" : ""}`}>
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex-1 min-w-0">
                       <h4 className="text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h4>
                       <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
@@ -246,6 +251,14 @@ export default function Autorizacao({ currentUser, userPermissions }) {
           </div>
         </div>
       )}
+
+      <TarefasModal
+        open={!!tarefasCiclo}
+        ciclo={tarefasCiclo}
+        onClose={() => setTarefasCiclo(null)}
+        onConfirm={handleTarefasConfirm}
+        authorizing={authorizing !== null}
+      />
     </div>
   );
 }

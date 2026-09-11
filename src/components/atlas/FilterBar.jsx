@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, RefreshCw, Loader2 } from "lucide-react";
 import { FILTER_OPTIONS } from "@/components/atlas/constants";
 
 const ADVANCED_FILTERS = ["estado", "mastro", "vias_mastro", "tipo_pneu"];
@@ -11,7 +11,7 @@ const FILTER_LABELS = {
   tipo_pneu: "Pneu",
 };
 
-export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange }) {
+export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, onSync, syncing }) {
   const [showFilters, setShowFilters] = useState(false);
 
   const activeAdvancedCount = ADVANCED_FILTERS.filter(
@@ -28,15 +28,28 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
   return (
     <div className="space-y-2.5 mb-4">
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Pesquisar série, modelo, specs, cone, cliente..."
-          className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
-        />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Pesquisar série, modelo, specs, cone, cliente..."
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
+          />
+        </div>
+        {onSync && (
+          <button
+            onClick={onSync}
+            disabled={syncing}
+            title="Sincronizar com o Watcher"
+            className="flex-shrink-0 px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/40 flex items-center gap-1.5 disabled:opacity-50"
+          >
+            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            <span className="text-xs font-medium hidden sm:inline">SINCRONIZAR</span>
+          </button>
+        )}
       </div>
 
       {/* Quick filters row */}

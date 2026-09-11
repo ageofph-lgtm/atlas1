@@ -8,6 +8,9 @@ import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
 import DeleteMaquinaModal from "@/components/atlas/DeleteMaquinaModal";
 import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
+import TarefasModal from "@/components/atlas/TarefasModal";
+import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
+import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { INVENTARIO_TABS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 
 const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
@@ -26,6 +29,9 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [editCiclo, setEditCiclo] = useState(null);
   const [deleteMaquina, setDeleteMaquina] = useState(null);
   const [saidaRapidaCiclo, setSaidaRapidaCiclo] = useState(null);
+  const [autorizarCicloState, setAutorizarCicloState] = useState(null);
+  const [autorizando, setAutorizando] = useState(null);
+  const [syncing, setSyncing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
@@ -47,6 +53,36 @@ export default function Inventario({ currentUser, userPermissions }) {
   useEffect(() => {
     loadData();
   }, []);
+
+  useSyncWatcher(loadData);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await base44.functions.invoke("atlasToWatcher", { action: "sync_status", autor });
+      const data = res?.data !== undefined ? res.data : res;
+      if (data.error) throw new Error(data.error);
+      toast({ title: "✓ Sincronizado com o Watcher", description: `${data.updated} atualizações` });
+      loadData();
+    } catch (err) {
+      toast({ variant: "destructive", title: "Erro no sync", description: err.message });
+    }
+    setSyncing(false);
+  };
+
+  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress }) => {
+    if (!autorizarCicloState) return;
+    setAutorizando(autorizarCicloState.id);
+    try {
+      const data = await authorizeCiclo(autorizarCicloState.id, autor, { tarefas, isVps, isExpress });
+      toast({ title: "✓ Autorizada", description: `Watcher O.S.: ${data.watcher_os_id}` });
+      setAutorizarCicloState(null);
+      loadData();
+    } catch (err) {
+      toast({ variant: "destructive", title: "Erro na autorização", description: err.message });
+    }
+    setAutorizando(null);
+  };
 
   const maquinaMap = useMemo(() => {
     const map = {};
@@ -238,6 +274,8 @@ export default function Inventario({ currentUser, userPermissions }) {
         onSearchChange={setSearchQuery}
         filters={filters}
         onFilterChange={handleFilterChange}
+        onSync={handleSync}
+        syncing={syncing}
       />
 
       {/* Tabs */}
@@ -280,10 +318,12 @@ export default function Inventario({ currentUser, userPermissions }) {
               canReservar={userPermissions?.canReservar}
               canDeleteMaquina={userPermissions?.canDeleteMaquina}
               canSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") && c.estado === "pronta"}
+              canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
               onEdit={userPermissions?.canEditMaquina ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
               onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
               onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}
               onSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") ? (ciclo) => setSaidaRapidaCiclo(ciclo) : null}
+              onAutorizar={(currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota") ? (ciclo) => setAutorizarCicloState(ciclo) : null}
             />
           ))}
         </div>
@@ -319,6 +359,13 @@ export default function Inventario({ currentUser, userPermissions }) {
         currentUser={currentUser}
         onClose={() => setSaidaRapidaCiclo(null)}
         onDone={loadData}
+      />
+      <TarefasModal
+        open={!!autorizarCicloState}
+        ciclo={autorizarCicloState}
+        onClose={() => setAutorizarCicloState(null)}
+        onConfirm={handleTarefasConfirm}
+        authorizing={autorizando !== null}
       />
     </div>
   );

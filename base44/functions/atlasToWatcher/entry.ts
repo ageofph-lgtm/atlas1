@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Body inválido' }, { status: 400 });
     }
 
-    const { action, ciclo_id, autor } = body;
+    const { action, ciclo_id, autor, tarefas, isVps, isExpress } = body;
 
     const bridgeSecret = Deno.env.get("ATLAS_BRIDGE_SECRET");
     const watcherUrl = Deno.env.get("WATCHER_ATLAS_URL");
@@ -74,7 +74,10 @@ Deno.serve(async (req) => {
             modelo: maquina?.modelo || '',
             ano: maquina?.ano || '',
             tipo: tipo,
-            prioridade: ciclo.prioridade || false
+            prioridade: ciclo.prioridade || false,
+            tarefas: tarefas || [],
+            isVps: isVps || false,
+            isExpress: isExpress || false
           }
         })
       });
@@ -94,7 +97,8 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.Ciclo.update(ciclo_id, {
         estado: 'autorizada',
         data_autorizacao: now,
-        watcher_os_id: watcherResult.id
+        watcher_os_id: watcherResult.id,
+        tarefas: tarefas || []
       });
 
       // Create EventoCiclo
@@ -147,6 +151,8 @@ Deno.serve(async (req) => {
           if (watcherEstado.startsWith('concluida')) {
             novoEstado = 'pronta';
             updateData.data_pronta = new Date().toISOString();
+          } else if (watcherEstado.startsWith('em-execucao') || watcherEstado.startsWith('em_execucao')) {
+            novoEstado = 'em_execucao';
           } else if (watcherEstado.startsWith('em-preparacao') || watcherEstado.startsWith('em_preparacao')) {
             novoEstado = 'em_execucao';
           }

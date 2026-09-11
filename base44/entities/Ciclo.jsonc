@@ -116,6 +116,27 @@
     "observacoes": {
       "type": "string",
       "description": "Observa\u00e7\u00f5es do ciclo"
+    },
+    "tarefas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "texto": {
+            "type": "string",
+            "description": "Descri\u00e7\u00e3o da tarefa"
+          },
+          "concluida": {
+            "type": "boolean",
+            "default": false,
+            "description": "Se a tarefa est\u00e1 conclu\u00edda"
+          }
+        },
+        "required": [
+          "texto"
+        ]
+      },
+      "description": "Tarefas da O.S. selecionadas na autoriza\u00e7\u00e3o (predefinidas + personalizadas)"
     }
   },
   "required": [

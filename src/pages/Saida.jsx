@@ -10,6 +10,7 @@ import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
+import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 
 export default function Saida({ currentUser }) {
   const { toast } = useToast();
@@ -45,6 +46,8 @@ export default function Saida({ currentUser }) {
   useEffect(() => {
     loadData();
   }, []);
+
+  useSyncWatcher(loadData);
 
   const maquinaMap = useMemo(() => {
     const map = {};
@@ -270,7 +273,7 @@ export default function Saida({ currentUser }) {
 
       {/* Retorno modal */}
       <Dialog open={!!retornoModal} onOpenChange={() => setRetornoModal(null)}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-slate-100">
+        <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-slate-100">Registar Retorno — {retornoModal?.serie}</DialogTitle>
           </DialogHeader>
@@ -327,7 +330,7 @@ export default function Saida({ currentUser }) {
 
       {/* Saída modal */}
       <Dialog open={!!saidaModal} onOpenChange={() => setSaidaModal(null)}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-slate-100">
+        <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-slate-100">Dar Saída — {saidaModal?.serie}</DialogTitle>
           </DialogHeader>

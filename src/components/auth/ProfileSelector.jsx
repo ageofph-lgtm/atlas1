@@ -135,17 +135,17 @@ export default function ProfileSelector({ onLogin }) {
 
   if (isLogging) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center bg-white/70 backdrop-blur-xl border border-gray-200 angled-clip p-8 shadow-2xl">
-          <div className="animate-spin w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full mx-auto mb-6"></div>
-          <p className="text-gray-800 text-lg font-semibold">A entrar no sistema...</p>
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center bg-white/70 backdrop-blur-xl border border-gray-200 angled-clip p-6 sm:p-8 shadow-2xl">
+          <div className="animate-spin w-10 h-10 sm:w-12 sm:h-12 border-4 border-red-500 border-t-transparent rounded-full mx-auto mb-4 sm:mb-6"></div>
+          <p className="text-gray-800 text-base sm:text-lg font-semibold">A entrar no sistema...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white overflow-y-auto p-4 py-8 flex flex-col items-center justify-start">
       <style>
         {`
           .angled-clip {
@@ -187,30 +187,30 @@ export default function ProfileSelector({ onLogin }) {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-6xl text-center"
+        className="w-full max-w-5xl text-center"
       >
-        {/* Logo Only */}
+        {/* Logo */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="mb-16"
+          className="mb-8 sm:mb-12"
         >
           <div className="flex items-center justify-center">
             <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/dc340a4ed_LogoGeomtricoATLAScomOlhoCircular-Photoroom.png"
               alt="ATLAS"
-              className="w-32 h-32 object-contain drop-shadow-xl"
+              className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain drop-shadow-xl"
             />
           </div>
         </motion.div>
 
-        {/* Profile Cards */}
+        {/* Profile Cards — first row */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8"
         >
           {Object.entries(PROFILES).slice(0, 3).map(([key, profile], index) => {
             const ProfileIcon = profile.icon;
@@ -223,14 +223,14 @@ export default function ProfileSelector({ onLogin }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 + index * 0.1, duration: 0.6 }}
                 onClick={() => {setSelectedProfile(key); setPassword(''); setError('');}}
-                className={`profile-card angled-clip p-8 text-center ${
+                className={`profile-card angled-clip p-5 sm:p-6 md:p-8 text-center min-h-[48px] ${
                   isSelected ? 'profile-card-selected' : ''
                 }`}
               >
-                <ProfileIcon className={`w-16 h-16 mx-auto mb-6 ${
+                <ProfileIcon className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-4 sm:mb-6 ${
                   isSelected ? 'text-red-600' : 'text-gray-700'
                 }`} />
-                <h3 className={`font-bold text-xl mb-3 ${
+                <h3 className={`font-bold text-lg sm:text-xl mb-2 sm:mb-3 ${
                   isSelected ? 'text-red-600' : 'text-gray-900'
                 }`}>
                   {profile.title}
@@ -246,7 +246,7 @@ export default function ProfileSelector({ onLogin }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12"
         >
           {Object.entries(PROFILES).slice(3).map(([key, profile], index) => {
             const ProfileIcon = profile.icon;
@@ -259,14 +259,14 @@ export default function ProfileSelector({ onLogin }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9 + index * 0.1, duration: 0.6 }}
                 onClick={() => {setSelectedProfile(key); setPassword(''); setError('');}}
-                className={`profile-card angled-clip p-8 text-center ${
+                className={`profile-card angled-clip p-5 sm:p-6 md:p-8 text-center min-h-[48px] ${
                   isSelected ? 'profile-card-selected' : ''
                 }`}
               >
-                <ProfileIcon className={`w-16 h-16 mx-auto mb-6 ${
+                <ProfileIcon className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-4 sm:mb-6 ${
                   isSelected ? 'text-red-600' : 'text-gray-700'
                 }`} />
-                <h3 className={`font-bold text-xl mb-3 ${
+                <h3 className={`font-bold text-lg sm:text-xl mb-2 sm:mb-3 ${
                   isSelected ? 'text-red-600' : 'text-gray-900'
                 }`}>
                   {profile.title}
@@ -284,9 +284,9 @@ export default function ProfileSelector({ onLogin }) {
           transition={{ delay: 1.2, duration: 0.6 }}
           className="max-w-md mx-auto"
         >
-          <form onSubmit={handleLogin} className="login-form angled-clip p-10">
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-8 justify-center">
+          <form onSubmit={handleLogin} className="login-form angled-clip p-6 sm:p-8 md:p-10">
+            <div className="mb-6 sm:mb-8">
+              <div className="flex items-center gap-3 mb-6 sm:mb-8 justify-center">
                 <Lock className="w-6 h-6 text-gray-700" />
                 <h3 className="text-xl font-bold text-gray-900">Autenticação</h3>
               </div>
@@ -300,7 +300,7 @@ export default function ProfileSelector({ onLogin }) {
                   value={password}
                   onChange={(e) => {setPassword(e.target.value); setError('');}}
                   placeholder="Digite a senha"
-                  className="w-full h-12 text-lg bg-white/80 border-gray-300 focus:border-red-500 focus:ring-red-500/20"
+                  className="w-full h-12 text-base sm:text-lg bg-white/80 border-gray-300 focus:border-red-500 focus:ring-red-500/20"
                   autoFocus
                 />
               </div>
