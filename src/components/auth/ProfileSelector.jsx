@@ -124,13 +124,13 @@ export default function ProfileSelector({ onLogin }) {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="mb-8 sm:mb-12"
+          className="mb-6 sm:mb-12"
         >
           <div className="flex items-center justify-center">
             <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/dc340a4ed_LogoGeomtricoATLAScomOlhoCircular-Photoroom.png"
               alt="ATLAS"
-              className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain drop-shadow-xl"
+              className="w-16 h-16 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain drop-shadow-xl"
             />
           </div>
         </motion.div>
@@ -139,45 +139,17 @@ export default function ProfileSelector({ onLogin }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-6 mb-4 sm:mb-8"
+          className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-6 mb-6 sm:mb-12"
         >
-          {Object.entries(PROFILES).slice(0, 3).map(([key, profile], index) => {
+          {Object.entries(PROFILES).map(([key, profile], index) => {
             const ProfileIcon = profile.icon;
             const isSelected = selectedProfile === key;
             return (
               <motion.button
                 key={key}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 + index * 0.1, duration: 0.6 }}
-                onClick={() => { setSelectedProfile(key); setPassword(''); setError(''); }}
-                className={`glass border-2 rounded-lg p-3 sm:p-6 md:p-8 text-center min-h-[48px] transition-all hover:scale-[1.02] ${
-                  isSelected ? 'border-amber-500 ring-2 ring-amber-500/30' : 'border-slate-700 hover:border-slate-600'
-                }`}
-              >
-                <ProfileIcon className={`w-9 h-9 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-2 sm:mb-6 ${isSelected ? 'text-amber-400' : 'text-slate-300'}`} />
-                <h3 className={`font-bold text-sm sm:text-xl mb-1 sm:mb-3 ${isSelected ? 'text-amber-400' : 'text-slate-100'}`}>{profile.title}</h3>
-                <p className="text-xs sm:text-sm text-slate-400">{profile.description}</p>
-              </motion.button>
-            );
-          })}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-6 mb-6 sm:mb-12"
-        >
-          {Object.entries(PROFILES).slice(3).map(([key, profile], index) => {
-            const ProfileIcon = profile.icon;
-            const isSelected = selectedProfile === key;
-            return (
-              <motion.button
-                key={key}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 + index * 0.1, duration: 0.6 }}
+                transition={{ delay: 0.5 + index * 0.08, duration: 0.5 }}
                 onClick={() => { setSelectedProfile(key); setPassword(''); setError(''); }}
                 className={`glass border-2 rounded-lg p-3 sm:p-6 md:p-8 text-center min-h-[48px] transition-all hover:scale-[1.02] ${
                   isSelected ? 'border-amber-500 ring-2 ring-amber-500/30' : 'border-slate-700 hover:border-slate-600'
