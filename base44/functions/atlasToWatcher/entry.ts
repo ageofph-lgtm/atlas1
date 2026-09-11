@@ -92,12 +92,15 @@ Deno.serve(async (req) => {
 
       const watcherResult = await watcherResponse.json();
 
+      // Watcher atlasBridge responds { ok: true, result: { ...record } } — id lives under result
+      const watcherId = watcherResult.result?.id ?? watcherResult.id;
+
       // Update Ciclo
       const now = new Date().toISOString();
       await base44.asServiceRole.entities.Ciclo.update(ciclo_id, {
         estado: 'autorizada',
         data_autorizacao: now,
-        watcher_os_id: watcherResult.id,
+        watcher_os_id: watcherId,
         tarefas: tarefas || []
       });
 
@@ -114,7 +117,7 @@ Deno.serve(async (req) => {
       return Response.json({
         success: true,
         ciclo_id: ciclo_id,
-        watcher_os_id: watcherResult.id,
+        watcher_os_id: watcherId,
         estado: 'autorizada'
       });
 
@@ -122,56 +125,58 @@ Deno.serve(async (req) => {
     } else if (action === 'sync_status') {
       const autorizadas = await base44.asServiceRole.entities.Ciclo.filter({ estado: 'autorizada' });
       const emExecucao = await base44.asServiceRole.entities.Ciclo.filter({ estado: 'em_execucao' });
-      const ciclos = [...autorizadas, ...emExecucao].filter(c => c.watcher_os_id);
+      const allCiclos = [...autorizadas, ...emExecucao];
+      const linked = allCiclos.filter(c => c.watcher_os_id);
+      const unlinked = allCiclos.filter(c => !c.watcher_os_id);
 
       const updates = [];
+      const healed = [];
 
-      for (const ciclo of ciclos) {
+      // Map Watcher estado string → ATLAS estado + extra update fields
+      const mapEstado = (watcherEstado) => {
+        const estado = (watcherEstado || '').toLowerCase();
+        if (estado.startsWith('concluida')) {
+          return { novoEstado: 'pronta', updateData: { data_pronta: new Date().toISOString() } };
+        }
+        if (estado.startsWith('em-execucao') || estado.startsWith('em_execucao') ||
+            estado.startsWith('em-preparacao') || estado.startsWith('em_preparacao')) {
+          return { novoEstado: 'em_execucao', updateData: {} };
+        }
+        return { novoEstado: null, updateData: {} };
+      };
+
+      // Apply a estado transition + audit event if the estado actually changes
+      const applyTransition = async (ciclo, novoEstado, updateData, nota) => {
+        if (!novoEstado || novoEstado === ciclo.estado) return false;
+        await base44.asServiceRole.entities.Ciclo.update(ciclo.id, {
+          estado: novoEstado,
+          ...updateData
+        });
+        await base44.asServiceRole.entities.EventoCiclo.create({
+          ciclo_id: ciclo.id,
+          serie: ciclo.serie,
+          de_estado: ciclo.estado,
+          para_estado: novoEstado,
+          autor: autorName,
+          nota: nota
+        });
+        return true;
+      };
+
+      // ── Pass 1: linked ciclos — normal sync by watcher_os_id ──
+      for (const ciclo of linked) {
         try {
           const watcherResponse = await fetch(watcherUrl, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-atlas-secret': bridgeSecret
-            },
-            body: JSON.stringify({
-              action: 'get_status',
-              query: { id: ciclo.watcher_os_id }
-            })
+            headers: { 'Content-Type': 'application/json', 'x-atlas-secret': bridgeSecret },
+            body: JSON.stringify({ action: 'get_status', query: { id: ciclo.watcher_os_id } })
           });
-
           if (!watcherResponse.ok) continue;
 
           const watcherResult = await watcherResponse.json();
-          const watcherEstado = (watcherResult.estado || '').toLowerCase();
+          const { novoEstado, updateData } = mapEstado(watcherResult.estado);
 
-          let novoEstado = null;
-          const updateData = {};
-
-          if (watcherEstado.startsWith('concluida')) {
-            novoEstado = 'pronta';
-            updateData.data_pronta = new Date().toISOString();
-          } else if (watcherEstado.startsWith('em-execucao') || watcherEstado.startsWith('em_execucao')) {
-            novoEstado = 'em_execucao';
-          } else if (watcherEstado.startsWith('em-preparacao') || watcherEstado.startsWith('em_preparacao')) {
-            novoEstado = 'em_execucao';
-          }
-
-          if (novoEstado && novoEstado !== ciclo.estado) {
-            await base44.asServiceRole.entities.Ciclo.update(ciclo.id, {
-              estado: novoEstado,
-              ...updateData
-            });
-
-            await base44.asServiceRole.entities.EventoCiclo.create({
-              ciclo_id: ciclo.id,
-              serie: ciclo.serie,
-              de_estado: ciclo.estado,
-              para_estado: novoEstado,
-              autor: autorName,
-              nota: 'Sync com Watcher'
-            });
-
+          if (await applyTransition(ciclo, novoEstado, updateData, 'Sync com Watcher')) {
             updates.push({
               ciclo_id: ciclo.id,
               serie: ciclo.serie,
@@ -184,10 +189,66 @@ Deno.serve(async (req) => {
         }
       }
 
+      // ── Pass 2: healing for ciclos that lost the watcher link ──
+      // Query by serie, adopt the most recent record created at/after data_autorizacao,
+      // write watcher_os_id back, then apply the normal estado mapping.
+      for (const ciclo of unlinked) {
+        try {
+          const watcherResponse = await fetch(watcherUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-atlas-secret': bridgeSecret },
+            body: JSON.stringify({ action: 'get_status', query: { serie: ciclo.serie } })
+          });
+          if (!watcherResponse.ok) continue;
+
+          const watcherResult = await watcherResponse.json();
+          const records = Array.isArray(watcherResult) ? watcherResult
+            : Array.isArray(watcherResult.result) ? watcherResult.result
+            : Array.isArray(watcherResult.records) ? watcherResult.records
+            : [];
+          if (records.length === 0) continue;
+
+          // Tolerance window: the Watcher record is created moments before data_autorizacao is
+          // written (race in authorize), so allow records created up to 30s before autorizacao.
+          const autorizacaoTs = ciclo.data_autorizacao ? new Date(ciclo.data_autorizacao).getTime() : 0;
+          const windowStart = autorizacaoTs - 30000;
+          const candidates = records
+            .filter(r => r.created_date && new Date(r.created_date).getTime() >= windowStart)
+            .sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime());
+          if (candidates.length === 0) continue;
+
+          const adopted = candidates[0];
+          const adoptedId = adopted.id ?? adopted._id;
+          if (!adoptedId) continue;
+
+          // Recover the link
+          await base44.asServiceRole.entities.Ciclo.update(ciclo.id, {
+            watcher_os_id: adoptedId
+          });
+
+          // Apply normal estado mapping with the recovered record
+          const { novoEstado, updateData } = mapEstado(adopted.estado);
+          if (await applyTransition(ciclo, novoEstado, updateData, 'Sync com Watcher — vínculo recuperado')) {
+            updates.push({
+              ciclo_id: ciclo.id,
+              serie: ciclo.serie,
+              de_estado: ciclo.estado,
+              para_estado: novoEstado,
+              healed: true
+            });
+          } else {
+            healed.push({ ciclo_id: ciclo.id, serie: ciclo.serie, watcher_os_id: adoptedId });
+          }
+        } catch (_e) {
+          // Skip this ciclo on error, continue with next
+        }
+      }
+
       return Response.json({
         success: true,
-        synced: ciclos.length,
+        synced: allCiclos.length,
         updated: updates.length,
+        healed: healed.length,
         updates: updates
       });
 
