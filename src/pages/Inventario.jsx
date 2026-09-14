@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { RefreshCw, Package } from "lucide-react";
@@ -13,6 +13,7 @@ import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { INVENTARIO_TABS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
+import { matchCicloSearch } from "@/components/atlas/searchUtils";
 
 const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
 
@@ -99,31 +100,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     (ciclo.serie && maquinaMap["serie:" + ciclo.serie]) ||
     null;
 
-  // Tab counts (unfiltered)
-  const tabCounts = useMemo(() => ({
-    por_fazer: ciclos.filter((c) => POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata").length,
-    prontas: ciclos.filter((c) => c.estado === "pronta").length,
-    recon: ciclos.filter((c) => c.categoria === "recon").length,
-    uts: ciclos.filter((c) => c.categoria === "uts").length,
-    sucata: ciclos.filter((c) => c.categoria === "sucata").length,
-    em_aluguer: ciclos.filter((c) => c.estado === "em_aluguer").length,
-    fechados: ciclos.filter((c) => c.estado === "fechado").length,
-  }), [ciclos]);
-
-  // Search: tokenized, case-insensitive, across all fields
-  const matchesSearch = (ciclo, maquina, query) => {
-    if (!query || !query.trim()) return true;
-    const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (tokens.length === 0) return true;
-    const fields = [
-      ciclo?.serie, ciclo?.categoria, ciclo?.cone_cor, ciclo?.cone_numero, ciclo?.reserva_cliente,
-      maquina?.modelo, maquina?.ano, maquina?.mastro, maquina?.vias_mastro,
-      maquina?.joystick, maquina?.tipo_pneu, maquina?.h3, maquina?.bateria, ...(maquina?.acessorios || []),
-    ].filter(Boolean).map((f) => String(f).toLowerCase());
-    return tokens.every((token) => fields.some((f) => f.includes(token)));
-  };
-
-  // Filter pills
+  // Filter pills + advanced filters
   const passesFilters = (ciclo, maquina) => {
     if (filters.categoria !== "all" && ciclo.categoria !== filters.categoria) return false;
     if (filters.estado !== "all" && ciclo.estado !== filters.estado) return false;
@@ -132,6 +109,41 @@ export default function Inventario({ currentUser, userPermissions }) {
     if (filters.tipo_pneu !== "all" && maquina?.tipo_pneu !== filters.tipo_pneu) return false;
     return true;
   };
+
+  // Categoria-fixed tabs conflict with the categoria pill when a different pill is active.
+  const CATEGORIA_FIXED_TAB = { recon: "recon", uts: "uts", sucata: "sucata" };
+
+  const tabFilter = (tabKey, c) => {
+    switch (tabKey) {
+      case "por_fazer": return POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata";
+      case "prontas": return c.estado === "pronta";
+      case "recon": return c.categoria === "recon";
+      case "uts": return c.categoria === "uts";
+      case "sucata": return c.categoria === "sucata";
+      case "em_aluguer": return c.estado === "em_aluguer";
+      case "fechados": return c.estado === "fechado";
+      default: return false;
+    }
+  };
+
+  const isTabDisabled = (tabKey) => {
+    const fixed = CATEGORIA_FIXED_TAB[tabKey];
+    return !!fixed && filters.categoria !== "all" && filters.categoria !== fixed;
+  };
+
+  // Tab counts — respect ALL active filters (categoria pill, advanced filters, search),
+  // so every badge matches "how many would show if I clicked this tab now".
+  const tabCounts = useMemo(() => {
+    const counts = {};
+    INVENTARIO_TABS.forEach((t) => {
+      counts[t.key] = ciclos.filter((c) => {
+        if (!tabFilter(t.key, c)) return false;
+        const m = getMaquina(c);
+        return passesFilters(c, m) && matchCicloSearch(c, m, searchQuery);
+      }).length;
+    });
+    return counts;
+  }, [ciclos, maquinas, filters, searchQuery]);
 
   // Tab filter
   const getTabCiclos = () => {
@@ -159,7 +171,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     const tabItems = getTabCiclos();
     const filtered = tabItems.filter((c) => {
       const m = getMaquina(c);
-      return passesFilters(c, m) && matchesSearch(c, m, searchQuery);
+      return passesFilters(c, m) && matchCicloSearch(c, m, searchQuery);
     });
     return sortCiclos(filtered);
   }, [ciclos, maquinas, activeTab, filters, searchQuery]);
@@ -167,6 +179,18 @@ export default function Inventario({ currentUser, userPermissions }) {
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
+
+  // Auto-switch tab when the categoria pill makes the active tab invalid/empty.
+  const firstPillChange = useRef(true);
+  useEffect(() => {
+    if (firstPillChange.current) { firstPillChange.current = false; return; }
+    const disabled = isTabDisabled(activeTab);
+    const empty = tabCounts[activeTab] === 0;
+    if (disabled || empty) {
+      setActiveTab(tabCounts.por_fazer > 0 ? "por_fazer" : "prontas");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.categoria]);
 
   // Reserva save
   const handleReservaSave = async (data) => {
@@ -294,22 +318,28 @@ export default function Inventario({ currentUser, userPermissions }) {
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-slate-700 overflow-x-auto">
-        {INVENTARIO_TABS.filter((t) => !t.adminOnly || currentUser?.perfil === "administrador").map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === tab.key
-                ? "border-amber-500 text-amber-400"
-                : "border-transparent text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            {tab.label}
-            <span className={`text-xs px-1.5 py-0.5 rounded ${activeTab === tab.key ? "bg-amber-500/20 text-amber-400" : "bg-slate-700 text-slate-500"}`}>
-              {tabCounts[tab.key]}
-            </span>
-          </button>
-        ))}
+        {INVENTARIO_TABS.filter((t) => !t.adminOnly || currentUser?.perfil === "administrador").map((tab) => {
+          const disabled = isTabDisabled(tab.key);
+          return (
+            <button
+              key={tab.key}
+              disabled={disabled}
+              onClick={() => !disabled && setActiveTab(tab.key)}
+              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${
+                disabled
+                  ? "border-transparent text-slate-600 cursor-not-allowed opacity-50"
+                  : activeTab === tab.key
+                    ? "border-amber-500 text-amber-400"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              {tab.label}
+              <span className={`text-xs px-1.5 py-0.5 rounded ${disabled ? "bg-slate-700/50 text-slate-600" : activeTab === tab.key ? "bg-amber-500/20 text-amber-400" : "bg-slate-700 text-slate-500"}`}>
+                {tabCounts[tab.key]}
+              </span>
+            </button>
+          );
+        })}
         <button onClick={loadData} className="ml-auto p-2 text-slate-400 hover:text-amber-400">
           <RefreshCw className="w-4 h-4" />
         </button>

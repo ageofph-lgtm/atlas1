@@ -5,12 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap } from "lucide-react";
+import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, Search } from "lucide-react";
 import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
+import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
 
 export default function Saida({ currentUser }) {
@@ -28,6 +29,7 @@ export default function Saida({ currentUser }) {
   const [retornoModal, setRetornoModal] = useState(null);
   const [retornoConeNumero, setRetornoConeNumero] = useState("");
   const [retornoConeError, setRetornoConeError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -60,6 +62,15 @@ export default function Saida({ currentUser }) {
   }, [maquinas]);
 
   const getMaquina = (c) => maquinaMap[c.maquina_id] || (c.serie && maquinaMap["serie:" + c.serie]) || null;
+
+  const filteredProntas = useMemo(
+    () => prontas.filter((c) => matchCicloSearch(c, getMaquina(c), searchQuery)),
+    [prontas, maquinas, searchQuery]
+  );
+  const filteredAlugadas = useMemo(
+    () => alugadas.filter((c) => matchCicloSearch(c, getMaquina(c), searchQuery)),
+    [alugadas, maquinas, searchQuery]
+  );
 
   const openSaidaModal = (ciclo) => {
     setSaidaModal(ciclo);
@@ -162,6 +173,20 @@ export default function Saida({ currentUser }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Pesquisa */}
+      <div className="lg:col-span-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Pesquisar série, modelo, specs, cone, cliente..."
+            className="w-full pl-10 pr-4 py-2.5 glass border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
+          />
+        </div>
+      </div>
+
       {/* SAÍDA RÁPIDA */}
       <div className="lg:col-span-2">
         <button
@@ -179,21 +204,21 @@ export default function Saida({ currentUser }) {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500" />
             <h2 className="text-sm font-bold uppercase tracking-wide text-green-400">Prontas para Saída</h2>
-            <span className="text-xs text-slate-500">({prontas.length})</span>
+            <span className="text-xs text-slate-500">({filteredProntas.length})</span>
           </div>
           <button onClick={loadData} className="p-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400">
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
 
-        {prontas.length === 0 ? (
+        {filteredProntas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-slate-500">
             <Package className="w-10 h-10 mb-2 opacity-30" />
             <p className="text-sm">Nenhuma máquina pronta</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {prontas.map((c) => {
+            {filteredProntas.map((c) => {
               const m = getMaquina(c);
               return (
                 <div key={c.id} className="glass border border-green-500/20 rounded-lg p-4">
@@ -234,18 +259,18 @@ export default function Saida({ currentUser }) {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-cyan-500" />
             <h2 className="text-sm font-bold uppercase tracking-wide text-cyan-400">Em Aluguer — Aguardando Retorno</h2>
-            <span className="text-xs text-slate-500">({alugadas.length})</span>
+            <span className="text-xs text-slate-500">({filteredAlugadas.length})</span>
           </div>
         </div>
 
-        {alugadas.length === 0 ? (
+        {filteredAlugadas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-slate-500">
             <Package className="w-10 h-10 mb-2 opacity-30" />
             <p className="text-sm">Nenhuma máquina em aluguer</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {alugadas.map((c) => {
+            {filteredAlugadas.map((c) => {
               const m = getMaquina(c);
               const dias = c.data_saida ? Math.ceil((new Date() - new Date(c.data_saida)) / (1000 * 60 * 60 * 24)) : 0;
               return (
