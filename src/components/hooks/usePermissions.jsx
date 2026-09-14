@@ -11,6 +11,7 @@ const ATLAS_PERMISSIONS = {
     canDeleteMaquina: true,
     canReservar: true,
     canEditReserva: true,
+    canNotas: true,
   },
   gestor_frota: {
     canEntrada: true,
@@ -22,6 +23,7 @@ const ATLAS_PERMISSIONS = {
     canDeleteMaquina: true,
     canReservar: false,
     canEditReserva: false,
+    canNotas: true,
   },
   logistica: {
     canEntrada: true,
@@ -33,6 +35,7 @@ const ATLAS_PERMISSIONS = {
     canDeleteMaquina: false,
     canReservar: false,
     canEditReserva: false,
+    canNotas: true,
   },
   comercial: {
     canEntrada: false,
@@ -44,6 +47,7 @@ const ATLAS_PERMISSIONS = {
     canDeleteMaquina: false,
     canReservar: true,
     canEditReserva: true,
+    canNotas: true,
   },
   visitante: {
     canEntrada: false,
@@ -55,6 +59,7 @@ const ATLAS_PERMISSIONS = {
     canDeleteMaquina: false,
     canReservar: false,
     canEditReserva: false,
+    canNotas: false,
   },
 };
 

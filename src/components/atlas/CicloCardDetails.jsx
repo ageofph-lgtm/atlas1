@@ -3,6 +3,7 @@ import { Loader2, CheckSquare, Square } from "lucide-react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { SPEC_LABELS } from "./constants";
+import MaquinaNotas from "./MaquinaNotas";
 
 const fmt = (d) => (d ? format(new Date(d), "dd/MM HH:mm") : null);
 
@@ -15,7 +16,7 @@ function SpecRow({ label, value }) {
   );
 }
 
-export default function CicloCardDetails({ ciclo, maquina }) {
+export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSaved }) {
   const [eventos, setEventos] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -62,6 +63,12 @@ export default function CicloCardDetails({ ciclo, maquina }) {
           <span className="text-slate-500">Acessórios: </span>
           <span className="text-slate-200">{maquina?.acessorios?.length ? maquina.acessorios.map((a) => SPEC_LABELS.acessorios?.[a] || a).join(", ") : "—"}</span>
         </div>
+      </div>
+
+      {/* Notas da Máquina (aviso) */}
+      <div>
+        <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide mb-2">Notas da Máquina</h4>
+        <MaquinaNotas maquina={maquina} canNotas={canNotas} onSaved={onNotasSaved} />
       </div>
 
       {/* Datas do Ciclo */}

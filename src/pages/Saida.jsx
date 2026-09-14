@@ -11,6 +11,7 @@ import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
+import MaquinaNotas from "@/components/atlas/MaquinaNotas";
 
 export default function Saida({ currentUser }) {
   const { toast } = useToast();
@@ -209,6 +210,9 @@ export default function Saida({ currentUser }) {
                       {c.reserva_data && ` · ${format(new Date(c.reserva_data), "dd/MM")}`}
                     </div>
                   )}
+                  <div className="mb-2">
+                    <MaquinaNotas maquina={m} canNotas={currentUser?.perfil !== "visitante"} onSaved={loadData} />
+                  </div>
                   <button
                     onClick={() => openSaidaModal(c)}
                     disabled={acting === c.id}
@@ -255,6 +259,9 @@ export default function Saida({ currentUser }) {
                     {c.reserva_cliente && (
                       <p className="text-xs text-cyan-400/70 mt-0.5">Cliente: {c.reserva_cliente}</p>
                     )}
+                  </div>
+                  <div className="mb-2">
+                    <MaquinaNotas maquina={m} canNotas={currentUser?.perfil !== "visitante"} onSaved={loadData} />
                   </div>
                   <button
                     onClick={() => openRetornoModal(c)}

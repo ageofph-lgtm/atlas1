@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Pencil, CalendarClock, Trash2, Truck, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { AlertTriangle, Pencil, CalendarClock, Trash2, Truck, ChevronDown, ChevronUp, Zap, StickyNote } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
 import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
+import MaquinaNotas from "./MaquinaNotas";
 
-export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canSaidaRapida, canAutorizar, onEdit, onReservar, onDelete, onSaidaRapida, onAutorizar }) {
+export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canSaidaRapida, canAutorizar, canNotas, onEdit, onReservar, onDelete, onSaidaRapida, onAutorizar, onNotasSaved }) {
   const [expanded, setExpanded] = useState(false);
 
   const estadoCfg = ESTADO_CONFIG[ciclo.estado] || ESTADO_CONFIG.entrada;
@@ -134,6 +135,13 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
         </div>
       )}
 
+      {/* Nota da máquina (preview) */}
+      {maquina?.observacoes && (
+        <div className="mb-2">
+          <MaquinaNotas maquina={maquina} variant="preview" />
+        </div>
+      )}
+
       {/* Action buttons */}
       {hasActions && (
         <div className="flex gap-2 mt-2 pt-2 border-t border-slate-700/50" onClick={(e) => e.stopPropagation()}>
@@ -200,13 +208,21 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
             className="overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <CicloCardDetails ciclo={ciclo} maquina={maquina} />
+            <CicloCardDetails ciclo={ciclo} maquina={maquina} canNotas={canNotas} onNotasSaved={onNotasSaved} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Chevron toggle indicator */}
-      <div className="flex items-center justify-center gap-1 text-[10px] text-slate-500 pt-2 mt-2 border-t border-slate-700/40 select-none">
+      {/* Chevron toggle indicator + quick nota */}
+      <div className="flex items-center justify-center gap-3 text-[10px] text-slate-500 pt-2 mt-2 border-t border-slate-700/40 select-none">
+        {canNotas && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+            className="flex items-center gap-1 text-amber-400/80 hover:text-amber-400"
+          >
+            <StickyNote className="w-3 h-3" /> nota
+          </button>
+        )}
         {expanded ? (
           <><ChevronUp className="w-3 h-3" /> fechar</>
         ) : (

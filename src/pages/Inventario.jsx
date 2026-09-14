@@ -194,10 +194,12 @@ export default function Inventario({ currentUser, userPermissions }) {
   };
 
   // Maquina edit
-  const handleMaquinaEdit = async (specs, cicloUpdates = {}) => {
+  const handleMaquinaEdit = async (specs, cicloUpdates = {}, newSerie = null) => {
     if (!editMaquina) return;
     try {
-      await base44.entities.Maquina.update(editMaquina.id, {
+      const oldSerie = editMaquina.serie;
+      const finalSerie = newSerie || oldSerie;
+      const maquinaUpdate = {
         mastro: specs.mastro || "",
         vias_mastro: specs.vias_mastro || "",
         joystick: specs.joystick || "",
@@ -205,14 +207,17 @@ export default function Inventario({ currentUser, userPermissions }) {
         acessorios: specs.acessorios || [],
         h3: specs.h3 || "",
         bateria: specs.bateria || "",
-      });
+      };
+      if (newSerie) maquinaUpdate.serie = newSerie;
+      await base44.entities.Maquina.update(editMaquina.id, maquinaUpdate);
+
       if (editCiclo && Object.keys(cicloUpdates).length > 0) {
         await base44.entities.Ciclo.update(editCiclo.id, cicloUpdates);
         if (cicloUpdates.categoria && cicloUpdates.categoria !== editCiclo.categoria) {
           const coneLabel = cicloUpdates.cone_cor ? `${cicloUpdates.cone_cor} ${cicloUpdates.cone_numero || ""}`.trim() : "sem cone";
           await base44.entities.EventoCiclo.create({
             ciclo_id: editCiclo.id,
-            serie: editCiclo.serie,
+            serie: finalSerie,
             de_estado: editCiclo.categoria,
             para_estado: cicloUpdates.categoria,
             autor,
@@ -222,7 +227,7 @@ export default function Inventario({ currentUser, userPermissions }) {
         if (cicloUpdates.estado && cicloUpdates.estado !== editCiclo.estado) {
           await base44.entities.EventoCiclo.create({
             ciclo_id: editCiclo.id,
-            serie: editCiclo.serie,
+            serie: finalSerie,
             de_estado: editCiclo.estado,
             para_estado: cicloUpdates.estado,
             autor,
@@ -230,7 +235,15 @@ export default function Inventario({ currentUser, userPermissions }) {
           });
         }
       }
-      toast({ title: "✓ Máquina atualizada", description: `NS: ${editMaquina.serie}` });
+
+      // Cascade: rename serie across all linked Ciclo + EventoCiclo (watcher_os_id untouched)
+      if (newSerie && newSerie !== oldSerie) {
+        await base44.entities.Ciclo.updateMany({ serie: oldSerie }, { $set: { serie: newSerie } });
+        await base44.entities.EventoCiclo.updateMany({ serie: oldSerie }, { $set: { serie: newSerie } });
+        toast({ title: "✓ Máquina atualizada", description: `NS: ${oldSerie} → ${newSerie} (registos ligados atualizados)` });
+      } else {
+        toast({ title: "✓ Máquina atualizada", description: `NS: ${finalSerie}` });
+      }
       loadData();
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
@@ -320,6 +333,8 @@ export default function Inventario({ currentUser, userPermissions }) {
               canDeleteMaquina={userPermissions?.canDeleteMaquina}
               canSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") && c.estado === "pronta"}
               canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
+              canNotas={userPermissions?.canNotas}
+              onNotasSaved={loadData}
               onEdit={canEditMaquinaRecord(currentUser, getMaquina(c)) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
               onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
               onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}

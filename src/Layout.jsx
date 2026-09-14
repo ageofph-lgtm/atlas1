@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Menu, X, Cog, BarChart3 } from "lucide-react";
 import { User } from "@/entities/all";
@@ -25,6 +25,7 @@ const PAGE_TITLES = {
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
@@ -53,6 +54,8 @@ export default function Layout({ children, currentPageName }) {
   const handleLogin = (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
+    const defaultRoute = userData?.perfil === "logistica" ? createPageUrl("Entrada") : createPageUrl("Inventario");
+    navigate(defaultRoute);
   };
 
   const handleLogout = async () => {

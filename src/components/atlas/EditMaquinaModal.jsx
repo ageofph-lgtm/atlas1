@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Trash2 } from "lucide-react";
+import { Check, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 
@@ -30,9 +30,11 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
   const [coneNumero, setConeNumero] = useState("");
   const [coneError, setConeError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [serie, setSerie] = useState("");
 
   const isAdmin = currentUser?.perfil === "administrador";
   const canEditCategoria = currentUser?.perfil === "gestor_frota" || isAdmin;
+  const serieChanged = serie.trim().length > 0 && serie.trim() !== (maquina?.serie || "");
   const effectiveConeCor = CATEGORIA_CONE_MAP[categoria] || null;
   const needsCone = !!effectiveConeCor;
 
@@ -53,6 +55,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
       setClienteSaida(ciclo?.reserva_cliente || "");
       setDiasAlugada(ciclo?.dias_alugada ?? "");
       setConeNumero(ciclo?.cone_numero || "");
+      setSerie(maquina?.serie || "");
       setConeError("");
     }
   }, [maquina, ciclo]);
@@ -79,7 +82,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
   };
 
   const handleSave = async () => {
-    if (coneError) return;
+    if (coneError || !serie.trim()) return;
     setSaving(true);
     try {
       const cicloUpdates = {};
@@ -97,7 +100,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
         if (clienteSaida !== (ciclo?.reserva_cliente || "")) cicloUpdates.reserva_cliente = clienteSaida;
         if (diasAlugada !== (ciclo?.dias_alugada ?? "")) cicloUpdates.dias_alugada = diasAlugada === "" ? null : Number(diasAlugada);
       }
-      await onSave(specs, cicloUpdates);
+      await onSave(specs, cicloUpdates, serieChanged ? serie.trim() : null);
       onClose();
     } catch (e) {
       // error handled by parent
@@ -113,6 +116,23 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
         </DialogHeader>
 
         <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">
+          <div>
+            <label className="text-xs font-medium text-slate-400 mb-1.5 block">Número de Série (NS) <span className="text-amber-400">· chave de ligação</span></label>
+            <input
+              type="text"
+              value={serie}
+              onChange={(e) => setSerie(e.target.value)}
+              placeholder="NS da máquina"
+              className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm font-mono tracking-wider"
+            />
+            {serieChanged && (
+              <p className="text-xs text-amber-400 mt-1.5 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                NS alterado — será atualizado em todos os registos ligados
+              </p>
+            )}
+          </div>
+
           {canEditCategoria && (
             <div>
               <h3 className="text-sm font-medium text-slate-300 mb-2">Categoria <span className="text-amber-400">· define o caminho</span></h3>
@@ -301,7 +321,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
           )}
           <Button
             onClick={handleSave}
-            disabled={saving || !!coneError}
+            disabled={saving || !!coneError || !serie.trim()}
             className="bg-amber-500 hover:bg-amber-600 text-slate-900"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}

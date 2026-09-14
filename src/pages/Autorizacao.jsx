@@ -6,6 +6,7 @@ import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 import TarefasModal from "@/components/atlas/TarefasModal";
 import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
+import MaquinaNotas from "@/components/atlas/MaquinaNotas";
 
 export default function Autorizacao({ currentUser, userPermissions }) {
   const { toast } = useToast();
@@ -173,6 +174,9 @@ export default function Autorizacao({ currentUser, userPermissions }) {
                             EM MANUTENÇÃO
                           </span>
                         )}
+                      </div>
+                      <div className="mt-2">
+                        <MaquinaNotas maquina={m} canNotas={userPermissions?.canNotas} onSaved={loadData} />
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
