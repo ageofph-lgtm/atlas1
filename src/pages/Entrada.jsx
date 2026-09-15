@@ -128,6 +128,15 @@ export default function Entrada({ currentUser }) {
     if (!canSubmit) return;
     setIsSubmitting(true);
     try {
+      // Trava: o cone (cor + nº) tem de ser único entre as máquinas no pátio.
+      if (needsCone && coneNumero) {
+        const result = await validateConeNumber(categoria, coneNumero);
+        if (!result.free) {
+          setConeError(`Cone ${coneNumero} ${coneCor} já está em uso — NS ${result.conflito.serie}`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
       let maquinaId = existingMaquina?.id;
 
       if (!maquinaId) {

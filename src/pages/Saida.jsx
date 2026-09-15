@@ -128,14 +128,23 @@ export default function Saida({ currentUser }) {
   };
 
   const handleRetorno = async () => {
-    if (!retornoModal || retornoConeError) return;
+    if (!retornoModal) return;
     setActing(retornoModal.id);
     try {
+      const cor = CATEGORIA_CONE_MAP[retornoModal.categoria];
+      // Trava: o cone (cor + nº) tem de ser único entre as máquinas no pátio.
+      if (cor && retornoConeNumero) {
+        const result = await validateConeNumber(retornoModal.categoria, retornoConeNumero, retornoModal.id);
+        if (!result.free) {
+          setRetornoConeError(`Cone ${retornoConeNumero} ${cor} já está em uso — NS ${result.conflito.serie}`);
+          setActing(null);
+          return;
+        }
+      }
       const now = new Date().toISOString();
       const dias = retornoModal.data_saida
         ? Math.ceil((new Date(now) - new Date(retornoModal.data_saida)) / (1000 * 60 * 60 * 24))
         : 0;
-      const cor = CATEGORIA_CONE_MAP[retornoModal.categoria];
       const coneNumero = cor ? retornoConeNumero : null;
       await base44.entities.Ciclo.update(retornoModal.id, {
         estado: "fechado",

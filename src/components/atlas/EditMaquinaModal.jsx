@@ -85,6 +85,15 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
     if (coneError || !serie.trim()) return;
     setSaving(true);
     try {
+      // Trava: o cone (cor + nº) tem de ser único entre as máquinas no pátio.
+      if (needsCone && coneNumero) {
+        const result = await validateConeNumber(categoria, coneNumero, ciclo?.id);
+        if (!result.free) {
+          setConeError(`Cone ${coneNumero} ${effectiveConeCor} já está em uso — NS ${result.conflito.serie}`);
+          setSaving(false);
+          return;
+        }
+      }
       const cicloUpdates = {};
       if (categoria !== (ciclo?.categoria || "")) {
         cicloUpdates.categoria = categoria;

@@ -1,7 +1,8 @@
 import { base44 } from "@/api/base44Client";
 import { CATEGORIA_CONE_MAP } from "@/components/atlas/constants";
 
-const ACTIVE_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "pronta", "manutencao"];
+// A cone is locked while the machine is in the yard. It only frees up after saída (em_aluguer) or closure (fechado).
+const ACTIVE_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "pronta", "manutencao", "retorno"];
 
 export async function validateConeNumber(categoria, numero, excludeCicloId) {
   const coneCor = CATEGORIA_CONE_MAP[categoria];
