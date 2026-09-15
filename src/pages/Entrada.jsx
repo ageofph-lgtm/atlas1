@@ -44,7 +44,7 @@ export default function Entrada({ currentUser }) {
   const [notas, setNotas] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const NOTA_LABELS = ["Duplicada", "Não funciona"];
+  const NOTA_LABELS = ["Duplicada", "Não funciona", "Garfos 2400", "Mau estado"];
   const toggleNotaLabel = (label) => {
     setNotas((prev) => {
       const text = prev || "";

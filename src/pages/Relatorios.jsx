@@ -4,6 +4,7 @@ import { RefreshCw, TrendingUp, TrendingDown, Package, Clock, Calendar } from "l
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import BackupPanel from "@/components/atlas/BackupPanel";
 
 const CATEGORIA_COLORS = {
   str: "#f59e0b",
@@ -153,6 +154,9 @@ export default function Relatorios({ currentUser, userPermissions }) {
 
   return (
     <div className="space-y-6">
+      {/* Backup / restore — admin only */}
+      {currentUser?.perfil === "administrador" && <BackupPanel />}
+
       {/* Period selector + refresh */}
       <div className="flex items-center justify-between">
         <div className="flex gap-2">

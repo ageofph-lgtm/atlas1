@@ -17,8 +17,8 @@ export default function MaquinaNotas({ maquina, canNotas = false, onSaved, varia
   if (variant === "preview") {
     if (!nota) return null;
     return (
-      <div className="flex items-start gap-2 text-sm text-amber-200 bg-amber-500/10 border border-amber-500/30 border-l-4 border-l-amber-500 rounded-md px-2.5 py-1.5">
-        <StickyNote className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-400" />
+      <div className="flex items-start gap-2 text-sm text-slate-100 bg-amber-500/10 border border-amber-500/30 border-l-4 border-l-amber-500 rounded-md px-2.5 py-1.5">
+        <StickyNote className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-500" />
         <span className="line-clamp-2 break-words font-medium leading-snug">{nota}</span>
       </div>
     );
@@ -45,8 +45,8 @@ export default function MaquinaNotas({ maquina, canNotas = false, onSaved, varia
     <div onClick={(e) => e.stopPropagation()}>
       {nota && !editing && (
         <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 border-l-4 border-l-amber-500 rounded-md px-2.5 py-2">
-          <StickyNote className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-400" />
-          <p className="text-sm text-amber-100 whitespace-pre-wrap break-words flex-1 font-medium leading-snug">{nota}</p>
+          <StickyNote className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-500" />
+          <p className="text-sm text-slate-100 whitespace-pre-wrap break-words flex-1 font-medium leading-snug">{nota}</p>
           {canNotas && (
             <button onClick={startEdit} className="text-amber-400/70 hover:text-amber-400 flex-shrink-0" title="Editar nota">
               <Pencil className="w-3.5 h-3.5" />
