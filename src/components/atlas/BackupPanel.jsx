@@ -5,6 +5,16 @@ import { Download, Upload, Loader2, ShieldCheck } from "lucide-react";
 const BACKUP_ENTITIES = ["Maquina", "Ciclo", "EventoCiclo", "Pedido", "OrdemServico", "FrotaACP", "Notificacao"];
 const BUILTIN_FIELDS = ["id", "created_date", "updated_date", "created_by_id"];
 
+const NATURAL_KEYS = {
+  Maquina: (r) => r.serie || null,
+  Ciclo: (r) => `${r.maquina_id}|${r.estado}|${r.data_entrada || ""}`,
+  EventoCiclo: (r) => `${r.ciclo_id}|${r.de_estado || ""}|${r.para_estado}|${r.nota || ""}`,
+  Pedido: (r) => `${r.cliente}|${r.estado}|${r.data_necessaria || ""}`,
+  OrdemServico: (r) => `${r.serie}|${r.cliente || ""}`,
+  FrotaACP: (r) => r.serie || null,
+  Notificacao: (r) => `${r.userId}|${r.message}|${r.osId || ""}`,
+};
+
 const strip = (rec) => {
   const out = { ...rec };
   BUILTIN_FIELDS.forEach((f) => delete out[f]);
@@ -60,12 +70,19 @@ export default function BackupPanel() {
         if (!data?.entities) throw new Error("formato inválido");
         const summary = {};
         for (const name of BACKUP_ENTITIES) {
-          const recs = (data.entities[name] || []).map(strip);
+          const existing = await base44.entities[name].list("-created_date", 5000);
+          const existingKeys = new Set(existing.map(NATURAL_KEYS[name]).filter(Boolean));
+          const recs = (data.entities[name] || [])
+            .map(strip)
+            .filter((r) => {
+              const k = NATURAL_KEYS[name](r);
+              return k ? !existingKeys.has(k) : true;
+            });
           if (recs.length) await chunkCreate(name, recs);
-          summary[name] = recs.length;
+          summary[name] = { noFicheiro: (data.entities[name] || []).length, importados: recs.length, ignorados: (data.entities[name] || []).length - recs.length };
         }
-        const total = Object.values(summary).reduce((s, r) => s + r, 0);
-        setStatus({ type: "ok", msg: `Restauro concluído: ${total} registos importados.` });
+        const total = Object.values(summary).reduce((s, r) => s + r.importados, 0);
+        setStatus({ type: "ok", msg: `Restauro concluído: ${total} registos importados (ignorados os já existentes).` });
       } catch (_err) {
         setStatus({ type: "err", msg: "Ficheiro inválido ou erro no restauro." });
       } finally {
