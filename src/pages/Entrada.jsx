@@ -41,6 +41,7 @@ export default function Entrada({ currentUser }) {
   const [estadoInicial, setEstadoInicial] = useState("classificada");
   const [coneNumero, setConeNumero] = useState("");
   const [coneError, setConeError] = useState("");
+  const [notas, setNotas] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Live search when serie changes
@@ -152,6 +153,7 @@ export default function Entrada({ currentUser }) {
           acessorios: specs.acessorios || [],
           h3: specs.h3 || "",
           bateria: specs.bateria || "",
+          observacoes: notas || "",
         });
         maquinaId = newMaquina.id;
       } else {
@@ -166,6 +168,7 @@ export default function Entrada({ currentUser }) {
           acessorios: specs.acessorios?.length ? specs.acessorios : existingMaquina.acessorios,
           h3: specs.h3 || existingMaquina.h3 || "",
           bateria: specs.bateria || existingMaquina.bateria || "",
+          observacoes: notas || existingMaquina.observacoes || "",
         });
       }
 
@@ -223,6 +226,7 @@ export default function Entrada({ currentUser }) {
       setEstadoInicial("classificada");
       setConeNumero("");
       setConeError("");
+      setNotas("");
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
     }
@@ -406,6 +410,17 @@ export default function Entrada({ currentUser }) {
                 );
               })}
             </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-slate-300 mb-2">Notas / Observações <span className="text-slate-600 font-normal">(opcional)</span></h3>
+            <textarea
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
+              placeholder="Notas visíveis no card da máquina..."
+              rows={3}
+              className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm resize-y"
+            />
           </div>
 
           <div className="flex gap-3">
