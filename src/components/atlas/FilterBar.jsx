@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search, Filter, RefreshCw, Loader2 } from "lucide-react";
-import { FILTER_OPTIONS } from "@/components/atlas/constants";
+import { FILTER_OPTIONS, CONE_COLORS } from "@/components/atlas/constants";
 
 const ADVANCED_FILTERS = ["estado", "mastro", "vias_mastro", "tipo_pneu"];
 
@@ -18,11 +18,13 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
     (key) => filters[key] && filters[key] !== "all"
   ).length;
 
-  const hasAnyFilter = activeAdvancedCount > 0 || (filters.categoria && filters.categoria !== "all");
+  const hasAnyFilter = activeAdvancedCount > 0 || (filters.categoria && filters.categoria !== "all") || (filters.coneCor && filters.coneCor !== "all") || (filters.coneNumero && filters.coneNumero.trim());
 
   const handleClear = () => {
     ADVANCED_FILTERS.forEach((key) => onFilterChange(key, "all"));
     onFilterChange("categoria", "all");
+    onFilterChange("coneCor", "all");
+    onFilterChange("coneNumero", "");
   };
 
   return (
@@ -86,6 +88,29 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
               {o.label}
             </button>
           ))}
+        </div>
+
+        {/* Cone filter — exact match on (cor + nº) */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-wide text-slate-600">CONE</span>
+          <select
+            value={filters.coneCor || "all"}
+            onChange={(e) => onFilterChange("coneCor", e.target.value)}
+            className="bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-xs px-2 py-1 focus:border-amber-500 focus:outline-none cursor-pointer"
+          >
+            <option value="all">Cor</option>
+            {CONE_COLORS.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={filters.coneNumero || ""}
+            onChange={(e) => onFilterChange("coneNumero", e.target.value)}
+            placeholder="Nº"
+            className="w-16 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-xs px-2 py-1 focus:border-amber-500 focus:outline-none"
+          />
         </div>
 
         {hasAnyFilter && (

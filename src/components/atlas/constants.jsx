@@ -124,6 +124,7 @@ export const FILTER_OPTIONS = {
 };
 
 export const INVENTARIO_TABS = [
+  { key: 'todas', label: 'TODAS' },
   { key: 'por_fazer', label: 'POR FAZER' },
   { key: 'prontas', label: 'PRONTAS' },
   { key: 'recon', label: 'RECON' },

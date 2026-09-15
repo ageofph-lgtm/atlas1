@@ -2,7 +2,9 @@ import { SPEC_LABELS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 
 // Tokenized, case-insensitive search across ciclo + maquina fields.
 // OR logic: any token matches any field — easy to find by any term
-// (serie, modelo, triplex, niho, nº do cone, cliente, ...).
+// (serie, modelo, triplex, niho, cliente, ...).
+// Cone NUMBER is NOT searched here (use the dedicated cone filter for that,
+// so digits don't broadly match series/ano/etc.).
 export const matchCicloSearch = (ciclo, maquina, query) => {
   if (!query || !query.trim()) return true;
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
@@ -16,8 +18,6 @@ export const matchCicloSearch = (ciclo, maquina, query) => {
     ciclo?.categoria,
     catLabel,
     ciclo?.cone_cor,
-    ciclo?.cone_numero != null ? "cone" : "",
-    ciclo?.cone_numero,
     ciclo?.reserva_cliente,
     maquina?.modelo,
     maquina?.ano,

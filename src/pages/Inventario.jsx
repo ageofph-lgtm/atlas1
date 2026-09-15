@@ -23,9 +23,9 @@ export default function Inventario({ currentUser, userPermissions }) {
 
   const [ciclos, setCiclos] = useState([]);
   const [maquinas, setMaquinas] = useState([]);
-  const [activeTab, setActiveTab] = useState("por_fazer");
+  const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all" });
+  const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all", coneCor: "all", coneNumero: "" });
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
   const [editCiclo, setEditCiclo] = useState(null);
@@ -40,11 +40,8 @@ export default function Inventario({ currentUser, userPermissions }) {
     if (!silent) setIsLoading(true);
     try {
       const allCiclos = await base44.entities.Ciclo.list("-created_date", 500);
-      const visibleCiclos = currentUser?.perfil === "administrador"
-        ? allCiclos
-        : allCiclos.filter((c) => c.estado !== "fechado");
       const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
-      setCiclos(visibleCiclos);
+      setCiclos(allCiclos);
       setMaquinas(allMaquinas);
     } catch (e) {
       console.error(e);
@@ -107,6 +104,9 @@ export default function Inventario({ currentUser, userPermissions }) {
     if (filters.mastro !== "all" && maquina?.mastro !== filters.mastro) return false;
     if (filters.vias_mastro !== "all" && maquina?.vias_mastro !== filters.vias_mastro) return false;
     if (filters.tipo_pneu !== "all" && maquina?.tipo_pneu !== filters.tipo_pneu) return false;
+    // Cone filter — exact match on (cor + nº), so digits don't broadly match series.
+    if (filters.coneCor && filters.coneCor !== "all" && ciclo.cone_cor !== filters.coneCor) return false;
+    if (filters.coneNumero && filters.coneNumero.trim() && String(ciclo.cone_numero ?? "") !== String(filters.coneNumero.trim())) return false;
     return true;
   };
 
@@ -115,6 +115,7 @@ export default function Inventario({ currentUser, userPermissions }) {
 
   const tabFilter = (tabKey, c) => {
     switch (tabKey) {
+      case "todas": return true;
       case "por_fazer": return POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata";
       case "prontas": return c.estado === "pronta";
       case "recon": return c.categoria === "recon";
@@ -148,6 +149,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   // Tab filter
   const getTabCiclos = () => {
     switch (activeTab) {
+      case "todas": return ciclos;
       case "por_fazer": return ciclos.filter((c) => POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata");
       case "prontas": return ciclos.filter((c) => c.estado === "pronta");
       case "recon": return ciclos.filter((c) => c.categoria === "recon");
@@ -187,7 +189,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     const disabled = isTabDisabled(activeTab);
     const empty = tabCounts[activeTab] === 0;
     if (disabled || empty) {
-      setActiveTab(tabCounts.por_fazer > 0 ? "por_fazer" : "prontas");
+      setActiveTab("todas");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.categoria]);
