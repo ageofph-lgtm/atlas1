@@ -44,6 +44,21 @@ export default function Entrada({ currentUser }) {
   const [notas, setNotas] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const NOTA_LABELS = ["Duplicada", "Não funciona"];
+  const toggleNotaLabel = (label) => {
+    setNotas((prev) => {
+      const text = prev || "";
+      const idx = text.toLowerCase().indexOf(label.toLowerCase());
+      if (idx !== -1) {
+        const before = text.slice(0, idx).replace(/[,\s]+$/, "");
+        const after = text.slice(idx + label.length).replace(/^[,\s]+/, "");
+        return (before + (after ? " " + after : "")).trim();
+      }
+      const sep = text && !text.endsWith(" ") ? " " : "";
+      return (text + sep + label).trim();
+    });
+  };
+
   // Live search when serie changes
   useEffect(() => {
     if (serie.length < 3) {
@@ -414,6 +429,24 @@ export default function Entrada({ currentUser }) {
 
           <div>
             <h3 className="text-sm font-medium text-slate-300 mb-2">Notas / Observações <span className="text-slate-600 font-normal">(opcional)</span></h3>
+            <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+              <span className="text-[10px] uppercase tracking-wide text-slate-600">Rótulos:</span>
+              {NOTA_LABELS.map((label) => {
+                const active = (notas || "").toLowerCase().includes(label.toLowerCase());
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => toggleNotaLabel(label)}
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors ${
+                      active ? "bg-amber-500 text-slate-900 border-amber-500" : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
             <textarea
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
