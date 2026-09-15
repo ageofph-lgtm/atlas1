@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, Check, ArrowRight, ArrowLeft, Package, Info } from "lucide-react";
+import { Search, Check, ArrowRight, ArrowLeft, Package, Info, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import PhotoCapture from "@/components/atlas/PhotoCapture";
 import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
@@ -35,6 +35,7 @@ export default function Entrada({ currentUser }) {
   const [existingMaquina, setExistingMaquina] = useState(null);
   const [passagens, setPassagens] = useState(0);
   const [ultimaSaida, setUltimaSaida] = useState(null);
+  const [cicloAtivo, setCicloAtivo] = useState(null);
   const [searching, setSearching] = useState(false);
   const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
   const [categoria, setCategoria] = useState("");
@@ -65,6 +66,7 @@ export default function Entrada({ currentUser }) {
       setExistingMaquina(null);
       setPassagens(0);
       setUltimaSaida(null);
+      setCicloAtivo(null);
       return;
     }
     setSearching(true);
@@ -91,10 +93,13 @@ export default function Entrada({ currentUser }) {
             .filter((c) => c.data_saida)
             .sort((a, b) => new Date(b.data_saida) - new Date(a.data_saida));
           setUltimaSaida(saidas[0]?.data_saida || null);
+          const ativos = ciclos.filter((c) => !c.data_saida && c.estado !== "fechado");
+          setCicloAtivo(ativos.length > 0 ? ativos.sort((a, b) => new Date(b.data_entrada) - new Date(a.data_entrada))[0] : null);
         } else {
           setExistingMaquina(null);
           setPassagens(0);
           setUltimaSaida(null);
+          setCicloAtivo(null);
         }
       } catch (_e) {
         // ignore
@@ -125,7 +130,7 @@ export default function Entrada({ currentUser }) {
     });
   };
 
-  const canProceedStep1 = serie.length >= 3;
+  const canProceedStep1 = serie.length >= 3 && !cicloAtivo;
   const coneCor = CATEGORIA_CONE_MAP[categoria] || null;
   const needsCone = !!coneCor;
   const canSubmit = categoria && (!needsCone || (coneNumero && !coneError));
@@ -144,6 +149,14 @@ export default function Entrada({ currentUser }) {
     if (!canSubmit) return;
     setIsSubmitting(true);
     try {
+      // Trava: não permitir re-registar máquina que ainda não deu saída.
+      const ciclosCheck = await base44.entities.Ciclo.filter({ serie });
+      const ativo = ciclosCheck.find((c) => !c.data_saida && c.estado !== "fechado");
+      if (ativo) {
+        toast({ variant: "destructive", title: "Máquina já no pátio", description: `NS ${serie} ainda não deu saída.` });
+        setIsSubmitting(false);
+        return;
+      }
       // Trava: o cone (cor + nº) tem de ser único entre as máquinas no pátio.
       if (needsCone && coneNumero) {
         const result = await validateConeNumber(categoria, coneNumero);
@@ -236,6 +249,7 @@ export default function Entrada({ currentUser }) {
       setExistingMaquina(null);
       setPassagens(0);
       setUltimaSaida(null);
+      setCicloAtivo(null);
       setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
       setCategoria("");
       setEstadoInicial("classificada");
@@ -295,7 +309,22 @@ export default function Entrada({ currentUser }) {
             </div>
           </div>
 
-          {serie.length >= 3 && !searching && existingMaquina && (
+          {serie.length >= 3 && !searching && existingMaquina && cicloAtivo && (
+            <div className="bg-red-500/15 border-2 border-red-500/50 rounded-xl p-5">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-8 h-8 text-red-400 flex-shrink-0" />
+                <div>
+                  <p className="text-lg font-bold text-red-300">Máquina já existe e não deu saída</p>
+                  <p className="text-sm text-red-400/80 mt-1">
+                    NS <span className="font-bold">{serie}</span> ainda se encontra no pátio
+                    {cicloAtivo.estado ? ` (${cicloAtivo.estado.replace(/_/g, " ")})` : ""}.
+                    Não é possível registar novamente enquanto não tiver saída.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {serie.length >= 3 && !searching && existingMaquina && !cicloAtivo && (
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-start gap-2">
               <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-300">
