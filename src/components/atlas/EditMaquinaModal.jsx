@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
+import { isCategoriaSemEstado, estadoEfetivo } from "@/components/atlas/cicloUtils";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -37,6 +38,8 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
   const serieChanged = serie.trim().length > 0 && serie.trim() !== (maquina?.serie || "");
   const effectiveConeCor = CATEGORIA_CONE_MAP[categoria] || null;
   const needsCone = !!effectiveConeCor;
+  // Sucata/indefinida não têm estado de fluxo — ficam sempre em "indefinido".
+  const semEstado = isCategoriaSemEstado(categoria);
 
   useEffect(() => {
     if (maquina) {
@@ -50,7 +53,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
         bateria: maquina.bateria || "",
       });
       setCategoria(ciclo?.categoria || "");
-      setEstado(ciclo?.estado || "");
+      setEstado(estadoEfetivo(ciclo) || "");
       setTipoSaida(ciclo?.tipo_saida || "");
       setClienteSaida(ciclo?.reserva_cliente || "");
       setDiasAlugada(ciclo?.dias_alugada ?? "");
@@ -103,8 +106,18 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
         cicloUpdates.cone_numero = coneNumero || null;
         cicloUpdates.cone_cor = effectiveConeCor;
       }
+      // A categoria manda no estado: sucata/indefinida ficam sempre em "indefinido",
+      // e ao sair dessas categorias a máquina volta ao fluxo como "classificada".
+      const categoriaMudou = categoria !== (ciclo?.categoria || "");
+      const estadoFinal = semEstado
+        ? "indefinido"
+        : estado && estado !== "indefinido"
+          ? estado
+          : "classificada";
+      if (estadoFinal !== (ciclo?.estado || "") && (isAdmin || categoriaMudou)) {
+        cicloUpdates.estado = estadoFinal;
+      }
       if (isAdmin) {
-        if (estado !== (ciclo?.estado || "")) cicloUpdates.estado = estado;
         if (tipoSaida !== (ciclo?.tipo_saida || "")) cicloUpdates.tipo_saida = tipoSaida || null;
         if (clienteSaida !== (ciclo?.reserva_cliente || "")) cicloUpdates.reserva_cliente = clienteSaida;
         if (diasAlugada !== (ciclo?.dias_alugada ?? "")) cicloUpdates.dias_alugada = diasAlugada === "" ? null : Number(diasAlugada);
@@ -265,10 +278,12 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
               <div>
                 <label className="text-xs font-medium text-slate-400 mb-1.5 block">Estado</label>
                 <select
-                  value={estado}
+                  value={semEstado ? "indefinido" : estado}
                   onChange={(e) => setEstado(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm"
+                  disabled={semEstado}
+                  className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm disabled:opacity-60"
                 >
+                  <option value="indefinido">Indefinido</option>
                   <option value="entrada">Entrada</option>
                   <option value="classificada">Classificada</option>
                   <option value="autorizada">Autorizada</option>
@@ -279,6 +294,11 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
                   <option value="retorno">Retorno</option>
                   <option value="fechado">Fechado</option>
                 </select>
+                {semEstado && (
+                  <p className="text-xs text-slate-500 mt-1.5">
+                    Categoria sem fluxo de preparação — o estado fica INDEFINIDO.
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">

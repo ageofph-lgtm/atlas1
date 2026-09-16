@@ -10,7 +10,16 @@ export const ESTADO_CONFIG = {
   manutencao:    { label: 'Manutenção',    short: 'MANUT',   dot: 'bg-ccla', text: 'text-ccla', bg: 'bg-ccla/10', border: 'border-ccla/30' },
   retorno:       { label: 'Retorno',       short: 'RET',     dot: 'bg-ka',   text: 'text-ka',   bg: 'bg-ka/10',   border: 'border-ka/30' },
   fechado:       { label: 'Fechado',       short: 'FECH',    dot: 'bg-kn',   text: 'text-kn',   bg: 'bg-kn/10',   border: 'border-kn/30' },
+  indefinido:    { label: 'Indefinido',    short: 'INDEF',   dot: 'bg-kn',   text: 'text-kn',   bg: 'bg-kn/10',   border: 'border-kn/30' },
 };
+
+// Categorias que não seguem o fluxo de trabalho: ficam sempre em estado "indefinido"
+// (não entram em POR FAZER / PRONTAS nem podem ser autorizadas).
+export const CATEGORIAS_SEM_ESTADO = ['sucata', 'indefinida'];
+
+// Estados que se mantêm mesmo em categorias sem estado — são factos do ciclo
+// (já saiu / já fechou), não etapas de preparação.
+export const ESTADOS_TERMINAIS = ['em_aluguer', 'retorno', 'fechado'];
 
 export const ESTADO_ORDER = [
   'entrada', 'classificada', 'autorizada', 'em_execucao', 'manutencao', 'pronta', 'em_aluguer'
@@ -107,7 +116,8 @@ export const FILTER_OPTIONS = {
     { value: 'em_execucao', label: 'Em Execução' },
     { value: 'manutencao', label: 'Manutenção' },
     { value: 'pronta', label: 'Pronta' },
-    { value: 'em_aluguer', label: 'Em Aluguer' }
+    { value: 'em_aluguer', label: 'Em Aluguer' },
+    { value: 'indefinido', label: 'Indefinido' }
   ],
   mastro: [
     { value: 'all', label: 'Todos' },
@@ -130,5 +140,31 @@ export const INVENTARIO_TABS = [
   { key: 'recon', label: 'RECON' },
   { key: 'uts', label: 'UTS' },
   { key: 'sucata', label: 'SUCATA' },
+  { key: 'indefinida', label: 'INDEFINIDAS' },
   { key: 'em_aluguer', label: 'EM ALUGUER' }
+];
+
+// Famílias de modelo (nomenclatura STILL) — filtros rápidos do inventário.
+// `match` é comparado contra o modelo normalizado (maiúsculas, sem separadores).
+export const MODELO_FAMILIAS = [
+  { value: 'rx20', label: 'RX20', match: ['RX20'] },
+  { value: 'rx60', label: 'RX60', match: ['RX60'] },
+  { value: 'exv',  label: 'EXV',  match: ['EXV'] },
+  { value: 'exu',  label: 'EXU',  match: ['EXU'] },
+  { value: 'rxe',  label: 'RXE',  match: ['RXE'] },
+  { value: 'rce',  label: 'RCE',  match: ['RCE'] },
+  { value: 'fmx',  label: 'FMX',  match: ['FMX'] },
+  { value: 'exh',  label: 'EXH',  match: ['EXH'] },
+];
+
+// Pseudo-família: modelos que não caem em nenhuma das famílias acima.
+export const MODELO_FAMILIA_OUTRAS = { value: 'outras', label: 'Outras', match: [] };
+
+export const AUTORIZACAO_TABS = [
+  { key: 'todas', label: 'TODAS' },
+  { key: 'str', label: 'STR' },
+  { key: 'uts', label: 'UTS' },
+  { key: 'recon', label: 'RECON' },
+  { key: 'sucata', label: 'SUCATA' },
+  { key: 'indefinida', label: 'INDEFINIDA' },
 ];

@@ -11,6 +11,7 @@ import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
+import { estadoEfetivo } from "@/components/atlas/cicloUtils";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
 
@@ -35,7 +36,8 @@ export default function Saida({ currentUser }) {
     if (!silent) setIsLoading(true);
     try {
       const p = await base44.entities.Ciclo.filter({ estado: "pronta" });
-      setProntas(p);
+      // Sucata/indefinida não saem para aluguer — estadoEfetivo põe-nas em "indefinido".
+      setProntas(p.filter((c) => estadoEfetivo(c) === "pronta"));
       const a = await base44.entities.Ciclo.filter({ estado: "em_aluguer" });
       setAlugadas(a);
       const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
