@@ -7,7 +7,6 @@ import FilterBar from "@/components/atlas/FilterBar";
 import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
 import DeleteMaquinaModal from "@/components/atlas/DeleteMaquinaModal";
-import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
 import TarefasModal from "@/components/atlas/TarefasModal";
 import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
@@ -30,7 +29,6 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [editMaquina, setEditMaquina] = useState(null);
   const [editCiclo, setEditCiclo] = useState(null);
   const [deleteMaquina, setDeleteMaquina] = useState(null);
-  const [saidaRapidaCiclo, setSaidaRapidaCiclo] = useState(null);
   const [autorizarCicloState, setAutorizarCicloState] = useState(null);
   const [autorizando, setAutorizando] = useState(null);
   const [syncing, setSyncing] = useState(false);
@@ -286,14 +284,12 @@ export default function Inventario({ currentUser, userPermissions }) {
               canEditMaquina={canEditMaquinaRecord(currentUser, getMaquina(c))}
               canReservar={userPermissions?.canReservar}
               canDeleteMaquina={userPermissions?.canDeleteMaquina}
-              canSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") && c.estado === "pronta"}
               canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
               canNotas={userPermissions?.canNotas}
               onNotasSaved={loadData}
               onEdit={canEditMaquinaRecord(currentUser, getMaquina(c)) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
               onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
               onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}
-              onSaidaRapida={(currentUser?.perfil === "logistica" || currentUser?.perfil === "administrador") ? (ciclo) => setSaidaRapidaCiclo(ciclo) : null}
               onAutorizar={(currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota") ? (ciclo) => setAutorizarCicloState(ciclo) : null}
             />
           ))}
@@ -323,13 +319,6 @@ export default function Inventario({ currentUser, userPermissions }) {
         open={!!deleteMaquina}
         onClose={() => setDeleteMaquina(null)}
         onConfirm={handleDeleteMaquina}
-      />
-      <SaidaRapidaModal
-        open={!!saidaRapidaCiclo}
-        preselectedCiclo={saidaRapidaCiclo}
-        currentUser={currentUser}
-        onClose={() => setSaidaRapidaCiclo(null)}
-        onDone={loadData}
       />
       <TarefasModal
         open={!!autorizarCicloState}

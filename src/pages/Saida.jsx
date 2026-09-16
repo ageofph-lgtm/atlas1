@@ -29,6 +29,7 @@ export default function Saida({ currentUser }) {
   const [acting, setActing] = useState(null);
   const [saidaModal, setSaidaModal] = useState(null); // ciclo being given saída
   const [cliente, setCliente] = useState("");
+  const [tipoSaida, setTipoSaida] = useState("alugada");
   const [saidaRapidaOpen, setSaidaRapidaOpen] = useState(false);
   const [retornoRapidoOpen, setRetornoRapidoOpen] = useState(false);
   const [retornoModal, setRetornoModal] = useState(null);
@@ -88,6 +89,7 @@ export default function Saida({ currentUser }) {
   const openSaidaModal = (ciclo) => {
     setSaidaModal(ciclo);
     setCliente(ciclo.reserva_cliente || "");
+    setTipoSaida("alugada");
   };
 
   const handleDarSaida = async () => {
@@ -95,9 +97,13 @@ export default function Saida({ currentUser }) {
     setActing(saidaModal.id);
     try {
       const now = new Date().toISOString();
+      // Uma máquina vendida não volta: o ciclo fecha já. Alugada fica a aguardar retorno.
+      const vendida = tipoSaida === "vendida";
+      const novoEstado = vendida ? "fechado" : "em_aluguer";
       const updateData = {
-        estado: "em_aluguer",
+        estado: novoEstado,
         data_saida: now,
+        tipo_saida: tipoSaida,
       };
       // Update reserva_cliente if changed or set
       if (cliente && cliente !== saidaModal.reserva_cliente) {
@@ -108,13 +114,17 @@ export default function Saida({ currentUser }) {
         ciclo_id: saidaModal.id,
         serie: saidaModal.serie,
         de_estado: "pronta",
-        para_estado: "em_aluguer",
+        para_estado: novoEstado,
         autor,
-        nota: cliente ? `Saída para ${cliente}` : "Saída para aluguer",
+        nota: `${vendida ? "Venda" : "Saída para aluguer"}${cliente ? ` — ${cliente}` : ""}`,
       });
-      toast({ title: "✓ Saída registada", description: `NS: ${saidaModal.serie}` });
+      toast({
+        title: vendida ? "✓ Venda registada" : "✓ Saída registada",
+        description: `NS: ${saidaModal.serie}`,
+      });
       setSaidaModal(null);
       setCliente("");
+      setTipoSaida("alugada");
       loadData();
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
@@ -393,6 +403,40 @@ export default function Saida({ currentUser }) {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
+              <Label className="text-slate-400 text-xs mb-1.5 block">Tipo de saída</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: "alugada", label: "ALUGADA", hint: "volta ao pátio no retorno" },
+                  { value: "vendida", label: "VENDIDA", hint: "sai definitivamente" },
+                ].map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => setTipoSaida(o.value)}
+                    className={`p-3 rounded-lg border-2 text-left transition-all ${
+                      tipoSaida === o.value
+                        ? o.value === "vendida"
+                          ? "border-purple-500 bg-purple-500/10"
+                          : "border-cyan-500 bg-cyan-500/10"
+                        : "border-slate-700 bg-slate-900 hover:border-slate-600"
+                    }`}
+                  >
+                    <span
+                      className={`text-sm font-bold ${
+                        tipoSaida === o.value
+                          ? o.value === "vendida" ? "text-purple-300" : "text-cyan-300"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {o.label}
+                    </span>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{o.hint}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <Label className="text-slate-400 text-xs mb-1.5 flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5" /> Cliente
               </Label>
@@ -412,10 +456,10 @@ export default function Saida({ currentUser }) {
             <Button
               onClick={handleDarSaida}
               disabled={acting === saidaModal?.id}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className={tipoSaida === "vendida" ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-green-600 hover:bg-green-700 text-white"}
             >
               {acting === saidaModal?.id ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <ArrowRight className="w-4 h-4 mr-1" />}
-              Confirmar Saída
+              {tipoSaida === "vendida" ? "Confirmar Venda" : "Confirmar Saída"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -151,3 +151,11 @@ export const tabFilterCiclo = (tabKey, ciclo) => {
     default: return false;
   }
 };
+
+/**
+ * Uma saída é venda só quando está marcada como tal. Os ciclos antigos não
+ * têm tipo_saida porque a venda não existia no fluxo — nessa altura toda a
+ * saída era aluguer, por isso contá-los como aluguer é a leitura correta.
+ */
+export const isVenda = (ciclo) => ciclo?.tipo_saida === "vendida";
+export const isAluguer = (ciclo) => !!ciclo?.data_saida && !isVenda(ciclo);

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar } from "lucide-react";
+import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar, Tag } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import BackupPanel from "@/components/atlas/BackupPanel";
 import HistoricoCiclos from "@/components/atlas/HistoricoCiclos";
 import ManutencaoCiclosPanel from "@/components/atlas/ManutencaoCiclosPanel";
+import { isVenda, isAluguer } from "@/components/atlas/cicloUtils";
 
 const CATEGORIA_COLORS = {
   str: "#f59e0b",
@@ -60,6 +61,8 @@ export default function Relatorios({ currentUser, userPermissions }) {
   const stats = useMemo(() => {
     const entradas = ciclos.filter((c) => c.data_entrada && isAfter(new Date(c.data_entrada), periodStart));
     const saidas = ciclos.filter((c) => c.data_saida && isAfter(new Date(c.data_saida), periodStart));
+    const vendidas = saidas.filter(isVenda);
+    const alugadas = saidas.filter(isAluguer);
 
     const activeByCategoria = {
       str: ciclos.filter((c) => c.categoria === "str" && c.estado !== "fechado").length,
@@ -84,7 +87,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
       ? Math.round((withFila.reduce((s, c) => s + (new Date(c.data_autorizacao) - new Date(c.data_entrada)), 0) / withFila.length / (1000 * 60 * 60 * 24)) * 10) / 10
       : 0;
 
-    return { entradas, saidas, activeByCategoria, mediaDias, mediaPrateleira, mediaFila };
+    return { entradas, saidas, vendidas, alugadas, activeByCategoria, mediaDias, mediaPrateleira, mediaFila };
   }, [ciclos, periodStart]);
 
   // Daily chart data
@@ -94,7 +97,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
     for (let i = numDays - 1; i >= 0; i--) {
       const d = startOfDay(subDays(new Date(), i));
       const key = format(d, "yyyy-MM-dd");
-      days[key] = { day: format(d, "dd/MM"), entradas: 0, saidas: 0 };
+      days[key] = { day: format(d, "dd/MM"), entradas: 0, alugadas: 0, vendidas: 0 };
     }
     stats.entradas.forEach((c) => {
       const key = format(new Date(c.data_entrada), "yyyy-MM-dd");
@@ -102,7 +105,9 @@ export default function Relatorios({ currentUser, userPermissions }) {
     });
     stats.saidas.forEach((c) => {
       const key = format(new Date(c.data_saida), "yyyy-MM-dd");
-      if (days[key]) days[key].saidas++;
+      if (!days[key]) return;
+      if (isVenda(c)) days[key].vendidas++;
+      else days[key].alugadas++;
     });
     return Object.values(days);
   }, [stats, periodStart]);
@@ -149,6 +154,8 @@ export default function Relatorios({ currentUser, userPermissions }) {
   const statCards = [
     { label: "Entradas", value: stats.entradas.length, icon: TrendingUp, color: "text-green-400", bg: "bg-green-500/10" },
     { label: "Saídas", value: stats.saidas.length, icon: TrendingDown, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+    { label: "Alugadas", value: stats.alugadas.length, icon: TrendingDown, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+    { label: "Vendidas", value: stats.vendidas.length, icon: Tag, color: "text-purple-400", bg: "bg-purple-500/10" },
     { label: "Média dias alugada", value: stats.mediaDias, icon: Calendar, color: "text-amber-400", bg: "bg-amber-500/10" },
     { label: "Méd. prateleira (dias)", value: stats.mediaPrateleira, icon: Clock, color: "text-purple-400", bg: "bg-purple-500/10" },
     { label: "Méd. fila (dias)", value: stats.mediaFila, icon: Clock, color: "text-blue-400", bg: "bg-blue-500/10" },
@@ -220,7 +227,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Entradas vs saídas por dia */}
         <div className="glass border border-slate-700 rounded-lg p-4">
-          <h3 className="text-sm font-bold text-slate-300 mb-4">Entradas vs Saídas por dia</h3>
+          <h3 className="text-sm font-bold text-slate-300 mb-4">Entradas vs saídas por dia</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={dailyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -229,7 +236,8 @@ export default function Relatorios({ currentUser, userPermissions }) {
               <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px" }} />
               <Legend />
               <Bar dataKey="entradas" fill="#22c55e" name="Entradas" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="saidas" fill="#06b6d4" name="Saídas" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="alugadas" fill="#06b6d4" name="Alugadas" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="vendidas" fill="#a855f7" name="Vendidas" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -276,6 +284,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
               <tr className="border-b border-slate-700 text-slate-500 text-xs uppercase">
                 <th className="text-left p-3 font-medium">NS</th>
                 <th className="text-left p-3 font-medium">Modelo</th>
+                <th className="text-left p-3 font-medium">Tipo</th>
                 <th className="text-left p-3 font-medium">Cliente</th>
                 <th className="text-left p-3 font-medium">Data saída</th>
                 <th className="text-left p-3 font-medium">Data retorno</th>
@@ -285,13 +294,18 @@ export default function Relatorios({ currentUser, userPermissions }) {
             <tbody>
               {historicoSaidas.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-500">Sem saídas no período</td>
+                  <td colSpan={7} className="p-6 text-center text-slate-500">Sem saídas no período</td>
                 </tr>
               ) : (
                 historicoSaidas.map((c) => (
                   <tr key={c.id} className="border-b border-slate-700/50 hover:bg-slate-700/20">
                     <td className="p-3 font-bold text-slate-200">{c.serie}</td>
                     <td className="p-3 text-slate-400">{c.modelo}</td>
+                    <td className="p-3">
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${isVenda(c) ? "bg-purple-500/15 text-purple-300" : "bg-cyan-500/15 text-cyan-300"}`}>
+                        {isVenda(c) ? "VENDIDA" : "ALUGADA"}
+                      </span>
+                    </td>
                     <td className="p-3 text-slate-400">{c.reserva_cliente || "—"}</td>
                     <td className="p-3 text-slate-400">{c.data_saida ? format(new Date(c.data_saida), "dd/MM/yyyy") : "—"}</td>
                     <td className="p-3 text-slate-400">{c.data_retorno ? format(new Date(c.data_retorno), "dd/MM/yyyy") : "—"}</td>
