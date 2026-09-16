@@ -77,12 +77,12 @@ export default function Relatorios({ currentUser, userPermissions }) {
       ? Math.round((closedWithDias.reduce((s, c) => s + c.dias_alugada, 0) / closedWithDias.length) * 10) / 10
       : 0;
 
-    const withPrateleira = ciclos.filter((c) => c.data_pronta && c.data_saida);
+    const withPrateleira = ciclos.filter((c) => c.data_pronta && c.data_saida && (new Date(c.data_saida) - new Date(c.data_pronta)) >= 0);
     const mediaPrateleira = withPrateleira.length > 0
       ? Math.round((withPrateleira.reduce((s, c) => s + (new Date(c.data_saida) - new Date(c.data_pronta)), 0) / withPrateleira.length / (1000 * 60 * 60 * 24)) * 10) / 10
       : 0;
 
-    const withFila = ciclos.filter((c) => c.data_entrada && c.data_autorizacao);
+    const withFila = ciclos.filter((c) => c.data_entrada && c.data_autorizacao && (new Date(c.data_autorizacao) - new Date(c.data_entrada)) >= 0);
     const mediaFila = withFila.length > 0
       ? Math.round((withFila.reduce((s, c) => s + (new Date(c.data_autorizacao) - new Date(c.data_entrada)), 0) / withFila.length / (1000 * 60 * 60 * 24)) * 10) / 10
       : 0;
