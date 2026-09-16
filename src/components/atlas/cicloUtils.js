@@ -102,3 +102,26 @@ export const passesCicloFilters = (ciclo, maquina, filters = {}) => {
   if (!matchModeloFamilia(maquina, filters.modelos)) return false;
   return true;
 };
+
+// Estados em que a máquina está fora do pátio mas o ciclo continua aberto.
+// Um ciclo só está mesmo encerrado quando fica "fechado".
+export const ESTADOS_FORA_DO_PATIO = ["em_aluguer", "retorno"];
+
+const maisRecente = (campo) => (a, b) => new Date(b[campo] || b.created_date) - new Date(a[campo] || a.created_date);
+
+/**
+ * Separa os ciclos por fechar de uma série em dois casos, que pedem respostas
+ * diferentes na entrada:
+ *  - noPatio → a máquina nunca saiu; registá-la outra vez seria duplicá-la.
+ *  - fora    → saiu para aluguer e está a voltar; o ciclo tem de ser fechado
+ *              como retorno antes de abrir o novo.
+ */
+export const classificarCiclosAbertos = (ciclos = []) => {
+  const abertos = ciclos.filter((c) => c.estado !== "fechado");
+  const fora = abertos.filter((c) => ESTADOS_FORA_DO_PATIO.includes(c.estado));
+  const noPatio = abertos.filter((c) => !ESTADOS_FORA_DO_PATIO.includes(c.estado));
+  return {
+    noPatio: [...noPatio].sort(maisRecente("data_entrada"))[0] || null,
+    fora: [...fora].sort(maisRecente("data_saida"))[0] || null,
+  };
+};

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, Check, ArrowRight, ArrowLeft, Package, Info, AlertTriangle } from "lucide-react";
+import { Search, Check, ArrowRight, ArrowLeft, Package, Info, AlertTriangle, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import PhotoCapture from "@/components/atlas/PhotoCapture";
 import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
-import { isCategoriaSemEstado } from "@/components/atlas/cicloUtils";
+import { isCategoriaSemEstado, classificarCiclosAbertos } from "@/components/atlas/cicloUtils";
+import { registarRetorno, diasAlugada } from "@/components/atlas/registarRetorno";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -36,7 +37,9 @@ export default function Entrada({ currentUser }) {
   const [existingMaquina, setExistingMaquina] = useState(null);
   const [passagens, setPassagens] = useState(0);
   const [ultimaSaida, setUltimaSaida] = useState(null);
-  const [cicloAtivo, setCicloAtivo] = useState(null);
+  const [cicloNoPatio, setCicloNoPatio] = useState(null);
+  const [cicloFora, setCicloFora] = useState(null);
+  const [reentradaConfirmada, setReentradaConfirmada] = useState(false);
   const [searching, setSearching] = useState(false);
   const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
   const [categoria, setCategoria] = useState("");
@@ -67,7 +70,9 @@ export default function Entrada({ currentUser }) {
       setExistingMaquina(null);
       setPassagens(0);
       setUltimaSaida(null);
-      setCicloAtivo(null);
+      setCicloNoPatio(null);
+      setCicloFora(null);
+      setReentradaConfirmada(false);
       return;
     }
     setSearching(true);
@@ -94,13 +99,19 @@ export default function Entrada({ currentUser }) {
             .filter((c) => c.data_saida)
             .sort((a, b) => new Date(b.data_saida) - new Date(a.data_saida));
           setUltimaSaida(saidas[0]?.data_saida || null);
-          const ativos = ciclos.filter((c) => !c.data_saida && c.estado !== "fechado");
-          setCicloAtivo(ativos.length > 0 ? ativos.sort((a, b) => new Date(b.data_entrada) - new Date(a.data_entrada))[0] : null);
+          const { noPatio, fora } = classificarCiclosAbertos(ciclos);
+          setCicloNoPatio(noPatio);
+          setCicloFora(fora);
+          setReentradaConfirmada(false);
+          // Notas da máquina ficam editáveis — na reentrada podem ter de mudar.
+          setNotas(m.observacoes || "");
         } else {
           setExistingMaquina(null);
           setPassagens(0);
           setUltimaSaida(null);
-          setCicloAtivo(null);
+          setCicloNoPatio(null);
+          setCicloFora(null);
+          setReentradaConfirmada(false);
         }
       } catch (_e) {
         // ignore
@@ -131,7 +142,8 @@ export default function Entrada({ currentUser }) {
     });
   };
 
-  const canProceedStep1 = serie.length >= 3 && !cicloAtivo;
+  // Fora do pátio só avança depois de confirmar que é uma reentrada.
+  const canProceedStep1 = serie.length >= 3 && !cicloNoPatio && (!cicloFora || reentradaConfirmada);
   // Sucata e indefinida não seguem o fluxo de preparação — ficam em "indefinido".
   const semEstado = isCategoriaSemEstado(categoria);
   const estadoFinal = semEstado ? "indefinido" : estadoInicial;
@@ -153,11 +165,23 @@ export default function Entrada({ currentUser }) {
     if (!canSubmit) return;
     setIsSubmitting(true);
     try {
-      // Trava: não permitir re-registar máquina que ainda não deu saída.
+      // Trava: uma série não pode ter dois ciclos abertos ao mesmo tempo.
+      // Ter data_saida não basta para dar o ciclo por encerrado — uma máquina
+      // em aluguer continua com o ciclo aberto até ao retorno.
       const ciclosCheck = await base44.entities.Ciclo.filter({ serie });
-      const ativo = ciclosCheck.find((c) => !c.data_saida && c.estado !== "fechado");
-      if (ativo) {
+      const { noPatio, fora } = classificarCiclosAbertos(ciclosCheck);
+      if (noPatio) {
         toast({ variant: "destructive", title: "Máquina já no pátio", description: `NS ${serie} ainda não deu saída.` });
+        setIsSubmitting(false);
+        return;
+      }
+      if (fora && !reentradaConfirmada) {
+        setCicloFora(fora);
+        toast({
+          variant: "destructive",
+          title: "Máquina em aluguer",
+          description: `NS ${serie} ainda está fora. Confirme a reentrada no passo 1.`,
+        });
         setIsSubmitting(false);
         return;
       }
@@ -170,6 +194,23 @@ export default function Entrada({ currentUser }) {
           return;
         }
       }
+      // Reentrada: fecha o aluguer anterior como retorno. É isto que impede o
+      // ciclo antigo de ficar para trás em aluguer e a máquina aparecer em duplicado.
+      let diasDoAluguer = null;
+      if (fora && reentradaConfirmada) {
+        const res = await registarRetorno(fora, {
+          autor,
+          limparCone: true,
+          nota: "Retorno registado na reentrada da máquina",
+        });
+        if (!res.ok) {
+          toast({ variant: "destructive", title: "Erro ao fechar o aluguer", description: res.erro });
+          setIsSubmitting(false);
+          return;
+        }
+        diasDoAluguer = res.dias;
+      }
+
       let maquinaId = existingMaquina?.id;
 
       if (!maquinaId) {
@@ -200,7 +241,7 @@ export default function Entrada({ currentUser }) {
           acessorios: specs.acessorios?.length ? specs.acessorios : existingMaquina.acessorios,
           h3: specs.h3 || existingMaquina.h3 || "",
           bateria: specs.bateria || existingMaquina.bateria || "",
-          observacoes: notas || existingMaquina.observacoes || "",
+          observacoes: notas,
         });
       }
 
@@ -227,7 +268,7 @@ export default function Entrada({ currentUser }) {
         de_estado: null,
         para_estado: "entrada",
         autor,
-        nota: "Registo de entrada",
+        nota: reentradaConfirmada ? "Reentrada no pátio" : "Registo de entrada",
       });
       await base44.entities.EventoCiclo.create({
         ciclo_id: newCiclo.id,
@@ -235,8 +276,9 @@ export default function Entrada({ currentUser }) {
         de_estado: "entrada",
         para_estado: estadoFinal,
         autor,
-        nota:
-          estadoFinal === "indefinido"
+        nota: reentradaConfirmada
+          ? `Reentrada após aluguer${diasDoAluguer != null ? ` de ${diasDoAluguer} dias` : ""}`
+          : estadoFinal === "indefinido"
             ? "Sem estado de preparação (sucata/indefinida)"
             : estadoFinal === "pronta"
             ? "Entrada direta — pronta"
@@ -245,7 +287,12 @@ export default function Entrada({ currentUser }) {
             : "Classificação",
       });
 
-      toast({ title: "✓ Registo concluído", description: `NS: ${serie}` });
+      toast({
+        title: reentradaConfirmada ? "✓ Reentrada concluída" : "✓ Registo concluído",
+        description: reentradaConfirmada && diasDoAluguer != null
+          ? `NS: ${serie} — aluguer anterior fechado com ${diasDoAluguer} dias`
+          : `NS: ${serie}`,
+      });
       // Reset
       setStep(1);
       setSerie("");
@@ -255,7 +302,9 @@ export default function Entrada({ currentUser }) {
       setExistingMaquina(null);
       setPassagens(0);
       setUltimaSaida(null);
-      setCicloAtivo(null);
+      setCicloNoPatio(null);
+      setCicloFora(null);
+      setReentradaConfirmada(false);
       setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
       setCategoria("");
       setEstadoInicial("classificada");
@@ -315,7 +364,7 @@ export default function Entrada({ currentUser }) {
             </div>
           </div>
 
-          {serie.length >= 3 && !searching && existingMaquina && cicloAtivo && (
+          {serie.length >= 3 && !searching && existingMaquina && cicloNoPatio && (
             <div className="bg-red-500/15 border-2 border-red-500/50 rounded-xl p-5">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-8 h-8 text-red-400 flex-shrink-0" />
@@ -323,14 +372,67 @@ export default function Entrada({ currentUser }) {
                   <p className="text-lg font-bold text-red-300">Máquina já existe e não deu saída</p>
                   <p className="text-sm text-red-400/80 mt-1">
                     NS <span className="font-bold">{serie}</span> ainda se encontra no pátio
-                    {cicloAtivo.estado ? ` (${cicloAtivo.estado.replace(/_/g, " ")})` : ""}.
+                    {cicloNoPatio.estado ? ` (${cicloNoPatio.estado.replace(/_/g, " ")})` : ""}.
                     Não é possível registar novamente enquanto não tiver saída.
                   </p>
                 </div>
               </div>
             </div>
           )}
-          {serie.length >= 3 && !searching && existingMaquina && !cicloAtivo && (
+
+          {/* Máquina fora em aluguer: é reentrada, não um registo novo */}
+          {serie.length >= 3 && !searching && existingMaquina && cicloFora && !cicloNoPatio && (
+            reentradaConfirmada ? (
+              <div className="bg-green-500/10 border-2 border-green-500/40 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <RotateCcw className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-bold text-green-300">Reentrada confirmada</p>
+                    <p className="text-sm text-green-400/80 mt-0.5">
+                      O aluguer anterior será fechado ({diasAlugada(cicloFora)} dias) e a máquina volta ao pátio
+                      com as características que já tinha. Categoria, cone e notas podem ser alterados a seguir.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setReentradaConfirmada(false)}
+                      className="text-xs text-green-400/70 hover:text-green-300 underline underline-offset-2 mt-2"
+                    >
+                      Cancelar reentrada
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-cyan-500/10 border-2 border-cyan-500/40 rounded-xl p-5">
+                <div className="flex items-start gap-3">
+                  <RotateCcw className="w-8 h-8 text-cyan-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-lg font-bold text-cyan-300">Esta máquina está a retornar?</p>
+                    <p className="text-sm text-cyan-400/80 mt-1">
+                      NS <span className="font-bold">{serie}</span> saiu para aluguer
+                      {cicloFora.data_saida && ` a ${format(new Date(cicloFora.data_saida), "dd/MM/yyyy")}`}
+                      {cicloFora.reserva_cliente && ` · ${cicloFora.reserva_cliente}`}
+                      {" "}e continua fora há {diasAlugada(cicloFora)} dias.
+                    </p>
+                    <p className="text-xs text-cyan-400/60 mt-1.5">
+                      Ao confirmar, esse aluguer é fechado como retorno e a máquina reentra no pátio —
+                      em vez de ficar registada em duplicado.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setReentradaConfirmada(true)}
+                      className="mt-3 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg text-sm flex items-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      CONFIRMAR REENTRADA
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+
+          {serie.length >= 3 && !searching && existingMaquina && !cicloNoPatio && !cicloFora && (
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-start gap-2">
               <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-300">
@@ -598,6 +700,12 @@ export default function Entrada({ currentUser }) {
             <p className="text-slate-400">NS: <span className="text-slate-100 font-bold">{serie}</span></p>
             <p className="text-slate-400">Modelo: <span className="text-slate-300">{modelo || "—"}</span></p>
             <p className="text-slate-400">Categoria: <span className="text-amber-400 font-bold">{CATEGORIA_CONFIG[categoria]?.label || "—"}</span></p>
+            {reentradaConfirmada && (
+              <p className="text-cyan-400 flex items-center gap-1.5 pt-1">
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reentrada — o aluguer anterior será fechado
+              </p>
+            )}
           </div>
 
           <div className="flex gap-3">
