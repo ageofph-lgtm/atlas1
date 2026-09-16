@@ -144,6 +144,10 @@ export const INVENTARIO_TABS = [
   { key: 'em_aluguer', label: 'EM ALUGUER' }
 ];
 
+// O histórico dos relatórios usa as mesmas abas, mais as fechadas — que são
+// justamente o que as páginas de operação escondem.
+export const HISTORICO_TABS = [...INVENTARIO_TABS, { key: 'fechados', label: 'FECHADAS' }];
+
 // Famílias de modelo (nomenclatura STILL) — filtros rápidos do inventário.
 // `match` é comparado contra o modelo normalizado (maiúsculas, sem separadores).
 export const MODELO_FAMILIAS = [

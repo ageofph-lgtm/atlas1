@@ -125,3 +125,29 @@ export const classificarCiclosAbertos = (ciclos = []) => {
     fora: [...fora].sort(maisRecente("data_saida"))[0] || null,
   };
 };
+
+export const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
+
+/**
+ * Um ciclo fechado é histórico: a máquina já saiu do pátio e aquele ciclo
+ * terminou. Fica fora das páginas de operação — vê-lo ao lado do ciclo atual
+ * da mesma série só confunde — e aparece no histórico dos relatórios.
+ */
+export const isHistorico = (ciclo) => estadoEfetivo(ciclo) === "fechado";
+
+/** Filtro das abas, partilhado pelo inventário e pelo histórico dos relatórios. */
+export const tabFilterCiclo = (tabKey, ciclo) => {
+  const estado = estadoEfetivo(ciclo);
+  switch (tabKey) {
+    case "todas": return true;
+    case "por_fazer": return POR_FAZER_ESTADOS.includes(estado);
+    case "prontas": return estado === "pronta";
+    case "recon": return ciclo.categoria === "recon";
+    case "uts": return ciclo.categoria === "uts";
+    case "sucata": return ciclo.categoria === "sucata";
+    case "indefinida": return ciclo.categoria === "indefinida";
+    case "em_aluguer": return estado === "em_aluguer";
+    case "fechados": return estado === "fechado";
+    default: return false;
+  }
+};
