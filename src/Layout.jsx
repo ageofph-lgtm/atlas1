@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Menu, X, Cog, BarChart3 } from "lucide-react";
+import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Cog, BarChart3 } from "lucide-react";
 import { User } from "@/entities/all";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import ProfileSelector from "./components/auth/ProfileSelector";
@@ -29,7 +29,6 @@ export default function Layout({ children, currentPageName }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const permissions = usePermissions(user?.perfil);
 
@@ -73,10 +72,6 @@ export default function Layout({ children, currentPageName }) {
     }
   };
 
-  useEffect(() => {
-    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "unset";
-  }, [isMobileMenuOpen]);
-
   if (isLoadingUser) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900">
@@ -97,7 +92,7 @@ export default function Layout({ children, currentPageName }) {
       {/* Top Navigation */}
       <nav className="atlas-nav fixed top-0 left-0 right-0 z-50 glass border-b border-slate-700">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14 md:h-16 gap-2">
             {/* Logo + brand chip */}
             <div className="flex items-center">
               <div className="w-9 h-9 flex-shrink-0">
@@ -107,7 +102,7 @@ export default function Layout({ children, currentPageName }) {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="brand-chip ml-3">ATLAS</span>
+              <span className="brand-chip ml-3 hidden md:inline-flex">ATLAS</span>
             </div>
 
             {/* Desktop Nav */}
@@ -155,83 +150,69 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               )}
 
-              <ThemeSwitcher />
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-700/50"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
+              {/* Identidade compacta no mobile — vinha da gaveta */}
+              {user && (
+                <div className="flex md:hidden items-center gap-2 min-w-0">
+                  <div className="bg-amber-500 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-slate-900 font-bold text-xs">
+                      {user.full_name?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-slate-200 truncate max-w-[96px] leading-tight">
+                      {user.full_name || "Utilizador"}
+                    </p>
+                    <p className="text-[9px] text-slate-500 truncate leading-tight">
+                      {user.perfil?.replace("_", " ").toUpperCase()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    aria-label="Terminar sessão"
+                    className="text-slate-500 hover:text-red-400 transition-colors p-1 flex-shrink-0"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              <ThemeSwitcher className="hidden md:block" />
             </div>
+          </div>
+
+          {/* Navegação mobile — substitui a gaveta lateral: um toque, sem animação */}
+          <div className="md:hidden flex items-center gap-1 h-11">
+            <div className="flex items-center gap-1 flex-1 min-w-0 overflow-x-auto no-scrollbar">
+              {allowedNavItems.map((item) => {
+                const isActive = location.pathname === item.url;
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.key}
+                    to={item.url}
+                    title={item.title}
+                    aria-label={item.title}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`flex items-center gap-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                      isActive
+                        ? "bg-amber-500 text-slate-900 px-2.5 py-1.5 text-xs font-bold"
+                        : "text-slate-400 hover:text-slate-100 hover:bg-slate-700/50 p-2"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    {/* Só o item activo mostra o rótulo, para os cinco caberem no ecrã */}
+                    {isActive && <span className="whitespace-nowrap">{item.title}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+            <ThemeSwitcher compact className="flex-shrink-0" />
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[100] md:hidden">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className="absolute top-0 right-0 w-72 h-full bg-slate-800 border-l border-slate-700 shadow-2xl">
-            <div className="p-5">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-bold text-slate-100">ATLAS</h2>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-slate-400 hover:text-slate-100">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-2 mb-6">
-                {allowedNavItems.map((item) => {
-                  const isActive = location.pathname === item.url;
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.key}
-                      to={item.url}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`w-full py-3 px-4 flex items-center gap-3 rounded-lg text-base font-medium transition-colors ${
-                        isActive
-                          ? "bg-amber-500 text-slate-900"
-                          : "text-slate-300 hover:bg-slate-700/50"
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      {item.title}
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {user && (
-                <div className="border-t border-slate-700 pt-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="bg-amber-500 w-9 h-9 rounded-full flex items-center justify-center">
-                      <span className="text-slate-900 font-bold">
-                        {user.full_name?.charAt(0).toUpperCase() || "U"}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-200">{user.full_name || "Utilizador"}</p>
-                      <p className="text-xs text-slate-500">{user.perfil?.replace("_", " ").toUpperCase()}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full py-2.5 bg-slate-700 hover:bg-red-600 text-slate-300 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Terminar Sessão
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Page Title */}
-      <div className="pt-20 px-4 sm:px-6 lg:px-8 pb-4">
+      <div className="pt-[108px] md:pt-20 px-4 sm:px-6 lg:px-8 pb-4">
         <h1 className="page-title text-lg md:text-xl font-bold tracking-wide text-slate-300">
           {PAGE_TITLES[currentPageName] || currentPageName?.toUpperCase() || "ATLAS"}
         </h1>
