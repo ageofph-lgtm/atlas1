@@ -155,6 +155,7 @@ export const MODELO_FAMILIAS = [
   { value: 'rce',  label: 'RCE',  match: ['RCE'] },
   { value: 'fmx',  label: 'FMX',  match: ['FMX'] },
   { value: 'exh',  label: 'EXH',  match: ['EXH'] },
+  { value: 'opx',  label: 'OPX',  match: ['OPX'] },
 ];
 
 // Pseudo-família: modelos que não caem em nenhuma das famílias acima.
@@ -164,7 +165,6 @@ export const AUTORIZACAO_TABS = [
   { key: 'todas', label: 'TODAS' },
   { key: 'str', label: 'STR' },
   { key: 'uts', label: 'UTS' },
-  { key: 'recon', label: 'RECON' },
   { key: 'sucata', label: 'SUCATA' },
   { key: 'indefinida', label: 'INDEFINIDA' },
 ];

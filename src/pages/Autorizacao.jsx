@@ -13,7 +13,7 @@ import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
-import { estadoEfetivo, matchModeloFamilia, normalizarEstadosIndefinidos } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
 
 // Máquinas que aguardam decisão da gestora. "indefinido" entra aqui porque é
 // onde sucata/indefinida ficam à espera de ser reclassificadas.
@@ -30,7 +30,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const [maquinas, setMaquinas] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all", coneCor: "all", coneNumero: "", modelos: [] });
+  const [filters, setFilters] = useState(FILTROS_VAZIOS);
   const [isLoading, setIsLoading] = useState(true);
   const [authorizing, setAuthorizing] = useState(null);
   const [tarefasCiclo, setTarefasCiclo] = useState(null);
@@ -70,20 +70,9 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     (ciclo.serie && maquinaMap["serie:" + ciclo.serie]) ||
     null;
 
-  const passesFilters = (ciclo, maquina) => {
-    if (filters.estado !== "all" && estadoEfetivo(ciclo) !== filters.estado) return false;
-    if (filters.mastro !== "all" && maquina?.mastro !== filters.mastro) return false;
-    if (filters.vias_mastro !== "all" && maquina?.vias_mastro !== filters.vias_mastro) return false;
-    if (filters.tipo_pneu !== "all" && maquina?.tipo_pneu !== filters.tipo_pneu) return false;
-    if (filters.coneCor && filters.coneCor !== "all" && ciclo.cone_cor !== filters.coneCor) return false;
-    if (filters.coneNumero && filters.coneNumero.trim() && String(ciclo.cone_numero ?? "") !== String(filters.coneNumero.trim())) return false;
-    if (!matchModeloFamilia(maquina, filters.modelos)) return false;
-    return true;
-  };
-
   const passesAll = (ciclo) => {
     const m = getMaquina(ciclo);
-    return passesFilters(ciclo, m) && matchCicloSearch(ciclo, m, searchQuery);
+    return passesCicloFilters(ciclo, m, filters) && matchCicloSearch(ciclo, m, searchQuery);
   };
 
   const aAutorizar = useMemo(

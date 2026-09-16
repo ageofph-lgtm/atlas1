@@ -63,3 +63,42 @@ export const normalizarEstadosIndefinidos = async (ciclos) => {
   const corrigidos = new Set(pendentes.map((c) => c.id));
   return ciclos.map((c) => (corrigidos.has(c.id) ? { ...c, estado: "indefinido" } : c));
 };
+
+/** Estado inicial dos filtros partilhado pelas páginas com FilterBar. */
+export const FILTROS_VAZIOS = {
+  categoria: "all",
+  estado: "all",
+  mastro: "all",
+  vias_mastro: "all",
+  tipo_pneu: "all",
+  coneCor: "all",
+  coneNumero: "",
+  modelos: [],
+};
+
+const FILTROS_SELECT = ["categoria", "estado", "mastro", "vias_mastro", "tipo_pneu", "coneCor"];
+
+/** True quando o utilizador restringiu alguma coisa (usado para "Limpar filtros"). */
+export const hasFiltrosAtivos = (filters = {}) =>
+  FILTROS_SELECT.some((k) => filters[k] && filters[k] !== "all") ||
+  !!(filters.coneNumero || "").trim() ||
+  (filters.modelos?.length || 0) > 0;
+
+/**
+ * Filtros da FilterBar aplicados a um par ciclo/máquina — partilhado pelo
+ * inventário, autorização e saída para não divergirem.
+ */
+export const passesCicloFilters = (ciclo, maquina, filters = {}) => {
+  const ativo = (key) => filters[key] && filters[key] !== "all";
+  if (ativo("categoria") && ciclo?.categoria !== filters.categoria) return false;
+  if (ativo("estado") && estadoEfetivo(ciclo) !== filters.estado) return false;
+  if (ativo("mastro") && maquina?.mastro !== filters.mastro) return false;
+  if (ativo("vias_mastro") && maquina?.vias_mastro !== filters.vias_mastro) return false;
+  if (ativo("tipo_pneu") && maquina?.tipo_pneu !== filters.tipo_pneu) return false;
+  // Cone — match exacto em (cor + nº), para os dígitos não apanharem séries.
+  if (ativo("coneCor") && ciclo?.cone_cor !== filters.coneCor) return false;
+  const coneNum = (filters.coneNumero || "").trim();
+  if (coneNum && String(ciclo?.cone_numero ?? "") !== coneNum) return false;
+  if (!matchModeloFamilia(maquina, filters.modelos)) return false;
+  return true;
+};

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Search, Filter, RefreshCw, Loader2 } from "lucide-react";
 import { FILTER_OPTIONS, CONE_COLORS, MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS } from "@/components/atlas/constants";
+import { hasFiltrosAtivos } from "@/components/atlas/cicloUtils";
 
 const ADVANCED_FILTERS = ["estado", "mastro", "vias_mastro", "tipo_pneu"];
 
@@ -11,18 +12,21 @@ const FILTER_LABELS = {
   tipo_pneu: "Pneu",
 };
 
-export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, onSync, syncing, showCategoria = true }) {
+export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, onSync, syncing, showCategoria = true, showEstado = true, placeholder }) {
   const [showFilters, setShowFilters] = useState(false);
+
+  // Páginas cujos painéis já separam por estado escondem esse filtro.
+  const advancedFilters = showEstado ? ADVANCED_FILTERS : ADVANCED_FILTERS.filter((k) => k !== "estado");
 
   const modelos = filters.modelos || [];
   const toggleModelo = (value) =>
     onFilterChange("modelos", modelos.includes(value) ? modelos.filter((v) => v !== value) : [...modelos, value]);
 
-  const activeAdvancedCount = ADVANCED_FILTERS.filter(
+  const activeAdvancedCount = advancedFilters.filter(
     (key) => filters[key] && filters[key] !== "all"
   ).length;
 
-  const hasAnyFilter = activeAdvancedCount > 0 || (filters.categoria && filters.categoria !== "all") || (filters.coneCor && filters.coneCor !== "all") || (filters.coneNumero && filters.coneNumero.trim()) || modelos.length > 0;
+  const hasAnyFilter = hasFiltrosAtivos(filters);
 
   const handleClear = () => {
     ADVANCED_FILTERS.forEach((key) => onFilterChange(key, "all"));
@@ -42,7 +46,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Pesquisar série, modelo, specs, cone, cliente..."
+            placeholder={placeholder || "Pesquisar série, modelo, specs, cone, cliente..."}
             className="w-full pl-10 pr-4 py-2.5 glass border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
           />
         </div>
@@ -154,7 +158,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
       {/* Advanced filters panel */}
       {showFilters && (
         <div className="flex items-center gap-3 flex-wrap pb-1 glass border border-slate-700 rounded-lg px-3 py-2">
-          {ADVANCED_FILTERS.map((key) => (
+          {advancedFilters.map((key) => (
             <div key={key} className="flex items-center gap-1.5">
               <span className="text-[10px] uppercase tracking-wide text-slate-600">
                 {FILTER_LABELS[key]}
