@@ -9,7 +9,8 @@ const OPTIONS = [
   { id: "retro-dark", label: "Retro · Dark" },
 ];
 
-export default function ThemeSwitcher() {
+/** `compact` encolhe o botão — usado na barra mobile, onde o tema é o último item. */
+export default function ThemeSwitcher({ compact = false, className = "" }) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -23,14 +24,14 @@ export default function ThemeSwitcher() {
   }, []);
 
   return (
-    <div className="relative" ref={ref}>
+    <div className={`relative ${className}`} ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
         title="Tema"
         aria-label="Mudar tema"
-        className="p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-700/50 flex items-center transition-colors"
+        className={`rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-700/50 flex items-center transition-colors ${compact ? "p-1.5" : "p-2"}`}
       >
-        <Palette className="w-4 h-4" />
+        <Palette className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-48 glass border border-slate-700 rounded-lg py-1 z-[120]">

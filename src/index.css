@@ -132,6 +132,10 @@
     z-index: 1;
   }
 
+  /* Tira a barra de scroll à faixa de navegação mobile, que rola na horizontal */
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgb(var(--mu2) / .4); border-radius: 99px; }
