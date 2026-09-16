@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from "react";
-import { History, Package } from "lucide-react";
+import { History, Package, SearchX } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
 import FilterBar from "@/components/atlas/FilterBar";
 import { HISTORICO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
-import { passesCicloFilters, tabFilterCiclo, FILTROS_VAZIOS, isHistorico } from "@/components/atlas/cicloUtils";
+import { passesCicloFilters, tabFilterCiclo, FILTROS_VAZIOS, isHistorico, hasFiltrosAtivos } from "@/components/atlas/cicloUtils";
 
 /**
  * Pesquisa de máquinas com a mesma barra, filtros e abas das páginas de
@@ -17,6 +17,10 @@ export default function HistoricoCiclos({ ciclos, getMaquina }) {
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
 
   const handleFilterChange = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
+
+  // Os relatórios são um painel de gráficos: os cards só aparecem quando se
+  // procura mesmo alguma coisa — pesquisa, filtro ou uma aba que não "todas".
+  const aProcurar = !!searchQuery.trim() || hasFiltrosAtivos(filters) || activeTab !== "todas";
 
   const passesAll = (c) => {
     const m = getMaquina(c);
@@ -34,14 +38,16 @@ export default function HistoricoCiclos({ ciclos, getMaquina }) {
   // Mais recentes primeiro: num histórico interessa o que aconteceu há pouco.
   const resultados = useMemo(
     () =>
-      ciclos
-        .filter((c) => tabFilterCiclo(activeTab, c) && passesAll(c))
-        .sort(
-          (a, b) =>
-            new Date(b.data_retorno || b.data_saida || b.data_entrada || b.created_date) -
-            new Date(a.data_retorno || a.data_saida || a.data_entrada || a.created_date)
-        ),
-    [ciclos, activeTab, filters, searchQuery]
+      !aProcurar
+        ? []
+        : ciclos
+            .filter((c) => tabFilterCiclo(activeTab, c) && passesAll(c))
+            .sort(
+              (a, b) =>
+                new Date(b.data_retorno || b.data_saida || b.data_entrada || b.created_date) -
+                new Date(a.data_retorno || a.data_saida || a.data_entrada || a.created_date)
+            ),
+    [ciclos, activeTab, filters, searchQuery, aProcurar]
   );
 
   return (
@@ -79,7 +85,15 @@ export default function HistoricoCiclos({ ciclos, getMaquina }) {
         ))}
       </div>
 
-      {resultados.length === 0 ? (
+      {!aProcurar ? (
+        <div className="flex items-center gap-2 text-xs text-slate-500 border border-slate-700 rounded-lg px-3 py-2">
+          <SearchX className="w-4 h-4 flex-shrink-0 opacity-60" />
+          <span>
+            Pesquise, aplique um filtro ou escolha uma aba para ver as máquinas.
+            <span className="text-slate-400"> {ciclos.length} ciclos no total, {ciclos.filter(isHistorico).length} fechados.</span>
+          </span>
+        </div>
+      ) : resultados.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-slate-500">
           <Package className="w-10 h-10 mb-2 opacity-30" />
           <p className="text-sm">Nenhuma máquina encontrada</p>
