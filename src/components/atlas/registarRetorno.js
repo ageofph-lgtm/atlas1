@@ -12,8 +12,9 @@ export const diasAlugada = (ciclo, ate = new Date()) =>
  * devolve { ok: false, erro } para o chamador mostrar junto ao campo.
  * Partilhado entre o retorno da página de saída e o retorno rápido.
  */
-export async function registarRetorno(ciclo, { coneNumero = "", autor, nota } = {}) {
-  const cor = CATEGORIA_CONE_MAP[ciclo.categoria] || null;
+export async function registarRetorno(ciclo, { coneNumero = "", autor, nota, limparCone = false } = {}) {
+  // Na reentrada o cone passa para o ciclo novo, por isso o que fecha fica sem ele.
+  const cor = limparCone ? null : CATEGORIA_CONE_MAP[ciclo.categoria] || null;
 
   if (cor && coneNumero) {
     const result = await validateConeNumber(ciclo.categoria, coneNumero, ciclo.id);
