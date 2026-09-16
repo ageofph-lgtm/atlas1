@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { RefreshCw, TrendingUp, TrendingDown, Package, Clock, Calendar } from "lucide-react";
+import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import BackupPanel from "@/components/atlas/BackupPanel";
+import HistoricoCiclos from "@/components/atlas/HistoricoCiclos";
+import ManutencaoCiclosPanel from "@/components/atlas/ManutencaoCiclosPanel";
 
 const CATEGORIA_COLORS = {
   str: "#f59e0b",
@@ -154,8 +156,13 @@ export default function Relatorios({ currentUser, userPermissions }) {
 
   return (
     <div className="space-y-6">
-      {/* Backup / restore — admin only */}
-      {currentUser?.perfil === "administrador" && <BackupPanel />}
+      {/* Backup / restore + manutenção — admin only */}
+      {currentUser?.perfil === "administrador" && (
+        <>
+          <BackupPanel />
+          <ManutencaoCiclosPanel />
+        </>
+      )}
 
       {/* Period selector + refresh */}
       <div className="flex items-center justify-between">
@@ -205,6 +212,9 @@ export default function Relatorios({ currentUser, userPermissions }) {
           </div>
         ))}
       </div>
+
+      {/* Pesquisa com histórico — o inventário esconde os ciclos fechados */}
+      <HistoricoCiclos ciclos={ciclos} getMaquina={getMaquina} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

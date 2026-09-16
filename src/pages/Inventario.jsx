@@ -15,9 +15,7 @@ import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { INVENTARIO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
-import { estadoEfetivo, passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
-
-const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
+import { passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS, isHistorico, tabFilterCiclo } from "@/components/atlas/cicloUtils";
 
 export default function Inventario({ currentUser, userPermissions }) {
   const { toast } = useToast();
@@ -99,26 +97,15 @@ export default function Inventario({ currentUser, userPermissions }) {
     (ciclo.serie && maquinaMap["serie:" + ciclo.serie]) ||
     null;
 
+  // Ciclos fechados não entram no inventário — a mesma série apareceria duas
+  // vezes, uma fechada e outra ativa. O histórico está nos relatórios.
+  const ciclosAtivos = useMemo(() => ciclos.filter((c) => !isHistorico(c)), [ciclos]);
+
   // Filter pills + advanced filters (partilhados com autorização e saída)
   const passesFilters = (ciclo, maquina) => passesCicloFilters(ciclo, maquina, filters);
 
   // Categoria-fixed tabs conflict with the categoria pill when a different pill is active.
   const CATEGORIA_FIXED_TAB = { recon: "recon", uts: "uts", sucata: "sucata", indefinida: "indefinida" };
-
-  const tabFilter = (tabKey, c) => {
-    switch (tabKey) {
-      case "todas": return true;
-      case "por_fazer": return POR_FAZER_ESTADOS.includes(estadoEfetivo(c));
-      case "prontas": return estadoEfetivo(c) === "pronta";
-      case "recon": return c.categoria === "recon";
-      case "uts": return c.categoria === "uts";
-      case "sucata": return c.categoria === "sucata";
-      case "indefinida": return c.categoria === "indefinida";
-      case "em_aluguer": return estadoEfetivo(c) === "em_aluguer";
-      case "fechados": return estadoEfetivo(c) === "fechado";
-      default: return false;
-    }
-  };
 
   const isTabDisabled = (tabKey) => {
     const fixed = CATEGORIA_FIXED_TAB[tabKey];
@@ -130,17 +117,17 @@ export default function Inventario({ currentUser, userPermissions }) {
   const tabCounts = useMemo(() => {
     const counts = {};
     INVENTARIO_TABS.forEach((t) => {
-      counts[t.key] = ciclos.filter((c) => {
-        if (!tabFilter(t.key, c)) return false;
+      counts[t.key] = ciclosAtivos.filter((c) => {
+        if (!tabFilterCiclo(t.key, c)) return false;
         const m = getMaquina(c);
         return passesFilters(c, m) && matchCicloSearch(c, m, searchQuery);
       }).length;
     });
     return counts;
-  }, [ciclos, maquinas, filters, searchQuery]);
+  }, [ciclosAtivos, maquinas, filters, searchQuery]);
 
   // Tab filter
-  const getTabCiclos = () => ciclos.filter((c) => tabFilter(activeTab, c));
+  const getTabCiclos = () => ciclosAtivos.filter((c) => tabFilterCiclo(activeTab, c));
 
   // Sort: priority first, then oldest
   const sortCiclos = (items) => {
@@ -157,7 +144,7 @@ export default function Inventario({ currentUser, userPermissions }) {
       return passesFilters(c, m) && matchCicloSearch(c, m, searchQuery);
     });
     return sortCiclos(filtered);
-  }, [ciclos, maquinas, activeTab, filters, searchQuery]);
+  }, [ciclosAtivos, maquinas, activeTab, filters, searchQuery]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
