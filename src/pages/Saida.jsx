@@ -5,13 +5,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, Search } from "lucide-react";
+import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX } from "lucide-react";
 import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
+import RetornoRapidoModal from "@/components/atlas/RetornoRapidoModal";
+import FilterBar from "@/components/atlas/FilterBar";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
-import { estadoEfetivo } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
+import { registarRetorno } from "@/components/atlas/registarRetorno";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
 
@@ -27,10 +30,12 @@ export default function Saida({ currentUser }) {
   const [saidaModal, setSaidaModal] = useState(null); // ciclo being given saída
   const [cliente, setCliente] = useState("");
   const [saidaRapidaOpen, setSaidaRapidaOpen] = useState(false);
+  const [retornoRapidoOpen, setRetornoRapidoOpen] = useState(false);
   const [retornoModal, setRetornoModal] = useState(null);
   const [retornoConeNumero, setRetornoConeNumero] = useState("");
   const [retornoConeError, setRetornoConeError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState(FILTROS_VAZIOS);
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -65,14 +70,20 @@ export default function Saida({ currentUser }) {
 
   const getMaquina = (c) => maquinaMap[c.maquina_id] || (c.serie && maquinaMap["serie:" + c.serie]) || null;
 
-  const filteredProntas = useMemo(
-    () => prontas.filter((c) => matchCicloSearch(c, getMaquina(c), searchQuery)),
-    [prontas, maquinas, searchQuery]
-  );
-  const filteredAlugadas = useMemo(
-    () => alugadas.filter((c) => matchCicloSearch(c, getMaquina(c), searchQuery)),
-    [alugadas, maquinas, searchQuery]
-  );
+  // A página é de acção rápida, não de catálogo: só listamos cards quando o
+  // utilizador procura alguma coisa, para a lista toda não poluir o ecrã.
+  const aProcurar = !!searchQuery.trim() || hasFiltrosAtivos(filters);
+
+  const aplicar = (items) =>
+    items.filter((c) => {
+      const m = getMaquina(c);
+      return passesCicloFilters(c, m, filters) && matchCicloSearch(c, m, searchQuery);
+    });
+
+  const filteredProntas = useMemo(() => aplicar(prontas), [prontas, maquinas, filters, searchQuery]);
+  const filteredAlugadas = useMemo(() => aplicar(alugadas), [alugadas, maquinas, filters, searchQuery]);
+
+  const handleFilterChange = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
   const openSaidaModal = (ciclo) => {
     setSaidaModal(ciclo);
@@ -133,37 +144,13 @@ export default function Saida({ currentUser }) {
     if (!retornoModal) return;
     setActing(retornoModal.id);
     try {
-      const cor = CATEGORIA_CONE_MAP[retornoModal.categoria];
-      // Trava: o cone (cor + nº) tem de ser único entre as máquinas no pátio.
-      if (cor && retornoConeNumero) {
-        const result = await validateConeNumber(retornoModal.categoria, retornoConeNumero, retornoModal.id);
-        if (!result.free) {
-          setRetornoConeError(`Cone ${retornoConeNumero} ${cor} já está em uso — NS ${result.conflito.serie}`);
-          setActing(null);
-          return;
-        }
+      const res = await registarRetorno(retornoModal, { coneNumero: retornoConeNumero, autor });
+      if (!res.ok) {
+        setRetornoConeError(res.erro);
+        setActing(null);
+        return;
       }
-      const now = new Date().toISOString();
-      const dias = retornoModal.data_saida
-        ? Math.ceil((new Date(now) - new Date(retornoModal.data_saida)) / (1000 * 60 * 60 * 24))
-        : 0;
-      const coneNumero = cor ? retornoConeNumero : null;
-      await base44.entities.Ciclo.update(retornoModal.id, {
-        estado: "fechado",
-        data_retorno: now,
-        dias_alugada: dias,
-        cone_cor: cor,
-        cone_numero: coneNumero,
-      });
-      await base44.entities.EventoCiclo.create({
-        ciclo_id: retornoModal.id,
-        serie: retornoModal.serie,
-        de_estado: "em_aluguer",
-        para_estado: "fechado",
-        autor,
-        nota: `Retorno — ${dias} dias alugada`,
-      });
-      toast({ title: "✓ Retorno registado", description: `${retornoModal.serie} — ${dias} dias` });
+      toast({ title: "✓ Retorno registado", description: `${retornoModal.serie} — ${res.dias} dias` });
       setRetornoModal(null);
       setRetornoConeNumero("");
       setRetornoConeError("");
@@ -184,22 +171,8 @@ export default function Saida({ currentUser }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Pesquisa */}
-      <div className="lg:col-span-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar série, modelo, specs, cone, cliente..."
-            className="w-full pl-10 pr-4 py-2.5 glass border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
-          />
-        </div>
-      </div>
-
-      {/* SAÍDA RÁPIDA */}
-      <div className="lg:col-span-2">
+      {/* Acções rápidas — o caminho normal desta página */}
+      <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button
           onClick={() => setSaidaRapidaOpen(true)}
           className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg flex items-center justify-center gap-2 transition-colors"
@@ -207,25 +180,57 @@ export default function Saida({ currentUser }) {
           <Zap className="w-5 h-5" />
           SAÍDA RÁPIDA
         </button>
+        <button
+          onClick={() => setRetornoRapidoOpen(true)}
+          className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          RETORNO RÁPIDO
+        </button>
+      </div>
+
+      {/* Pesquisa + filtros (os painéis já separam por estado) */}
+      <div className="lg:col-span-2">
+        <FilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          showEstado={false}
+          placeholder="Procurar máquina por série, modelo, specs, cone, cliente..."
+        />
+        <div className="flex items-center gap-2">
+          {!aProcurar && (
+            <div className="flex items-center gap-2 text-xs text-slate-500 glass border border-slate-700 rounded-lg px-3 py-2 flex-1 min-w-0">
+              <SearchX className="w-4 h-4 flex-shrink-0 opacity-60" />
+              <span>
+                Pesquise ou aplique um filtro para ver as máquinas.
+                <span className="text-slate-400"> {prontas.length} prontas · {alugadas.length} em aluguer.</span>
+              </span>
+            </div>
+          )}
+          <button
+            onClick={loadData}
+            title="Recarregar"
+            className="ml-auto flex-shrink-0 p-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Panel A: Prontas */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500" />
-            <h2 className="text-sm font-bold uppercase tracking-wide text-green-400">Prontas para Saída</h2>
-            <span className="text-xs text-slate-500">({filteredProntas.length})</span>
-          </div>
-          <button onClick={loadData} className="p-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400">
-            <RefreshCw className="w-4 h-4" />
-          </button>
+      <div className={aProcurar ? "" : "hidden"}>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-2 h-2 rounded-full bg-green-500" />
+          <h2 className="text-sm font-bold uppercase tracking-wide text-green-400">Prontas para Saída</h2>
+          <span className="text-xs text-slate-500">({filteredProntas.length} de {prontas.length})</span>
         </div>
 
         {filteredProntas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-slate-500">
             <Package className="w-10 h-10 mb-2 opacity-30" />
-            <p className="text-sm">Nenhuma máquina pronta</p>
+            <p className="text-sm">Nenhuma máquina pronta encontrada</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -265,19 +270,19 @@ export default function Saida({ currentUser }) {
       </div>
 
       {/* Panel B: Em Aluguer */}
-      <div>
+      <div className={aProcurar ? "" : "hidden"}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-cyan-500" />
             <h2 className="text-sm font-bold uppercase tracking-wide text-cyan-400">Em Aluguer — Aguardando Retorno</h2>
-            <span className="text-xs text-slate-500">({filteredAlugadas.length})</span>
+            <span className="text-xs text-slate-500">({filteredAlugadas.length} de {alugadas.length})</span>
           </div>
         </div>
 
         {filteredAlugadas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-slate-500">
             <Package className="w-10 h-10 mb-2 opacity-30" />
-            <p className="text-sm">Nenhuma máquina em aluguer</p>
+            <p className="text-sm">Nenhuma máquina em aluguer encontrada</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -368,6 +373,15 @@ export default function Saida({ currentUser }) {
         preselectedCiclo={null}
         currentUser={currentUser}
         onClose={() => setSaidaRapidaOpen(false)}
+        onDone={loadData}
+      />
+
+      {/* Retorno rápido modal */}
+      <RetornoRapidoModal
+        open={retornoRapidoOpen}
+        preselectedCiclo={null}
+        currentUser={currentUser}
+        onClose={() => setRetornoRapidoOpen(false)}
         onDone={loadData}
       />
 

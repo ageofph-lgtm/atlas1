@@ -15,7 +15,7 @@ import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { INVENTARIO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
-import { estadoEfetivo, matchModeloFamilia, normalizarEstadosIndefinidos } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
 
 const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
 
@@ -27,7 +27,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [maquinas, setMaquinas] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all", coneCor: "all", coneNumero: "", modelos: [] });
+  const [filters, setFilters] = useState(FILTROS_VAZIOS);
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
   const [editCiclo, setEditCiclo] = useState(null);
@@ -99,20 +99,8 @@ export default function Inventario({ currentUser, userPermissions }) {
     (ciclo.serie && maquinaMap["serie:" + ciclo.serie]) ||
     null;
 
-  // Filter pills + advanced filters
-  const passesFilters = (ciclo, maquina) => {
-    if (filters.categoria !== "all" && ciclo.categoria !== filters.categoria) return false;
-    if (filters.estado !== "all" && estadoEfetivo(ciclo) !== filters.estado) return false;
-    if (filters.mastro !== "all" && maquina?.mastro !== filters.mastro) return false;
-    if (filters.vias_mastro !== "all" && maquina?.vias_mastro !== filters.vias_mastro) return false;
-    if (filters.tipo_pneu !== "all" && maquina?.tipo_pneu !== filters.tipo_pneu) return false;
-    // Cone filter — exact match on (cor + nº), so digits don't broadly match series.
-    if (filters.coneCor && filters.coneCor !== "all" && ciclo.cone_cor !== filters.coneCor) return false;
-    if (filters.coneNumero && filters.coneNumero.trim() && String(ciclo.cone_numero ?? "") !== String(filters.coneNumero.trim())) return false;
-    // Famílias de modelo (RX20, RX60, EXV, ...) — combinam com todos os outros filtros.
-    if (!matchModeloFamilia(maquina, filters.modelos)) return false;
-    return true;
-  };
+  // Filter pills + advanced filters (partilhados com autorização e saída)
+  const passesFilters = (ciclo, maquina) => passesCicloFilters(ciclo, maquina, filters);
 
   // Categoria-fixed tabs conflict with the categoria pill when a different pill is active.
   const CATEGORIA_FIXED_TAB = { recon: "recon", uts: "uts", sucata: "sucata", indefinida: "indefinida" };
