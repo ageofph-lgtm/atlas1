@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Pencil, CalendarClock, Trash2, Truck, ChevronDown, ChevronUp, Zap, StickyNote } from "lucide-react";
+import { AlertTriangle, Pencil, CalendarClock, Trash2, Truck, ChevronDown, ChevronUp, Zap, StickyNote, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
+import { estadoEfetivo, isCategoriaSemEstado } from "./cicloUtils";
 import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
 import MaquinaNotas from "./MaquinaNotas";
 
-export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canSaidaRapida, canAutorizar, canNotas, onEdit, onReservar, onDelete, onSaidaRapida, onAutorizar, onNotasSaved }) {
+export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canSaidaRapida, canAutorizar, canNotas, onEdit, onReservar, onDelete, onSaidaRapida, onAutorizar, onNotasSaved, onTogglePrioridade, onMarcarPronta }) {
   const [expanded, setExpanded] = useState(false);
 
-  const estadoCfg = ESTADO_CONFIG[ciclo.estado] || ESTADO_CONFIG.entrada;
+  const estado = estadoEfetivo(ciclo);
+  const estadoCfg = ESTADO_CONFIG[estado] || ESTADO_CONFIG.entrada;
   const catCfg = CATEGORIA_CONFIG[ciclo.categoria] || CATEGORIA_CONFIG.indefinida;
   const coneColor = CONE_COLORS.find((c) => c.value === ciclo.cone_cor);
   const hasCone = coneColor && ciclo.cone_numero;
@@ -27,31 +29,44 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   }
 
   const diasCorrente =
-    ciclo.estado === "em_aluguer" && ciclo.data_saida
+    estado === "em_aluguer" && ciclo.data_saida
       ? Math.ceil((new Date() - new Date(ciclo.data_saida)) / (1000 * 60 * 60 * 24))
       : null;
 
   const showEditBtn = canEditMaquina && onEdit;
-  const showReservarBtn = canReservar && onReservar && ciclo.estado === "pronta";
+  const showReservarBtn = canReservar && onReservar && estado === "pronta";
   const showGerirBtn = canReservar && onReservar && ciclo.reserva_cliente;
   const showDeleteBtn = canDeleteMaquina && onDelete;
-  const showSaidaRapidaBtn = canSaidaRapida && onSaidaRapida && ciclo.estado === "pronta";
-  const canAutorizeState = ciclo.estado === "classificada" || ciclo.estado === "manutencao";
-  const canAutorizeCategoria = ciclo.categoria !== "sucata" && ciclo.categoria !== "indefinida";
-  const showAutorizarBtn = canAutorizar && onAutorizar && canAutorizeState && canAutorizeCategoria;
-  const hasActions = showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showSaidaRapidaBtn || showAutorizarBtn;
+  const showSaidaRapidaBtn = canSaidaRapida && onSaidaRapida && estado === "pronta";
+  const canAutorizeState = estado === "classificada" || estado === "manutencao";
+  const showAutorizarBtn = canAutorizar && onAutorizar && canAutorizeState;
+  const showProntaBtn = !!onMarcarPronta && !isCategoriaSemEstado(ciclo.categoria) && estado !== "pronta";
+  const hasActions = showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showSaidaRapidaBtn || showAutorizarBtn || showProntaBtn;
 
   return (
     <div
       onClick={() => setExpanded((v) => !v)}
       className={`relative glass cat-${ciclo.categoria} border ${estadoCfg.border} rounded-lg p-4 cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-lg hover:shadow-black/30 hover:border-slate-600`}
     >
-      {ciclo.prioridade && (
+      {onTogglePrioridade ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); onTogglePrioridade(ciclo); }}
+          title={ciclo.prioridade ? "Retirar prioridade" : "Marcar prioridade"}
+          className={`absolute -top-px -right-px text-[10px] font-bold px-2 py-0.5 rounded-bl-lg rounded-tr-lg flex items-center gap-1 z-10 transition-colors ${
+            ciclo.prioridade
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-slate-200"
+          }`}
+        >
+          <AlertTriangle className="w-2.5 h-2.5" />
+          PRI
+        </button>
+      ) : ciclo.prioridade ? (
         <div className="absolute -top-px -right-px bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg rounded-tr-lg flex items-center gap-1 z-10">
           <AlertTriangle className="w-2.5 h-2.5" />
           PRI
         </div>
-      )}
+      ) : null}
 
       {/* NS — visual hero + photo */}
       <div className="flex items-start justify-between gap-2 mb-1">
@@ -184,6 +199,15 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
               title="Saída rápida"
             >
               <Truck className="w-3 h-3" />
+            </button>
+          )}
+          {showProntaBtn && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onMarcarPronta(ciclo); }}
+              className="px-2 py-1.5 bg-green-600/20 hover:bg-green-600/40 text-green-400 rounded text-xs font-bold flex items-center justify-center gap-1"
+              title="Marcar como pronta"
+            >
+              <Check className="w-3 h-3" /> PRONTA
             </button>
           )}
           {showDeleteBtn && (

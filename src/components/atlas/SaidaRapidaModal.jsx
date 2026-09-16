@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Camera, Loader2, AlertCircle, Check, Truck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { estadoEfetivo } from "@/components/atlas/cicloUtils";
 import { useToast } from "@/components/ui/use-toast";
 import { CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
 
@@ -65,13 +66,15 @@ export default function SaidaRapidaModal({ open, onClose, preselectedCiclo, curr
       });
       if (extractionResult.status === "success" && extractionResult.output?.serie) {
         const ns = extractionResult.output.serie.trim();
-        const results = await base44.entities.Ciclo.filter({ serie: ns, estado: "pronta" });
+        const results = (await base44.entities.Ciclo.filter({ serie: ns, estado: "pronta" }))
+          .filter((c) => estadoEfetivo(c) === "pronta");
         if (results.length > 0) {
           setFoundCiclo(results[0]);
           loadMaquina(results[0]);
           setPhase("confirm");
         } else {
-          const allProntas = await base44.entities.Ciclo.filter({ estado: "pronta" });
+          const allProntas = (await base44.entities.Ciclo.filter({ estado: "pronta" }))
+            .filter((c) => estadoEfetivo(c) === "pronta");
           setProntasList(allProntas);
           setPhase("notfound");
         }

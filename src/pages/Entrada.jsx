@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import PhotoCapture from "@/components/atlas/PhotoCapture";
 import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
+import { isCategoriaSemEstado } from "@/components/atlas/cicloUtils";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -131,6 +132,9 @@ export default function Entrada({ currentUser }) {
   };
 
   const canProceedStep1 = serie.length >= 3 && !cicloAtivo;
+  // Sucata e indefinida não seguem o fluxo de preparação — ficam em "indefinido".
+  const semEstado = isCategoriaSemEstado(categoria);
+  const estadoFinal = semEstado ? "indefinido" : estadoInicial;
   const coneCor = CATEGORIA_CONE_MAP[categoria] || null;
   const needsCone = !!coneCor;
   const canSubmit = categoria && (!needsCone || (coneNumero && !coneError));
@@ -207,12 +211,12 @@ export default function Entrada({ currentUser }) {
         categoria,
         cone_cor: coneCor,
         cone_numero: needsCone ? coneNumero : null,
-        estado: estadoInicial,
+        estado: estadoFinal,
         data_entrada: now,
         data_classificacao: now,
         prioridade: false,
       };
-      if (estadoInicial === "pronta") {
+      if (estadoFinal === "pronta") {
         cicloData.data_pronta = now;
       }
       const newCiclo = await base44.entities.Ciclo.create(cicloData);
@@ -229,12 +233,14 @@ export default function Entrada({ currentUser }) {
         ciclo_id: newCiclo.id,
         serie,
         de_estado: "entrada",
-        para_estado: estadoInicial,
+        para_estado: estadoFinal,
         autor,
         nota:
-          estadoInicial === "pronta"
+          estadoFinal === "indefinido"
+            ? "Sem estado de preparação (sucata/indefinida)"
+            : estadoFinal === "pronta"
             ? "Entrada direta — pronta"
-            : estadoInicial === "manutencao"
+            : estadoFinal === "manutencao"
             ? "Entrada direta — manutenção"
             : "Classificação",
       });
@@ -553,7 +559,14 @@ export default function Entrada({ currentUser }) {
             </div>
           )}
 
-          {canChooseEstado && (
+          {semEstado && (
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-xs text-slate-400 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-500" />
+              Categoria sem estado de preparação — fica como <span className="font-bold text-slate-300">INDEFINIDO</span> (não entra em POR FAZER nem PRONTAS).
+            </div>
+          )}
+
+          {canChooseEstado && !semEstado && (
             <div>
               <h3 className="text-sm font-medium text-slate-300 mb-2">Estado inicial</h3>
               <div className="space-y-2">

@@ -40,7 +40,8 @@
         "em_aluguer",
         "manutencao",
         "retorno",
-        "fechado"
+        "fechado",
+        "indefinido"
       ],
       "default": "entrada",
       "description": "Estado atual do ciclo"

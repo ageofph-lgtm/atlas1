@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search, Filter, RefreshCw, Loader2 } from "lucide-react";
-import { FILTER_OPTIONS, CONE_COLORS } from "@/components/atlas/constants";
+import { FILTER_OPTIONS, CONE_COLORS, MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS } from "@/components/atlas/constants";
 
 const ADVANCED_FILTERS = ["estado", "mastro", "vias_mastro", "tipo_pneu"];
 
@@ -11,20 +11,25 @@ const FILTER_LABELS = {
   tipo_pneu: "Pneu",
 };
 
-export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, onSync, syncing }) {
+export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, onSync, syncing, showCategoria = true }) {
   const [showFilters, setShowFilters] = useState(false);
+
+  const modelos = filters.modelos || [];
+  const toggleModelo = (value) =>
+    onFilterChange("modelos", modelos.includes(value) ? modelos.filter((v) => v !== value) : [...modelos, value]);
 
   const activeAdvancedCount = ADVANCED_FILTERS.filter(
     (key) => filters[key] && filters[key] !== "all"
   ).length;
 
-  const hasAnyFilter = activeAdvancedCount > 0 || (filters.categoria && filters.categoria !== "all") || (filters.coneCor && filters.coneCor !== "all") || (filters.coneNumero && filters.coneNumero.trim());
+  const hasAnyFilter = activeAdvancedCount > 0 || (filters.categoria && filters.categoria !== "all") || (filters.coneCor && filters.coneCor !== "all") || (filters.coneNumero && filters.coneNumero.trim()) || modelos.length > 0;
 
   const handleClear = () => {
     ADVANCED_FILTERS.forEach((key) => onFilterChange(key, "all"));
     onFilterChange("categoria", "all");
     onFilterChange("coneCor", "all");
     onFilterChange("coneNumero", "");
+    onFilterChange("modelos", []);
   };
 
   return (
@@ -74,6 +79,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
         </button>
 
         {/* Inline categoria pills */}
+        {showCategoria && (
         <div className="flex items-center gap-1 flex-wrap">
           {FILTER_OPTIONS.categoria.map((o) => (
             <button
@@ -89,6 +95,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
             </button>
           ))}
         </div>
+        )}
 
         {/* Cone filter — exact match on (cor + nº) */}
         <div className="flex items-center gap-1.5">
@@ -116,11 +123,32 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
         {hasAnyFilter && (
           <button
             onClick={handleClear}
-            className="text-xs text-slate-500 hover:text-amber-400 underline underline-offset-2 ml-auto"
+            className="text-xs text-slate-500 hover:text-amber-400 underline underline-offset-2"
           >
             Limpar filtros
           </button>
         )}
+
+        {/* Famílias de modelo — lado direito, combinam com os restantes filtros */}
+        <div className="flex items-center gap-1 flex-wrap sm:ml-auto sm:justify-end">
+          {[...MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS].map((f) => {
+            const active = modelos.includes(f.value);
+            return (
+              <button
+                key={f.value}
+                onClick={() => toggleModelo(f.value)}
+                title={`Modelos ${f.label}`}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide whitespace-nowrap border transition-colors ${
+                  active
+                    ? "bg-amber-500 text-slate-900 border-amber-500"
+                    : "bg-slate-800/60 text-slate-500 border-slate-700 hover:border-slate-600 hover:text-slate-300"
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Advanced filters panel */}

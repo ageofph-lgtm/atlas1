@@ -12,8 +12,10 @@ import TarefasModal from "@/components/atlas/TarefasModal";
 import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
-import { INVENTARIO_TABS, CATEGORIA_CONFIG } from "@/components/atlas/constants";
+import { INVENTARIO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
+import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
+import { estadoEfetivo, matchModeloFamilia, normalizarEstadosIndefinidos } from "@/components/atlas/cicloUtils";
 
 const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
 
@@ -25,7 +27,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [maquinas, setMaquinas] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all", coneCor: "all", coneNumero: "" });
+  const [filters, setFilters] = useState({ categoria: "all", estado: "all", mastro: "all", vias_mastro: "all", tipo_pneu: "all", coneCor: "all", coneNumero: "", modelos: [] });
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
   const [editCiclo, setEditCiclo] = useState(null);
@@ -41,7 +43,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     try {
       const allCiclos = await base44.entities.Ciclo.list("-created_date", 500);
       const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
-      setCiclos(allCiclos);
+      setCiclos(await normalizarEstadosIndefinidos(allCiclos));
       setMaquinas(allMaquinas);
     } catch (e) {
       console.error(e);
@@ -100,29 +102,32 @@ export default function Inventario({ currentUser, userPermissions }) {
   // Filter pills + advanced filters
   const passesFilters = (ciclo, maquina) => {
     if (filters.categoria !== "all" && ciclo.categoria !== filters.categoria) return false;
-    if (filters.estado !== "all" && ciclo.estado !== filters.estado) return false;
+    if (filters.estado !== "all" && estadoEfetivo(ciclo) !== filters.estado) return false;
     if (filters.mastro !== "all" && maquina?.mastro !== filters.mastro) return false;
     if (filters.vias_mastro !== "all" && maquina?.vias_mastro !== filters.vias_mastro) return false;
     if (filters.tipo_pneu !== "all" && maquina?.tipo_pneu !== filters.tipo_pneu) return false;
     // Cone filter — exact match on (cor + nº), so digits don't broadly match series.
     if (filters.coneCor && filters.coneCor !== "all" && ciclo.cone_cor !== filters.coneCor) return false;
     if (filters.coneNumero && filters.coneNumero.trim() && String(ciclo.cone_numero ?? "") !== String(filters.coneNumero.trim())) return false;
+    // Famílias de modelo (RX20, RX60, EXV, ...) — combinam com todos os outros filtros.
+    if (!matchModeloFamilia(maquina, filters.modelos)) return false;
     return true;
   };
 
   // Categoria-fixed tabs conflict with the categoria pill when a different pill is active.
-  const CATEGORIA_FIXED_TAB = { recon: "recon", uts: "uts", sucata: "sucata" };
+  const CATEGORIA_FIXED_TAB = { recon: "recon", uts: "uts", sucata: "sucata", indefinida: "indefinida" };
 
   const tabFilter = (tabKey, c) => {
     switch (tabKey) {
       case "todas": return true;
-      case "por_fazer": return POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata";
-      case "prontas": return c.estado === "pronta";
+      case "por_fazer": return POR_FAZER_ESTADOS.includes(estadoEfetivo(c));
+      case "prontas": return estadoEfetivo(c) === "pronta";
       case "recon": return c.categoria === "recon";
       case "uts": return c.categoria === "uts";
       case "sucata": return c.categoria === "sucata";
-      case "em_aluguer": return c.estado === "em_aluguer";
-      case "fechados": return c.estado === "fechado";
+      case "indefinida": return c.categoria === "indefinida";
+      case "em_aluguer": return estadoEfetivo(c) === "em_aluguer";
+      case "fechados": return estadoEfetivo(c) === "fechado";
       default: return false;
     }
   };
@@ -147,19 +152,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   }, [ciclos, maquinas, filters, searchQuery]);
 
   // Tab filter
-  const getTabCiclos = () => {
-    switch (activeTab) {
-      case "todas": return ciclos;
-      case "por_fazer": return ciclos.filter((c) => POR_FAZER_ESTADOS.includes(c.estado) && c.categoria !== "sucata");
-      case "prontas": return ciclos.filter((c) => c.estado === "pronta");
-      case "recon": return ciclos.filter((c) => c.categoria === "recon");
-      case "uts": return ciclos.filter((c) => c.categoria === "uts");
-      case "sucata": return ciclos.filter((c) => c.categoria === "sucata");
-      case "em_aluguer": return ciclos.filter((c) => c.estado === "em_aluguer");
-      case "fechados": return ciclos.filter((c) => c.estado === "fechado");
-      default: return [];
-    }
-  };
+  const getTabCiclos = () => ciclos.filter((c) => tabFilter(activeTab, c));
 
   // Sort: priority first, then oldest
   const sortCiclos = (items) => {
@@ -223,53 +216,8 @@ export default function Inventario({ currentUser, userPermissions }) {
   const handleMaquinaEdit = async (specs, cicloUpdates = {}, newSerie = null) => {
     if (!editMaquina) return;
     try {
-      const oldSerie = editMaquina.serie;
-      const finalSerie = newSerie || oldSerie;
-      const maquinaUpdate = {
-        mastro: specs.mastro || "",
-        vias_mastro: specs.vias_mastro || "",
-        joystick: specs.joystick || "",
-        tipo_pneu: specs.tipo_pneu || "",
-        acessorios: specs.acessorios || [],
-        h3: specs.h3 || "",
-        bateria: specs.bateria || "",
-      };
-      if (newSerie) maquinaUpdate.serie = newSerie;
-      await base44.entities.Maquina.update(editMaquina.id, maquinaUpdate);
-
-      if (editCiclo && Object.keys(cicloUpdates).length > 0) {
-        await base44.entities.Ciclo.update(editCiclo.id, cicloUpdates);
-        if (cicloUpdates.categoria && cicloUpdates.categoria !== editCiclo.categoria) {
-          const coneLabel = cicloUpdates.cone_cor ? `${cicloUpdates.cone_cor} ${cicloUpdates.cone_numero || ""}`.trim() : "sem cone";
-          await base44.entities.EventoCiclo.create({
-            ciclo_id: editCiclo.id,
-            serie: finalSerie,
-            de_estado: editCiclo.categoria,
-            para_estado: cicloUpdates.categoria,
-            autor,
-            nota: `Categoria definida: ${cicloUpdates.categoria} → cone ${coneLabel}`,
-          });
-        }
-        if (cicloUpdates.estado && cicloUpdates.estado !== editCiclo.estado) {
-          await base44.entities.EventoCiclo.create({
-            ciclo_id: editCiclo.id,
-            serie: finalSerie,
-            de_estado: editCiclo.estado,
-            para_estado: cicloUpdates.estado,
-            autor,
-            nota: "Estado alterado (admin)",
-          });
-        }
-      }
-
-      // Cascade: rename serie across all linked Ciclo + EventoCiclo (watcher_os_id untouched)
-      if (newSerie && newSerie !== oldSerie) {
-        await base44.entities.Ciclo.updateMany({ serie: oldSerie }, { $set: { serie: newSerie } });
-        await base44.entities.EventoCiclo.updateMany({ serie: oldSerie }, { $set: { serie: newSerie } });
-        toast({ title: "✓ Máquina atualizada", description: `NS: ${oldSerie} → ${newSerie} (registos ligados atualizados)` });
-      } else {
-        toast({ title: "✓ Máquina atualizada", description: `NS: ${finalSerie}` });
-      }
+      const description = await saveMaquinaEdit({ maquina: editMaquina, ciclo: editCiclo, specs, cicloUpdates, newSerie, autor });
+      toast({ title: "✓ Máquina atualizada", description });
       loadData();
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
