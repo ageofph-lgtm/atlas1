@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Body inválido' }, { status: 400 });
     }
 
-    const { action, ciclo_id, autor, tarefas, isVps, isExpress } = body;
+    const { action, ciclo_id, autor, tarefas, isVps, isExpress, batch } = body;
 
     const bridgeSecret = Deno.env.get("ATLAS_BRIDGE_SECRET");
     const watcherUrl = Deno.env.get("WATCHER_ATLAS_URL");
@@ -132,11 +132,20 @@ Deno.serve(async (req) => {
       const updates = [];
       const healed = [];
 
-      // Map Watcher estado string → ATLAS estado + extra update fields
-      const mapEstado = (watcherEstado) => {
+      // Map Watcher estado string → ATLAS estado + extra update fields.
+      // `record` is the full FrotaACP record from the Watcher (used for real completion dates).
+      const mapEstado = (watcherEstado, record = null) => {
         const estado = (watcherEstado || '').toLowerCase();
         if (estado.startsWith('concluida')) {
-          return { novoEstado: 'pronta', updateData: { data_pronta: new Date().toISOString() } };
+          const updateData = {
+            // Use the Watcher's real completion date, not the sync moment
+            data_pronta: record?.dataConclusao || new Date().toISOString()
+          };
+          // Fill data_autorizacao if missing and the Watcher has a real atribuicao date
+          if (record?.dataAtribuicao && !record._ciclo_data_autorizacao) {
+            updateData.data_autorizacao = record.dataAtribuicao;
+          }
+          return { novoEstado: 'pronta', updateData };
         }
         if (estado.startsWith('em-execucao') || estado.startsWith('em_execucao') ||
             estado.startsWith('em-preparacao') || estado.startsWith('em_preparacao')) {
@@ -175,7 +184,9 @@ Deno.serve(async (req) => {
 
           const watcherResult = await watcherResponse.json();
           const record = watcherResult.result ?? watcherResult;
-          const { novoEstado, updateData } = mapEstado(record.estado);
+          // Pass current data_autorizacao so mapEstado knows whether to fill it
+          record._ciclo_data_autorizacao = ciclo.data_autorizacao;
+          const { novoEstado, updateData } = mapEstado(record.estado, record);
 
           if (await applyTransition(ciclo, novoEstado, updateData, 'Sync com Watcher')) {
             updates.push({
@@ -228,7 +239,8 @@ Deno.serve(async (req) => {
           });
 
           // Apply normal estado mapping with the recovered record
-          const { novoEstado, updateData } = mapEstado(adopted.estado);
+          adopted._ciclo_data_autorizacao = ciclo.data_autorizacao;
+          const { novoEstado, updateData } = mapEstado(adopted.estado, adopted);
           if (await applyTransition(ciclo, novoEstado, updateData, 'Sync com Watcher — vínculo recuperado')) {
             updates.push({
               ciclo_id: ciclo.id,
@@ -251,6 +263,167 @@ Deno.serve(async (req) => {
         updated: updates.length,
         healed: healed.length,
         updates: updates
+      });
+
+    // ── BACKFILL DATES ─────────────────────────────────────────
+    } else if (action === 'backfill_dates') {
+      const batchSize = Math.max(1, Math.min(500, Number(batch) || 50));
+
+      // Read ALL ciclos (limit 500)
+      const allCiclos = await base44.asServiceRole.entities.Ciclo.list('-created_date', 500);
+
+      // Candidate ciclos: has serie, categoria not sucata/indefinida
+      const candidates = allCiclos.filter(c =>
+        c.serie &&
+        c.categoria !== 'sucata' &&
+        c.categoria !== 'indefinida'
+      );
+
+      // Priority: watcher_os_id empty OR data_pronta empty OR estado not yet pronta-with-dates
+      const needsLinkOrDates = (c) =>
+        !c.watcher_os_id || !c.data_pronta || c.estado !== 'pronta';
+
+      // Partition: prioritize those needing work, then the rest (idempotent re-check)
+      const prioritized = candidates.filter(needsLinkOrDates);
+      const rest = candidates.filter(c => !needsLinkOrDates(c));
+
+      // Also count total_remaining across ALL candidates (for the caller to know when done)
+      const totalRemaining = prioritized.length;
+
+      const toProcess = [...prioritized, ...rest].slice(0, batchSize);
+
+      let processed = 0;
+      let changed = 0;
+      let linked = 0;
+      let skippedNoWatcher = 0;
+      const details = [];
+
+      for (const ciclo of toProcess) {
+        processed++;
+        try {
+          // Query Watcher by serie
+          const watcherResponse = await fetch(watcherUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-atlas-secret': bridgeSecret },
+            body: JSON.stringify({ action: 'get_status', query: { serie: ciclo.serie } })
+          });
+          if (!watcherResponse.ok) {
+            skippedNoWatcher++;
+            continue;
+          }
+
+          const watcherResult = await watcherResponse.json();
+          const records = Array.isArray(watcherResult) ? watcherResult
+            : Array.isArray(watcherResult.result) ? watcherResult.result
+            : Array.isArray(watcherResult.records) ? watcherResult.records
+            : [];
+          if (records.length === 0) {
+            skippedNoWatcher++;
+            continue;
+          }
+
+          // Adopt the MOST RECENT record by created_date
+          const adopted = records
+            .slice()
+            .sort((a, b) => new Date(b.created_date || 0).getTime() - new Date(a.created_date || 0).getTime())[0];
+          if (!adopted) {
+            skippedNoWatcher++;
+            continue;
+          }
+
+          const adoptedId = adopted.id ?? adopted._id;
+          const adoptedEstado = (adopted.estado || '').toLowerCase();
+          const historicoCriacoes = Array.isArray(adopted.historicoCriacoes) ? adopted.historicoCriacoes : [];
+
+          // Build the update for the Ciclo
+          const updateData = {};
+          const changes = [];
+          let estadoChanged = null;
+
+          // a) Link watcher_os_id if empty
+          if (!ciclo.watcher_os_id && adoptedId) {
+            updateData.watcher_os_id = adoptedId;
+            linked++;
+            changes.push('linked');
+          }
+
+          // b) data_pronta from real completion (concluida-* estado)
+          const isConcluida = adoptedEstado.startsWith('concluida');
+          const isAFazer = adoptedEstado.startsWith('a-fazer');
+          const isEmExec = adoptedEstado.startsWith('em-execucao') ||
+                           adoptedEstado.startsWith('em_execucao') ||
+                           adoptedEstado.startsWith('em-preparacao') ||
+                           adoptedEstado.startsWith('em_preparacao');
+
+          if (isConcluida && adopted.dataConclusao) {
+            // ALWAYS overwrite — existing values came from sync "new Date()" and are wrong
+            updateData.data_pronta = adopted.dataConclusao;
+            changes.push('data_pronta=' + adopted.dataConclusao);
+            // estado → pronta if not already pronta/fechado/em_aluguer/retorno
+            if (['entrada', 'classificada', 'autorizada', 'em_execucao', 'manutencao'].includes(ciclo.estado)) {
+              estadoChanged = 'pronta';
+            }
+          } else if (isAFazer && ['entrada', 'classificada'].includes(ciclo.estado)) {
+            estadoChanged = 'autorizada';
+          } else if (isEmExec && ['entrada', 'classificada', 'autorizada'].includes(ciclo.estado)) {
+            estadoChanged = 'em_execucao';
+          }
+
+          // c) data_autorizacao if missing
+          if (!ciclo.data_autorizacao) {
+            const attrDate = adopted.dataAtribuicao || adopted.created_date;
+            if (attrDate) {
+              updateData.data_autorizacao = attrDate;
+              changes.push('data_autorizacao=' + attrDate);
+            }
+          }
+
+          // Only write if something actually changed
+          const hasUpdate = Object.keys(updateData).length > 0 || estadoChanged !== null;
+          if (!hasUpdate) continue;
+
+          const oldEstado = ciclo.estado;
+          const newEstado = estadoChanged || ciclo.estado;
+
+          // Write the update (estado + other fields together)
+          const finalUpdate = { ...updateData };
+          if (estadoChanged) finalUpdate.estado = estadoChanged;
+          await base44.asServiceRole.entities.Ciclo.update(ciclo.id, finalUpdate);
+
+          // ONE audit event: for estado changes use the transition note; otherwise a data-only note
+          const historicoNote = historicoCriacoes.length > 0
+            ? ` — máquina com ${historicoCriacoes.length} ciclo(s) anterior(es)`
+            : '';
+          const nota = `Datas e vínculo retro-preenchidos do Watcher${historicoNote}`;
+          await base44.asServiceRole.entities.EventoCiclo.create({
+            ciclo_id: ciclo.id,
+            serie: ciclo.serie,
+            de_estado: oldEstado,
+            para_estado: newEstado,
+            autor: 'backfill',
+            nota: nota
+          });
+
+          changed++;
+          if (details.length < 25) {
+            details.push({
+              serie: ciclo.serie,
+              changes: changes.join(', ') + (estadoChanged ? `, estado: ${oldEstado}→${estadoChanged}` : '')
+            });
+          }
+        } catch (_e) {
+          // Skip this ciclo on error, continue with next
+        }
+      }
+
+      return Response.json({
+        success: true,
+        processed,
+        changed,
+        linked,
+        skipped_no_watcher: skippedNoWatcher,
+        total_remaining: totalRemaining,
+        details
       });
 
     } else {
