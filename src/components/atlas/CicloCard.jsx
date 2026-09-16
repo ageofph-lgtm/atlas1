@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Pencil, CalendarClock, Trash2, Truck, ChevronDown, ChevronUp, Zap, StickyNote, Check } from "lucide-react";
+import { AlertTriangle, Pencil, CalendarClock, Trash2, ChevronDown, ChevronUp, Zap, StickyNote, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
 import { estadoEfetivo, isCategoriaSemEstado } from "./cicloUtils";
@@ -8,7 +8,7 @@ import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
 import MaquinaNotas from "./MaquinaNotas";
 
-export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canSaidaRapida, canAutorizar, canNotas, onEdit, onReservar, onDelete, onSaidaRapida, onAutorizar, onNotasSaved, onTogglePrioridade, onMarcarPronta }) {
+export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onNotasSaved, onTogglePrioridade, onMarcarPronta }) {
   const [expanded, setExpanded] = useState(false);
 
   const estado = estadoEfetivo(ciclo);
@@ -37,11 +37,10 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   const showReservarBtn = canReservar && onReservar && estado === "pronta";
   const showGerirBtn = canReservar && onReservar && ciclo.reserva_cliente;
   const showDeleteBtn = canDeleteMaquina && onDelete;
-  const showSaidaRapidaBtn = canSaidaRapida && onSaidaRapida && estado === "pronta";
   const canAutorizeState = estado === "classificada" || estado === "manutencao";
   const showAutorizarBtn = canAutorizar && onAutorizar && canAutorizeState;
   const showProntaBtn = !!onMarcarPronta && !isCategoriaSemEstado(ciclo.categoria) && estado !== "pronta";
-  const hasActions = showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showSaidaRapidaBtn || showAutorizarBtn || showProntaBtn;
+  const hasActions = showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showAutorizarBtn || showProntaBtn;
 
   return (
     <div
@@ -190,15 +189,6 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
               className="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-cyan-400 rounded text-xs font-medium"
             >
               GERIR RESERVA
-            </button>
-          )}
-          {showSaidaRapidaBtn && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onSaidaRapida(ciclo); }}
-              className="px-2 py-1.5 bg-green-600/20 hover:bg-green-600/40 text-green-400 rounded text-xs font-medium flex items-center justify-center"
-              title="Saída rápida"
-            >
-              <Truck className="w-3 h-3" />
             </button>
           )}
           {showProntaBtn && (
