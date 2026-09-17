@@ -237,6 +237,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
                   currentUser={currentUser}
                   canPedidos={userPermissions?.canPedidos}
                   canResponderPedidos={userPermissions?.canResponderPedidos}
+                  canApagarPedidos={userPermissions?.canApagarPedidos}
                   onEdit={canEditMaquinaRecord(currentUser, m) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
                   onAutorizar={canAutorizar ? (ciclo) => setTarefasCiclo(ciclo) : null}
                   onTogglePrioridade={canAutorizar ? togglePrioridade : null}
@@ -265,6 +266,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
                 currentUser={currentUser}
                 canPedidos={userPermissions?.canPedidos}
                 canResponderPedidos={userPermissions?.canResponderPedidos}
+                  canApagarPedidos={userPermissions?.canApagarPedidos}
                 onMarcarPronta={canMarcarPronta && c.estado === "em_execucao" ? handleMarcarPronta : null}
               />
             ))}

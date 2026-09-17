@@ -14,6 +14,7 @@ const ATLAS_PERMISSIONS = {
     canNotas: true,
     canPedidos: true,
     canResponderPedidos: true,
+    canApagarPedidos: true,
   },
   gestor_frota: {
     canEntrada: true,
@@ -28,6 +29,7 @@ const ATLAS_PERMISSIONS = {
     canNotas: true,
     canPedidos: false,
     canResponderPedidos: true,
+    canApagarPedidos: false,
   },
   logistica: {
     canEntrada: true,
@@ -42,6 +44,7 @@ const ATLAS_PERMISSIONS = {
     canNotas: true,
     canPedidos: false,
     canResponderPedidos: false,
+    canApagarPedidos: false,
   },
   comercial: {
     canEntrada: false,
@@ -56,6 +59,7 @@ const ATLAS_PERMISSIONS = {
     canNotas: true,
     canPedidos: true,
     canResponderPedidos: false,
+    canApagarPedidos: false,
   },
   visitante: {
     canEntrada: false,
@@ -70,6 +74,7 @@ const ATLAS_PERMISSIONS = {
     canNotas: false,
     canPedidos: false,
     canResponderPedidos: false,
+    canApagarPedidos: false,
   },
 };
 

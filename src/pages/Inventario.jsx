@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { RefreshCw, Package } from "lucide-react";
+import { RefreshCw, Package, Bell, X } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
 import FilterBar from "@/components/atlas/FilterBar";
 import ReservaModal from "@/components/atlas/ReservaModal";
@@ -21,10 +22,16 @@ export default function Inventario({ currentUser, userPermissions }) {
   const { toast } = useToast();
   const autor = currentUser?.full_name || currentUser?.perfil || "system";
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Chegou-se aqui por uma notificação: ?serie=…&ciclo=… põe a máquina em foco.
+  const serieAlvo = searchParams.get("serie") || "";
+  const cicloAlvo = searchParams.get("ciclo") || "";
+
   const [ciclos, setCiclos] = useState([]);
   const [maquinas, setMaquinas] = useState([]);
+  const [pedidos, setPedidos] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(serieAlvo);
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
@@ -42,6 +49,12 @@ export default function Inventario({ currentUser, userPermissions }) {
       const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
       setCiclos(await normalizarEstadosIndefinidos(allCiclos));
       setMaquinas(allMaquinas);
+      // Os pedidos vêm numa consulta só, para os cards não fazerem uma cada.
+      try {
+        setPedidos(await base44.entities.PedidoMaquina.list("-created_date", 500));
+      } catch (_e) {
+        setPedidos([]);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -90,6 +103,32 @@ export default function Inventario({ currentUser, userPermissions }) {
     });
     return map;
   }, [maquinas]);
+
+  const pedidosPorCiclo = useMemo(() => {
+    const map = {};
+    pedidos.forEach((p) => {
+      if (!p.ciclo_id) return;
+      (map[p.ciclo_id] = map[p.ciclo_id] || []).push(p);
+    });
+    Object.values(map).forEach((l) => l.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+    return map;
+  }, [pedidos]);
+
+  // A notificação pode apontar para uma máquina que já fechou o ciclo — essa
+  // não está no inventário, está no histórico. Melhor dizê-lo do que deixar
+  // o ecrã vazio sem explicação.
+  const limparAlvo = () => {
+    setSearchParams({}, { replace: true });
+    setSearchQuery("");
+  };
+
+  const recarregarPedidos = async () => {
+    try {
+      setPedidos(await base44.entities.PedidoMaquina.list("-created_date", 500));
+    } catch (_e) {
+      // mantém o que já estava
+    }
+  };
 
   const getMaquina = (ciclo) =>
     (ciclo.maquina_id && maquinaMap[ciclo.maquina_id]) ||
@@ -144,6 +183,8 @@ export default function Inventario({ currentUser, userPermissions }) {
     });
     return sortCiclos(filtered);
   }, [ciclosAtivos, maquinas, activeTab, filters, searchQuery]);
+
+  const alvoSemResultado = !!serieAlvo && filteredCiclos.length === 0;
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -278,6 +319,24 @@ export default function Inventario({ currentUser, userPermissions }) {
         </button>
       </div>
 
+      {/* Vindo de uma notificação */}
+      {serieAlvo && (
+        <div className="flex items-center gap-2 text-xs glass border border-amber-500/30 rounded-lg px-3 py-2">
+          <Bell className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <span className="text-slate-300">
+            A mostrar <span className="num font-bold text-slate-100">{serieAlvo}</span>, vindo das mensagens.
+            {alvoSemResultado && (
+              <span className="text-amber-400/90">
+                {" "}Não está no inventário — se o ciclo já fechou, procure-a no histórico, em Relatórios.
+              </span>
+            )}
+          </span>
+          <button onClick={limparAlvo} className="ml-auto p-1 text-slate-500 hover:text-slate-200" aria-label="Limpar">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Cards */}
       {filteredCiclos.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-slate-500">
@@ -300,6 +359,10 @@ export default function Inventario({ currentUser, userPermissions }) {
               currentUser={currentUser}
               canPedidos={userPermissions?.canPedidos}
               canResponderPedidos={userPermissions?.canResponderPedidos}
+              canApagarPedidos={userPermissions?.canApagarPedidos}
+              pedidos={pedidosPorCiclo[c.id] || []}
+              onPedidosChanged={recarregarPedidos}
+              destaque={!!cicloAlvo && c.id === cicloAlvo}
               onEdit={canEditMaquinaRecord(currentUser, getMaquina(c)) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
               onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
               onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}

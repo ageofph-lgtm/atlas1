@@ -9,6 +9,7 @@ import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX 
 import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
 import RetornoRapidoModal from "@/components/atlas/RetornoRapidoModal";
 import FilterBar from "@/components/atlas/FilterBar";
+import PlacaScanner from "@/components/atlas/PlacaScanner";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
@@ -31,6 +32,9 @@ export default function Saida({ currentUser }) {
   const [saidaModal, setSaidaModal] = useState(null); // ciclo being given saída
   const [cliente, setCliente] = useState("");
   const [tipoSaida, setTipoSaida] = useState("alugada");
+  // Bateria e carregador que saem com a máquina, lidos da chapa de características.
+  const [bateria, setBateria] = useState({ ns: "", foto_url: "" });
+  const [carregador, setCarregador] = useState({ ns: "", foto_url: "" });
   const [saidaRapidaOpen, setSaidaRapidaOpen] = useState(false);
   const [retornoRapidoOpen, setRetornoRapidoOpen] = useState(false);
   const [retornoModal, setRetornoModal] = useState(null);
@@ -91,6 +95,8 @@ export default function Saida({ currentUser }) {
     setSaidaModal(ciclo);
     setCliente(ciclo.reserva_cliente || "");
     setTipoSaida("alugada");
+    setBateria({ ns: ciclo.bateria_ns || "", foto_url: ciclo.bateria_foto_url || "" });
+    setCarregador({ ns: ciclo.carregador_ns || "", foto_url: ciclo.carregador_foto_url || "" });
   };
 
   const handleDarSaida = async () => {
@@ -105,6 +111,10 @@ export default function Saida({ currentUser }) {
         estado: novoEstado,
         data_saida: now,
         tipo_saida: tipoSaida,
+        bateria_ns: bateria.ns,
+        bateria_foto_url: bateria.foto_url,
+        carregador_ns: carregador.ns,
+        carregador_foto_url: carregador.foto_url,
       };
       // Update reserva_cliente if changed or set
       if (cliente && cliente !== saidaModal.reserva_cliente) {
@@ -128,6 +138,8 @@ export default function Saida({ currentUser }) {
       setSaidaModal(null);
       setCliente("");
       setTipoSaida("alugada");
+      setBateria({ ns: "", foto_url: "" });
+      setCarregador({ ns: "", foto_url: "" });
       loadData();
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
@@ -454,6 +466,19 @@ export default function Saida({ currentUser }) {
               {saidaModal?.reserva_cliente && (
                 <p className="text-xs text-cyan-400/70 mt-1">Pré-preenchido da reserva</p>
               )}
+            </div>
+
+            <div>
+              <Label className="text-slate-400 text-xs mb-1.5 block">
+                Bateria e carregador <span className="text-slate-600">· fotografe a chapa, a IA lê o nº de série</span>
+              </Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <PlacaScanner titulo="Bateria" valor={bateria.ns} fotoUrl={bateria.foto_url} onChange={setBateria} />
+                <PlacaScanner titulo="Carregador" valor={carregador.ns} fotoUrl={carregador.foto_url} onChange={setCarregador} />
+              </div>
+              <p className="text-[10px] text-slate-600 mt-1.5">
+                Fica guardado no card da máquina. As fotos só abrem quando alguém as clica.
+              </p>
             </div>
           </div>
           <DialogFooter>

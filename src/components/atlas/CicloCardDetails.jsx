@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { BatteryCharging, Plug, Image as ImageIcon } from "lucide-react";
 import { Loader2, CheckSquare, Square } from "lucide-react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { SPEC_LABELS } from "./constants";
 import MaquinaNotas from "./MaquinaNotas";
 import PedidosMaquina from "./PedidosMaquina";
+import FotoModal from "./FotoModal";
 
 const fmt = (d) => (d ? format(new Date(d), "dd/MM HH:mm") : null);
 
@@ -17,8 +19,9 @@ function SpecRow({ label, value }) {
   );
 }
 
-export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSaved, currentUser, canPedidos, canResponderPedidos }) {
+export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSaved, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, pedidos, onPedidosChanged, abrirComposerPedido }) {
   const [eventos, setEventos] = useState(null);
+  const [foto, setFoto] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -72,12 +75,47 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSave
         <MaquinaNotas maquina={maquina} canNotas={canNotas} onSaved={onNotasSaved} />
       </div>
 
+      {/* Bateria e carregador que saíram com a máquina.
+          As fotos não se mostram — ficam a um clique de distância. */}
+      {(ciclo.bateria_ns || ciclo.bateria_foto_url || ciclo.carregador_ns || ciclo.carregador_foto_url) && (
+        <div>
+          <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide mb-2">Bateria e carregador</h4>
+          <div className="space-y-1.5">
+            {[
+              { Icon: BatteryCharging, label: "Bateria", ns: ciclo.bateria_ns, url: ciclo.bateria_foto_url },
+              { Icon: Plug, label: "Carregador", ns: ciclo.carregador_ns, url: ciclo.carregador_foto_url },
+            ]
+              .filter((x) => x.ns || x.url)
+              .map(({ Icon, label, ns, url }) => (
+                <div key={label} className="flex items-center gap-2 text-xs bg-slate-900/50 rounded px-2 py-1.5">
+                  <Icon className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                  <span className="text-slate-500">{label}</span>
+                  <span className="num text-slate-200 tracking-wider break-all">{ns || "—"}</span>
+                  {url && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setFoto({ url, titulo: `${label} — ${ciclo.serie}` }); }}
+                      className="ml-auto text-amber-400/80 hover:text-amber-400 flex items-center gap-1 flex-shrink-0"
+                    >
+                      <ImageIcon className="w-3 h-3" /> ver foto
+                    </button>
+                  )}
+                </div>
+              ))}
+          </div>
+          <FotoModal open={!!foto} url={foto?.url} titulo={foto?.titulo} onClose={() => setFoto(null)} />
+        </div>
+      )}
+
       {/* Pedidos do comercial para esta máquina */}
       <PedidosMaquina
         ciclo={ciclo}
         currentUser={currentUser}
         canPedir={canPedidos}
         canResponder={canResponderPedidos}
+        canApagar={canApagarPedidos}
+        pedidosExternos={pedidos}
+        onChanged={onPedidosChanged}
+        abrirComposer={abrirComposerPedido}
       />
 
       {/* Datas do Ciclo */}

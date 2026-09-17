@@ -1,5 +1,5 @@
-import React from "react";
-import { X, Inbox, CheckCheck, Loader2, ArrowRightLeft, LogIn, LogOut, CalendarClock, MessageSquarePlus, Bell } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { X, Inbox, CheckCheck, Loader2, ArrowRightLeft, LogIn, LogOut, CalendarClock, MessageSquarePlus, Bell, ChevronRight } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 
 const ICONE = {
@@ -22,6 +22,19 @@ const COR = {
   aviso: "text-slate-400",
 };
 
+/**
+ * Cada assunto tem o seu sítio. A gestão recebe dezenas de mensagens por dia e
+ * sem isto tudo se mistura: movimento do pátio, oficina, comercial.
+ */
+const ABAS = [
+  { key: "todas", label: "Todas", tipos: null },
+  { key: "movimento", label: "Pátio", tipos: ["entrada", "saida"] },
+  { key: "oficina", label: "Oficina", tipos: ["estado"] },
+  { key: "classificacao", label: "Classificação", tipos: ["categoria"] },
+  { key: "reservas", label: "Reservas", tipos: ["reserva"] },
+  { key: "pedidos", label: "Pedidos", tipos: ["pedido"] },
+];
+
 const quando = (d) => {
   if (!d) return "—";
   const data = new Date(d);
@@ -31,7 +44,32 @@ const quando = (d) => {
 };
 
 /** Painel da caixa de mensagens, aberto a partir do sino do cabeçalho. */
-export default function CaixaMensagens({ open, onClose, mensagens, porLer, isLoading, naoLida, onMarcarLida, onMarcarTodasLidas }) {
+export default function CaixaMensagens({ open, onClose, mensagens, porLer, isLoading, naoLida, onMarcarLida, onMarcarTodasLidas, onAbrirMaquina }) {
+  const [aba, setAba] = useState("todas");
+  const [soPorLer, setSoPorLer] = useState(false);
+
+  const daAba = (m, key) => {
+    const cfg = ABAS.find((a) => a.key === key);
+    return !cfg?.tipos || cfg.tipos.includes(m.tipo);
+  };
+
+  const contagens = useMemo(() => {
+    const c = {};
+    ABAS.forEach((a) => { c[a.key] = mensagens.filter((m) => daAba(m, a.key) && naoLida(m)).length; });
+    return c;
+  }, [mensagens, naoLida]);
+
+  const visiveis = useMemo(
+    () => mensagens.filter((m) => daAba(m, aba) && (!soPorLer || naoLida(m))),
+    [mensagens, aba, soPorLer, naoLida]
+  );
+
+  // Ler a mensagem e ir para a máquina são a mesma intenção: quem clica quer ver o caso.
+  const abrir = (m) => {
+    onMarcarLida(m);
+    if (m.serie && onAbrirMaquina) onAbrirMaquina(m);
+  };
+
   if (!open) return null;
 
   return (
@@ -61,20 +99,53 @@ export default function CaixaMensagens({ open, onClose, mensagens, porLer, isLoa
           </div>
         </div>
 
+        {/* Abas por assunto */}
+        <div className="flex items-center gap-1 px-2 pt-2 overflow-x-auto no-scrollbar border-b border-slate-800">
+          {ABAS.map((a) => (
+            <button
+              key={a.key}
+              onClick={() => setAba(a.key)}
+              className={`px-2.5 py-1.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-1 ${
+                aba === a.key ? "border-amber-500 text-amber-400" : "border-transparent text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              {a.label}
+              {contagens[a.key] > 0 && (
+                <span className="bg-red-500/90 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5">
+                  {contagens[a.key]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="px-4 py-2 border-b border-slate-800">
+          <button
+            onClick={() => setSoPorLer((v) => !v)}
+            className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+              soPorLer
+                ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
+                : "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300"
+            }`}
+          >
+            {soPorLer ? "a mostrar só por ler" : "mostrar só por ler"}
+          </button>
+        </div>
+
         <div className="flex-1 overflow-y-auto">
-          {mensagens.length === 0 ? (
+          {visiveis.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-500">
               <Inbox className="w-10 h-10 mb-2 opacity-30" />
-              <p className="text-sm">Sem mensagens</p>
+              <p className="text-sm">{soPorLer ? "Nada por ler aqui" : "Sem mensagens"}</p>
             </div>
           ) : (
-            mensagens.map((m) => {
+            visiveis.map((m) => {
               const Icon = ICONE[m.tipo] || Bell;
               const porLerEsta = naoLida(m);
               return (
                 <button
                   key={m.id}
-                  onClick={() => onMarcarLida(m)}
+                  onClick={() => abrir(m)}
                   className={`w-full text-left flex gap-3 px-4 py-3 border-b border-slate-800 transition-colors ${
                     porLerEsta ? "bg-amber-500/[0.06] hover:bg-amber-500/10" : "hover:bg-slate-800/50"
                   }`}
@@ -88,7 +159,14 @@ export default function CaixaMensagens({ open, onClose, mensagens, porLer, isLoa
                       <span className="text-[10px] text-slate-500 ml-auto flex-shrink-0">{quando(m.created_date)}</span>
                     </div>
                     {m.corpo && <p className="text-xs text-slate-400 mt-0.5 break-words">{m.corpo}</p>}
-                    {m.autor && <p className="text-[10px] text-slate-600 mt-1">{m.autor}</p>}
+                    <div className="flex items-center gap-1.5 mt-1">
+                      {m.autor && <p className="text-[10px] text-slate-600">{m.autor}</p>}
+                      {m.serie && onAbrirMaquina && (
+                        <span className="text-[10px] text-amber-400/70 flex items-center gap-0.5 ml-auto">
+                          ver máquina <ChevronRight className="w-3 h-3" />
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {porLerEsta && <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 mt-1.5" />}
                 </button>
