@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BatteryCharging, Plug, Image as ImageIcon } from "lucide-react";
+import { BatteryCharging, Plug, Image as ImageIcon, Eraser, Loader2 as Spinner } from "lucide-react";
 import { Loader2, CheckSquare, Square } from "lucide-react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
@@ -19,9 +19,26 @@ function SpecRow({ label, value }) {
   );
 }
 
-export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSaved, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, pedidos, onPedidosChanged, abrirComposerPedido }) {
+export default function CicloCardDetails({ ciclo, maquina, canNotas, onAtualizado, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, pedidos, onPedidosChanged, abrirComposerPedido, canLimparRegistos }) {
   const [eventos, setEventos] = useState(null);
   const [foto, setFoto] = useState(null);
+  const [aLimpar, setALimpar] = useState(false);
+
+  // Registos de bateria/carregador gravados por engano — um teste, a máquina
+  // errada — não têm como ser corrigidos de outra forma: só são escritos na
+  // saída, e essa já passou.
+  const limparBateriaCarregador = async () => {
+    setALimpar(true);
+    try {
+      await base44.entities.Ciclo.update(ciclo.id, {
+        bateria_ns: "", bateria_foto_url: "", carregador_ns: "", carregador_foto_url: "",
+      });
+      onAtualizado?.();
+    } catch (_e) {
+      // ignorado — o ecrã fica como estava
+    }
+    setALimpar(false);
+  };
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -72,14 +89,27 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSave
       {/* Notas da Máquina (aviso) */}
       <div>
         <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide mb-2">Notas da Máquina</h4>
-        <MaquinaNotas maquina={maquina} canNotas={canNotas} onSaved={onNotasSaved} />
+        <MaquinaNotas maquina={maquina} canNotas={canNotas} onSaved={onAtualizado} />
       </div>
 
       {/* Bateria e carregador que saíram com a máquina.
           As fotos não se mostram — ficam a um clique de distância. */}
       {(ciclo.bateria_ns || ciclo.bateria_foto_url || ciclo.carregador_ns || ciclo.carregador_foto_url) && (
         <div>
-          <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide mb-2">Bateria e carregador</h4>
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">Bateria e carregador</h4>
+            {canLimparRegistos && (
+              <button
+                onClick={(e) => { e.stopPropagation(); limparBateriaCarregador(); }}
+                disabled={aLimpar}
+                title="Apagar o registo de bateria e carregador"
+                className="ml-auto text-[10px] text-red-400/70 hover:text-red-400 flex items-center gap-1 disabled:opacity-50"
+              >
+                {aLimpar ? <Spinner className="w-3 h-3 animate-spin" /> : <Eraser className="w-3 h-3" />}
+                limpar registo
+              </button>
+            )}
+          </div>
           <div className="space-y-1.5">
             {[
               { Icon: BatteryCharging, label: "Bateria", ns: ciclo.bateria_ns, url: ciclo.bateria_foto_url },

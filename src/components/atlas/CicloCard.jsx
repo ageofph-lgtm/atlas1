@@ -8,7 +8,7 @@ import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
 import MaquinaNotas from "./MaquinaNotas";
 
-export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onNotasSaved, onTogglePrioridade, onMarcarPronta, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, pedidos, onPedidosChanged, destaque = false }) {
+export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onAtualizado, onTogglePrioridade, onMarcarPronta, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, canLimparRegistos, pedidos, onPedidosChanged, destaque = false }) {
   const [expanded, setExpanded] = useState(destaque);
   const [pedirAgora, setPedirAgora] = useState(false);
   const cardRef = useRef(null);
@@ -262,11 +262,12 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
               ciclo={ciclo}
               maquina={maquina}
               canNotas={canNotas}
-              onNotasSaved={onNotasSaved}
+              onAtualizado={onAtualizado}
               currentUser={currentUser}
               canPedidos={canPedidos}
               canResponderPedidos={canResponderPedidos}
               canApagarPedidos={canApagarPedidos}
+              canLimparRegistos={canLimparRegistos}
               pedidos={pedidos}
               onPedidosChanged={onPedidosChanged}
               abrirComposerPedido={pedirAgora}

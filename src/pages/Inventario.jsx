@@ -355,11 +355,12 @@ export default function Inventario({ currentUser, userPermissions }) {
               canDeleteMaquina={userPermissions?.canDeleteMaquina}
               canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
               canNotas={userPermissions?.canNotas}
-              onNotasSaved={loadData}
+              onAtualizado={loadData}
               currentUser={currentUser}
               canPedidos={userPermissions?.canPedidos}
               canResponderPedidos={userPermissions?.canResponderPedidos}
               canApagarPedidos={userPermissions?.canApagarPedidos}
+              canLimparRegistos={currentUser?.perfil === "administrador"}
               pedidos={pedidosPorCiclo[c.id] || []}
               onPedidosChanged={recarregarPedidos}
               destaque={!!cicloAlvo && c.id === cicloAlvo}
