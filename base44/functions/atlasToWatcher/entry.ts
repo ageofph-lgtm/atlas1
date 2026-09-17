@@ -154,6 +154,58 @@ Deno.serve(async (req) => {
         return { novoEstado: null, updateData: {} };
       };
 
+      // Comerciais com interesse na máquina: quem a reservou e quem lhe fez pedidos.
+      const comerciaisInteressados = async (ciclo) => {
+        const ids = new Set();
+        if (ciclo.reserva_comercial_id) ids.add(ciclo.reserva_comercial_id);
+        try {
+          const pedidos = await base44.asServiceRole.entities.PedidoMaquina.filter({ ciclo_id: ciclo.id });
+          pedidos.forEach(p => p.comercial_user_id && ids.add(p.comercial_user_id));
+        } catch (_e) {
+          // sem pedidos legíveis — a reserva sozinha continua a valer
+        }
+        return [...ids];
+      };
+
+      // Estas transições vêm da oficina, via Watcher. São o único sítio onde o
+      // ATLAS fica a saber que o trabalho começou ou acabou, por isso é daqui
+      // que saem as mensagens para a logística, a gestão e os comerciais à espera.
+      const avisarDaOficina = async (ciclo, novoEstado) => {
+        if (novoEstado !== 'pronta' && novoEstado !== 'em_execucao') return;
+        const pronta = novoEstado === 'pronta';
+        const criar = (m) => base44.asServiceRole.entities.Mensagem.create({
+          destino: '',
+          destino_user_id: '',
+          tipo: 'estado',
+          serie: ciclo.serie,
+          ciclo_id: ciclo.id,
+          autor: 'Oficina',
+          lida_por: [],
+          ...m
+        });
+        try {
+          const interessados = await comerciaisInteressados(ciclo);
+          const titulo = pronta ? `Máquina pronta — ${ciclo.serie}` : `Em manutenção — ${ciclo.serie}`;
+          const corpo = pronta
+            ? `A máquina ${ciclo.serie} mudou de estado para PRONTA.`
+            : `A oficina começou a trabalhar em ${ciclo.serie}.`;
+          const envios = [criar({ destino: 'gestao', titulo, corpo })];
+          if (pronta) envios.push(criar({ destino: 'logistica', titulo, corpo }));
+          interessados.forEach(id => envios.push(criar({
+            destino_user_id: id,
+            titulo: pronta
+              ? `A sua máquina está pronta — ${ciclo.serie}`
+              : `A sua máquina entrou em manutenção — ${ciclo.serie}`,
+            corpo: pronta
+              ? `${ciclo.serie} concluiu a preparação e está disponível.`
+              : `${ciclo.serie} está a ser preparada na oficina.`
+          })));
+          await Promise.all(envios);
+        } catch (_e) {
+          // uma notificação que não saiu não pode travar o sync do estado
+        }
+      };
+
       // Apply a estado transition + audit event if the estado actually changes
       const applyTransition = async (ciclo, novoEstado, updateData, nota) => {
         if (!novoEstado || novoEstado === ciclo.estado) return false;
@@ -169,6 +221,7 @@ Deno.serve(async (req) => {
           autor: autorName,
           nota: nota
         });
+        await avisarDaOficina(ciclo, novoEstado);
         return true;
       };
 

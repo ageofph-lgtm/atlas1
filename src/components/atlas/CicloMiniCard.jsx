@@ -11,7 +11,7 @@ import CicloCardDetails from "./CicloCardDetails";
  * (NS em destaque, cone, badges de categoria/estado) mas numa linha só,
  * e abre com todos os detalhes ao clicar.
  */
-export default function CicloMiniCard({ ciclo, maquina, canNotas, onNotasSaved, onMarcarPronta }) {
+export default function CicloMiniCard({ ciclo, maquina, canNotas, onNotasSaved, onMarcarPronta, currentUser, canPedidos, canResponderPedidos }) {
   const [expanded, setExpanded] = useState(false);
 
   const estado = estadoEfetivo(ciclo);
@@ -88,7 +88,15 @@ export default function CicloMiniCard({ ciclo, maquina, canNotas, onNotasSaved, 
             className="overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <CicloCardDetails ciclo={ciclo} maquina={maquina} canNotas={canNotas} onNotasSaved={onNotasSaved} />
+            <CicloCardDetails
+              ciclo={ciclo}
+              maquina={maquina}
+              canNotas={canNotas}
+              onNotasSaved={onNotasSaved}
+              currentUser={currentUser}
+              canPedidos={canPedidos}
+              canResponderPedidos={canResponderPedidos}
+            />
           </motion.div>
         )}
       </AnimatePresence>

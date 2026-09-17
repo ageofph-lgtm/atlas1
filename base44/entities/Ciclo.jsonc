@@ -114,6 +114,10 @@
       "type": "string",
       "description": "Nome do comercial que fez a reserva"
     },
+    "reserva_comercial_id": {
+      "type": "string",
+      "description": "ID do comercial que reservou \u2014 para lhe enviar as notifica\u00e7\u00f5es desta m\u00e1quina"
+    },
     "observacoes": {
       "type": "string",
       "description": "Observa\u00e7\u00f5es do ciclo"

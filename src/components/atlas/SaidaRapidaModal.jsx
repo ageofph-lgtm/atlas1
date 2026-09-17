@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { estadoEfetivo } from "@/components/atlas/cicloUtils";
 import { useToast } from "@/components/ui/use-toast";
 import { CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
+import { notificarSaida } from "@/components/atlas/mensagens";
 
 export default function SaidaRapidaModal({ open, onClose, preselectedCiclo, currentUser, onDone }) {
   const { toast } = useToast();
@@ -115,6 +116,7 @@ export default function SaidaRapidaModal({ open, onClose, preselectedCiclo, curr
         autor,
         nota,
       });
+      await notificarSaida(foundCiclo, { autor, tipoSaida, cliente: foundCiclo.reserva_cliente || "" });
       toast({ title: "✓ Saída registada", description: `${foundCiclo.serie} — ${tipoSaida === "alugada" ? "Alugada" : "Vendida"}` });
       onDone?.();
       onClose();

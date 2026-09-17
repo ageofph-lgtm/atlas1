@@ -8,7 +8,7 @@ import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
 import MaquinaNotas from "./MaquinaNotas";
 
-export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onNotasSaved, onTogglePrioridade, onMarcarPronta }) {
+export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onNotasSaved, onTogglePrioridade, onMarcarPronta, currentUser, canPedidos, canResponderPedidos }) {
   const [expanded, setExpanded] = useState(false);
 
   const estado = estadoEfetivo(ciclo);
@@ -222,7 +222,15 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
             className="overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <CicloCardDetails ciclo={ciclo} maquina={maquina} canNotas={canNotas} onNotasSaved={onNotasSaved} />
+            <CicloCardDetails
+              ciclo={ciclo}
+              maquina={maquina}
+              canNotas={canNotas}
+              onNotasSaved={onNotasSaved}
+              currentUser={currentUser}
+              canPedidos={canPedidos}
+              canResponderPedidos={canResponderPedidos}
+            />
           </motion.div>
         )}
       </AnimatePresence>

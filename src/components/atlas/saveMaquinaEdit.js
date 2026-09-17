@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { notificarMudancaGestao } from "@/components/atlas/mensagens";
 
 /**
  * Gravação partilhada do EditMaquinaModal (inventário + autorização).
@@ -45,6 +46,20 @@ export async function saveMaquinaEdit({ maquina, ciclo, specs, cicloUpdates = {}
         nota: "Estado alterado (admin)",
       });
     }
+  }
+
+  // A logística precisa de saber quando a gestão reclassifica ou muda o estado.
+  if (ciclo && (cicloUpdates.categoria || cicloUpdates.estado)) {
+    await notificarMudancaGestao(
+      { ...ciclo, serie: finalSerie },
+      {
+        autor,
+        categoriaAnterior: ciclo.categoria,
+        categoriaNova: cicloUpdates.categoria,
+        estadoAnterior: ciclo.estado,
+        estadoNovo: cicloUpdates.estado,
+      }
+    );
   }
 
   // Cascata: renomear o NS em todos os Ciclo + EventoCiclo ligados (watcher_os_id intacto)
