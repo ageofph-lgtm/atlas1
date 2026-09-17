@@ -11,7 +11,7 @@ import CicloCardDetails from "./CicloCardDetails";
  * (NS em destaque, cone, badges de categoria/estado) mas numa linha só,
  * e abre com todos os detalhes ao clicar.
  */
-export default function CicloMiniCard({ ciclo, maquina, canNotas, onNotasSaved, onMarcarPronta, currentUser, canPedidos, canResponderPedidos }) {
+export default function CicloMiniCard({ ciclo, maquina, canNotas, onAtualizado, onMarcarPronta, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, canLimparRegistos }) {
   const [expanded, setExpanded] = useState(false);
 
   const estado = estadoEfetivo(ciclo);
@@ -92,10 +92,12 @@ export default function CicloMiniCard({ ciclo, maquina, canNotas, onNotasSaved, 
               ciclo={ciclo}
               maquina={maquina}
               canNotas={canNotas}
-              onNotasSaved={onNotasSaved}
+              onAtualizado={onAtualizado}
               currentUser={currentUser}
               canPedidos={canPedidos}
               canResponderPedidos={canResponderPedidos}
+              canApagarPedidos={canApagarPedidos}
+              canLimparRegistos={canLimparRegistos}
             />
           </motion.div>
         )}

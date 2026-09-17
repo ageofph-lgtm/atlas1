@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Camera, Loader2, AlertCircle, Search } from "lucide-react";
+import { Camera, Loader2, AlertCircle, Search, List } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { estadoEfetivo } from "@/components/atlas/cicloUtils";
@@ -15,7 +15,9 @@ import { estadoEfetivo } from "@/components/atlas/cicloUtils";
  */
 export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, titulo, estadoAlvo, vazioTexto, Icone = Search, cor = "amber" }) {
   const { toast } = useToast();
-  const [fase, setFase] = useState("camera"); // camera | lista
+  // Começa na lista: escolher a máquina à mão é o caminho mais usado e não
+  // depende de a placa estar legível. A fotografia fica ao lado, não por baixo.
+  const [fase, setFase] = useState("lista"); // lista | camera
   const [processing, setProcessing] = useState(false);
   const [candidatas, setCandidatas] = useState([]);
   const [procura, setProcura] = useState("");
@@ -26,12 +28,13 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
   const T = cor === "cyan"
     ? { texto: "text-cyan-400", spin: "text-cyan-500", borda: "hover:border-cyan-500", fundo: "hover:bg-cyan-500/5" }
     : { texto: "text-amber-400", spin: "text-amber-500", borda: "hover:border-amber-500", fundo: "hover:bg-amber-500/5" };
+  T.ativo = cor === "cyan" ? "border-cyan-500 bg-cyan-500/10 text-cyan-300" : "border-amber-500 bg-amber-500/10 text-amber-300";
 
   useEffect(() => {
     if (!open) return;
-    setFase("camera");
     setProcura("");
-    setCandidatas([]);
+    mostrarLista();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const elegiveis = async () => {
@@ -96,6 +99,23 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
           <p className="text-xs text-slate-500">Encontre a máquina — o registo faz-se a seguir, no mesmo ecrã de sempre.</p>
         </DialogHeader>
 
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { key: "lista", label: "Escolher da lista", Ico: List },
+            { key: "camera", label: "Fotografar placa", Ico: Camera },
+          ].map(({ key, label, Ico }) => (
+            <button
+              key={key}
+              onClick={() => (key === "lista" ? mostrarLista() : setFase("camera"))}
+              className={`py-2 rounded-lg border-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
+                fase === key ? T.ativo : "border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600"
+              }`}
+            >
+              <Ico className="w-3.5 h-3.5" /> {label}
+            </button>
+          ))}
+        </div>
+
         {fase === "camera" && (
           <div className="py-2 space-y-3">
             <input
@@ -125,12 +145,6 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
                   <p className="text-xs text-slate-500 mt-1">A IA lê a série e encontra a máquina</p>
                 </>
               )}
-            </button>
-            <button
-              onClick={mostrarLista}
-              className="w-full py-2.5 border border-slate-700 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-700/50 flex items-center justify-center gap-2"
-            >
-              <Search className="w-4 h-4" /> Procurar pela lista
             </button>
           </div>
         )}
@@ -168,12 +182,6 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
               ))}
               {filtradas.length === 0 && <p className="text-sm text-slate-500 text-center py-4">{vazioTexto}</p>}
             </div>
-            <button
-              onClick={() => setFase("camera")}
-              className="w-full py-2.5 border border-slate-700 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-700/50 flex items-center justify-center gap-2"
-            >
-              <Camera className="w-4 h-4" /> Voltar à fotografia
-            </button>
           </div>
         )}
       </DialogContent>

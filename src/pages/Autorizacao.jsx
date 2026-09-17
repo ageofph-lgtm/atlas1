@@ -233,11 +233,12 @@ export default function Autorizacao({ currentUser, userPermissions }) {
                   canEditMaquina={canEditMaquinaRecord(currentUser, m)}
                   canAutorizar={canAutorizar && authorizing !== c.id}
                   canNotas={userPermissions?.canNotas}
-                  onNotasSaved={loadData}
+                  onAtualizado={loadData}
                   currentUser={currentUser}
                   canPedidos={userPermissions?.canPedidos}
                   canResponderPedidos={userPermissions?.canResponderPedidos}
                   canApagarPedidos={userPermissions?.canApagarPedidos}
+              canLimparRegistos={currentUser?.perfil === "administrador"}
                   onEdit={canEditMaquinaRecord(currentUser, m) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
                   onAutorizar={canAutorizar ? (ciclo) => setTarefasCiclo(ciclo) : null}
                   onTogglePrioridade={canAutorizar ? togglePrioridade : null}
@@ -262,11 +263,12 @@ export default function Autorizacao({ currentUser, userPermissions }) {
                 ciclo={c}
                 maquina={getMaquina(c)}
                 canNotas={userPermissions?.canNotas}
-                onNotasSaved={loadData}
+                onAtualizado={loadData}
                 currentUser={currentUser}
                 canPedidos={userPermissions?.canPedidos}
                 canResponderPedidos={userPermissions?.canResponderPedidos}
                   canApagarPedidos={userPermissions?.canApagarPedidos}
+              canLimparRegistos={currentUser?.perfil === "administrador"}
                 onMarcarPronta={canMarcarPronta && c.estado === "em_execucao" ? handleMarcarPronta : null}
               />
             ))}
