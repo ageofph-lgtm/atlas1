@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Cog, BarChart3 } from "lucide-react";
+import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Cog, BarChart3, Bell } from "lucide-react";
 import { User } from "@/entities/all";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import ProfileSelector from "./components/auth/ProfileSelector";
 import ThemeSwitcher from "./components/atlas/ThemeSwitcher";
+import CaixaMensagens from "./components/atlas/CaixaMensagens";
+import { useMensagens } from "@/hooks/useMensagens";
+import { podeUsarMensagens } from "@/components/atlas/mensagens";
 
 const ALL_NAV_ITEMS = [
   { key: "Entrada", title: "Entrada", url: createPageUrl("Entrada"), icon: Camera, permKey: "canEntrada" },
@@ -23,6 +26,25 @@ const PAGE_TITLES = {
   Relatorios: "RELATÓRIOS",
 };
 
+/** Sino da caixa de mensagens, com o número de mensagens por ler. */
+function SinoMensagens({ porLer, onOpen, compact = false, className = "" }) {
+  return (
+    <button
+      onClick={onOpen}
+      aria-label={`Mensagens${porLer ? ` — ${porLer} por ler` : ""}`}
+      title="Mensagens"
+      className={`relative rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-700/50 items-center transition-colors ${compact ? "p-1.5" : "p-2"} ${className}`}
+    >
+      <Bell className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
+      {porLer > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-[15px] px-1 flex items-center justify-center">
+          {porLer > 99 ? "99+" : porLer}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,6 +53,9 @@ export default function Layout({ children, currentPageName }) {
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
   const permissions = usePermissions(user?.perfil);
+  const [caixaAberta, setCaixaAberta] = useState(false);
+  const caixa = useMensagens(user);
+  const temCaixa = podeUsarMensagens(user?.perfil);
 
   useEffect(() => {
     loadUser();
@@ -86,6 +111,8 @@ export default function Layout({ children, currentPageName }) {
   }
 
   const allowedNavItems = ALL_NAV_ITEMS.filter((item) => permissions[item.permKey]);
+
+
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
@@ -176,6 +203,7 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               )}
 
+              {temCaixa && <SinoMensagens porLer={caixa.porLer} onOpen={() => setCaixaAberta(true)} className="hidden md:flex" />}
               <ThemeSwitcher className="hidden md:block" />
             </div>
           </div>
@@ -206,10 +234,22 @@ export default function Layout({ children, currentPageName }) {
                 );
               })}
             </div>
+            {temCaixa && <SinoMensagens porLer={caixa.porLer} onOpen={() => setCaixaAberta(true)} compact className="flex flex-shrink-0" />}
             <ThemeSwitcher compact className="flex-shrink-0" />
           </div>
         </div>
       </nav>
+
+      <CaixaMensagens
+        open={caixaAberta}
+        onClose={() => setCaixaAberta(false)}
+        mensagens={caixa.mensagens}
+        porLer={caixa.porLer}
+        isLoading={caixa.isLoading}
+        naoLida={caixa.naoLida}
+        onMarcarLida={caixa.marcarLida}
+        onMarcarTodasLidas={caixa.marcarTodasLidas}
+      />
 
       {/* Page Title */}
       <div className="pt-[108px] md:pt-20 px-4 sm:px-6 lg:px-8 pb-4">

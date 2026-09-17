@@ -12,6 +12,8 @@ const ATLAS_PERMISSIONS = {
     canReservar: true,
     canEditReserva: true,
     canNotas: true,
+    canPedidos: true,
+    canResponderPedidos: true,
   },
   gestor_frota: {
     canEntrada: true,
@@ -24,6 +26,8 @@ const ATLAS_PERMISSIONS = {
     canReservar: false,
     canEditReserva: false,
     canNotas: true,
+    canPedidos: false,
+    canResponderPedidos: true,
   },
   logistica: {
     canEntrada: true,
@@ -36,6 +40,8 @@ const ATLAS_PERMISSIONS = {
     canReservar: false,
     canEditReserva: false,
     canNotas: true,
+    canPedidos: false,
+    canResponderPedidos: false,
   },
   comercial: {
     canEntrada: false,
@@ -48,6 +54,8 @@ const ATLAS_PERMISSIONS = {
     canReservar: true,
     canEditReserva: true,
     canNotas: true,
+    canPedidos: true,
+    canResponderPedidos: false,
   },
   visitante: {
     canEntrada: false,
@@ -60,6 +68,8 @@ const ATLAS_PERMISSIONS = {
     canReservar: false,
     canEditReserva: false,
     canNotas: false,
+    canPedidos: false,
+    canResponderPedidos: false,
   },
 };
 

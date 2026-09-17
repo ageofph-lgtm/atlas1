@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { SPEC_LABELS } from "./constants";
 import MaquinaNotas from "./MaquinaNotas";
+import PedidosMaquina from "./PedidosMaquina";
 
 const fmt = (d) => (d ? format(new Date(d), "dd/MM HH:mm") : null);
 
@@ -16,7 +17,7 @@ function SpecRow({ label, value }) {
   );
 }
 
-export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSaved }) {
+export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSaved, currentUser, canPedidos, canResponderPedidos }) {
   const [eventos, setEventos] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -70,6 +71,14 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onNotasSave
         <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide mb-2">Notas da Máquina</h4>
         <MaquinaNotas maquina={maquina} canNotas={canNotas} onSaved={onNotasSaved} />
       </div>
+
+      {/* Pedidos do comercial para esta máquina */}
+      <PedidosMaquina
+        ciclo={ciclo}
+        currentUser={currentUser}
+        canPedir={canPedidos}
+        canResponder={canResponderPedidos}
+      />
 
       {/* Datas do Ciclo */}
       {dateEntries.length > 0 && (

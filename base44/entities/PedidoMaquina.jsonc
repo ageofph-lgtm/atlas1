@@ -1,0 +1,49 @@
+{
+  "name": "PedidoMaquina",
+  "type": "object",
+  "properties": {
+    "ciclo_id": {
+      "type": "string",
+      "description": "ID do Ciclo a que o pedido pertence"
+    },
+    "serie": {
+      "type": "string",
+      "description": "Série da máquina"
+    },
+    "texto": {
+      "type": "string",
+      "description": "O que o comercial precisa nesta máquina (ex. bluespot frontal, posicionador)"
+    },
+    "comercial": {
+      "type": "string",
+      "description": "Nome do comercial que fez o pedido"
+    },
+    "comercial_user_id": {
+      "type": "string",
+      "description": "ID do comercial, para lhe devolver as notificações desta máquina"
+    },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "aberto",
+        "em_execucao",
+        "concluido",
+        "cancelado"
+      ],
+      "default": "aberto",
+      "description": "Andamento do pedido"
+    },
+    "resposta": {
+      "type": "string",
+      "description": "Resposta da gestão ao pedido"
+    },
+    "respondido_por": {
+      "type": "string",
+      "description": "Quem respondeu"
+    }
+  },
+  "required": [
+    "serie",
+    "texto"
+  ]
+}

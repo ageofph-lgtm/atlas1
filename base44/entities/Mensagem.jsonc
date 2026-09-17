@@ -1,0 +1,58 @@
+{
+  "name": "Mensagem",
+  "type": "object",
+  "properties": {
+    "destino": {
+      "type": "string",
+      "description": "Audiência: 'logistica', 'gestao' ou 'comercial'. Vazio quando a mensagem é dirigida a um utilizador concreto via destino_user_id."
+    },
+    "destino_user_id": {
+      "type": "string",
+      "description": "ID do utilizador destinatário, quando a mensagem é só para ele (ex. o comercial que reservou)"
+    },
+    "titulo": {
+      "type": "string",
+      "description": "Título curto da mensagem"
+    },
+    "corpo": {
+      "type": "string",
+      "description": "Texto da mensagem"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "entrada",
+        "saida",
+        "estado",
+        "categoria",
+        "reserva",
+        "pedido",
+        "aviso"
+      ],
+      "default": "aviso",
+      "description": "Tipo do acontecimento que originou a mensagem"
+    },
+    "serie": {
+      "type": "string",
+      "description": "Série da máquina a que a mensagem diz respeito"
+    },
+    "ciclo_id": {
+      "type": "string",
+      "description": "ID do Ciclo relacionado"
+    },
+    "autor": {
+      "type": "string",
+      "description": "Quem originou o acontecimento"
+    },
+    "lida_por": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs dos utilizadores que já leram — o estado de leitura é por pessoa, não por mensagem"
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}

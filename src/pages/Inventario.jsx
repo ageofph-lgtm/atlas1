@@ -14,6 +14,7 @@ import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { INVENTARIO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
+import { notificarReserva } from "@/components/atlas/mensagens";
 import { passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS, isHistorico, tabFilterCiclo } from "@/components/atlas/cicloUtils";
 
 export default function Inventario({ currentUser, userPermissions }) {
@@ -170,13 +171,22 @@ export default function Inventario({ currentUser, userPermissions }) {
       };
       if (data.reserva_cliente) {
         updateData.reserva_comercial = autor;
+        // Guardamos o ID para lhe conseguir enviar as notificações desta máquina.
+        updateData.reserva_comercial_id = currentUser?.id || "";
       } else {
         updateData.reserva_comercial = null;
+        updateData.reserva_comercial_id = "";
       }
       if (data.reserva_nota) {
         updateData.observacoes = data.reserva_nota;
       }
       await base44.entities.Ciclo.update(reservaCiclo.id, updateData);
+      await notificarReserva(reservaCiclo, {
+        autor,
+        cliente: data.reserva_cliente,
+        data: data.reserva_data,
+        cancelada: !data.reserva_cliente,
+      });
       toast({ title: "✓ Reserva guardada", description: `NS: ${reservaCiclo.serie}` });
       loadData();
     } catch (err) {
@@ -287,6 +297,9 @@ export default function Inventario({ currentUser, userPermissions }) {
               canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
               canNotas={userPermissions?.canNotas}
               onNotasSaved={loadData}
+              currentUser={currentUser}
+              canPedidos={userPermissions?.canPedidos}
+              canResponderPedidos={userPermissions?.canResponderPedidos}
               onEdit={canEditMaquinaRecord(currentUser, getMaquina(c)) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
               onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
               onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}

@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { registarRetorno, diasAlugada } from "@/components/atlas/registarRetorno";
+import { notificarRetorno } from "@/components/atlas/mensagens";
 
 /**
  * Espelho do SaidaRapidaModal para a ponta oposta do ciclo: fotografa a placa,
@@ -117,6 +118,7 @@ export default function RetornoRapidoModal({ open, onClose, preselectedCiclo, cu
         setActing(false);
         return;
       }
+      await notificarRetorno(foundCiclo, { autor, dias: res.dias });
       toast({ title: "✓ Retorno registado", description: `${foundCiclo.serie} — ${res.dias} dias` });
       onDone?.();
       onClose();

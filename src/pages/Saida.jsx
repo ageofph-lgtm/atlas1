@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
+import { notificarSaida, notificarRetorno } from "@/components/atlas/mensagens";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
 
@@ -118,6 +119,8 @@ export default function Saida({ currentUser }) {
         autor,
         nota: `${vendida ? "Venda" : "Saída para aluguer"}${cliente ? ` — ${cliente}` : ""}`,
       });
+      await notificarSaida(saidaModal, { autor, tipoSaida, cliente });
+
       toast({
         title: vendida ? "✓ Venda registada" : "✓ Saída registada",
         description: `NS: ${saidaModal.serie}`,
@@ -160,6 +163,7 @@ export default function Saida({ currentUser }) {
         setActing(null);
         return;
       }
+      await notificarRetorno(retornoModal, { autor, dias: res.dias });
       toast({ title: "✓ Retorno registado", description: `${retornoModal.serie} — ${res.dias} dias` });
       setRetornoModal(null);
       setRetornoConeNumero("");

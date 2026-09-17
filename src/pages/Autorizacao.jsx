@@ -13,6 +13,7 @@ import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
+import { notificarPronta } from "@/components/atlas/mensagens";
 import { estadoEfetivo, passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
 
 // Máquinas que aguardam decisão da gestora. "indefinido" entra aqui porque é
@@ -135,6 +136,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         autor,
         nota: "Marcada como pronta (sem O.S. no Watcher)",
       });
+      await notificarPronta(ciclo, { autor });
       toast({ title: "✓ Marcada como pronta", description: `NS: ${ciclo.serie}` });
       loadData();
     } catch (err) {
@@ -232,6 +234,9 @@ export default function Autorizacao({ currentUser, userPermissions }) {
                   canAutorizar={canAutorizar && authorizing !== c.id}
                   canNotas={userPermissions?.canNotas}
                   onNotasSaved={loadData}
+                  currentUser={currentUser}
+                  canPedidos={userPermissions?.canPedidos}
+                  canResponderPedidos={userPermissions?.canResponderPedidos}
                   onEdit={canEditMaquinaRecord(currentUser, m) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
                   onAutorizar={canAutorizar ? (ciclo) => setTarefasCiclo(ciclo) : null}
                   onTogglePrioridade={canAutorizar ? togglePrioridade : null}
@@ -257,6 +262,9 @@ export default function Autorizacao({ currentUser, userPermissions }) {
                 maquina={getMaquina(c)}
                 canNotas={userPermissions?.canNotas}
                 onNotasSaved={loadData}
+                currentUser={currentUser}
+                canPedidos={userPermissions?.canPedidos}
+                canResponderPedidos={userPermissions?.canResponderPedidos}
                 onMarcarPronta={canMarcarPronta && c.estado === "em_execucao" ? handleMarcarPronta : null}
               />
             ))}

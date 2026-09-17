@@ -8,6 +8,7 @@ import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS } from 
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { isCategoriaSemEstado, classificarCiclosAbertos } from "@/components/atlas/cicloUtils";
 import { registarRetorno, diasAlugada } from "@/components/atlas/registarRetorno";
+import { notificarEntrada } from "@/components/atlas/mensagens";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -286,6 +287,8 @@ export default function Entrada({ currentUser }) {
             ? "Entrada direta — manutenção"
             : "Classificação",
       });
+
+      await notificarEntrada({ ...cicloData, id: newCiclo.id }, { autor, reentrada: reentradaConfirmada });
 
       toast({
         title: reentradaConfirmada ? "✓ Reentrada concluída" : "✓ Registo concluído",

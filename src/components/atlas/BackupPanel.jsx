@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Download, Upload, Loader2, ShieldCheck } from "lucide-react";
 
-const BACKUP_ENTITIES = ["Maquina", "Ciclo", "EventoCiclo", "Pedido", "OrdemServico", "FrotaACP", "Notificacao"];
+const BACKUP_ENTITIES = ["Maquina", "Ciclo", "EventoCiclo", "Mensagem", "PedidoMaquina", "Pedido", "OrdemServico", "FrotaACP", "Notificacao"];
 const BUILTIN_FIELDS = ["id", "created_date", "updated_date", "created_by_id"];
 
 const NATURAL_KEYS = {
@@ -13,6 +13,8 @@ const NATURAL_KEYS = {
   OrdemServico: (r) => `${r.serie}|${r.cliente || ""}`,
   FrotaACP: (r) => r.serie || null,
   Notificacao: (r) => `${r.userId}|${r.message}|${r.osId || ""}`,
+  Mensagem: (r) => `${r.destino || r.destino_user_id}|${r.titulo}|${r.ciclo_id || ""}|${r.created_date || ""}`,
+  PedidoMaquina: (r) => `${r.ciclo_id}|${r.texto}|${r.comercial_user_id || ""}`,
 };
 
 const strip = (rec) => {
