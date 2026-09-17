@@ -199,9 +199,11 @@ export default function Entrada({ currentUser }) {
       // ciclo antigo de ficar para trás em aluguer e a máquina aparecer em duplicado.
       let diasDoAluguer = null;
       if (fora && reentradaConfirmada) {
+        // Aqui é a própria entrada que abre o ciclo novo, com categoria, cone e
+        // notas recolhidos de raiz — o retorno só tem de fechar o aluguer.
         const res = await registarRetorno(fora, {
           autor,
-          limparCone: true,
+          reabrir: false,
           nota: "Retorno registado na reentrada da máquina",
         });
         if (!res.ok) {

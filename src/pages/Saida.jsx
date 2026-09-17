@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX } from "lucide-react";
-import SaidaRapidaModal from "@/components/atlas/SaidaRapidaModal";
-import RetornoRapidoModal from "@/components/atlas/RetornoRapidoModal";
+import LocalizarMaquinaModal from "@/components/atlas/LocalizarMaquinaModal";
 import FilterBar from "@/components/atlas/FilterBar";
 import PlacaScanner from "@/components/atlas/PlacaScanner";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
@@ -35,11 +34,12 @@ export default function Saida({ currentUser }) {
   // Bateria e carregador que saem com a máquina, lidos da chapa de características.
   const [bateria, setBateria] = useState({ ns: "", foto_url: "" });
   const [carregador, setCarregador] = useState({ ns: "", foto_url: "" });
-  const [saidaRapidaOpen, setSaidaRapidaOpen] = useState(false);
-  const [retornoRapidoOpen, setRetornoRapidoOpen] = useState(false);
+  const [localizarSaida, setLocalizarSaida] = useState(false);
+  const [localizarRetorno, setLocalizarRetorno] = useState(false);
   const [retornoModal, setRetornoModal] = useState(null);
   const [retornoConeNumero, setRetornoConeNumero] = useState("");
   const [retornoConeError, setRetornoConeError] = useState("");
+  const [retornoEstado, setRetornoEstado] = useState("classificada");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
 
@@ -151,6 +151,7 @@ export default function Saida({ currentUser }) {
     setRetornoModal(ciclo);
     setRetornoConeNumero("");
     setRetornoConeError("");
+    setRetornoEstado("classificada");
   };
 
   const validateRetornoCone = async () => {
@@ -169,14 +170,17 @@ export default function Saida({ currentUser }) {
     if (!retornoModal) return;
     setActing(retornoModal.id);
     try {
-      const res = await registarRetorno(retornoModal, { coneNumero: retornoConeNumero, autor });
+      const res = await registarRetorno(retornoModal, { coneNumero: retornoConeNumero, autor, estadoRegresso: retornoEstado });
       if (!res.ok) {
         setRetornoConeError(res.erro);
         setActing(null);
         return;
       }
       await notificarRetorno(retornoModal, { autor, dias: res.dias });
-      toast({ title: "✓ Retorno registado", description: `${retornoModal.serie} — ${res.dias} dias` });
+      toast({
+        title: "✓ Retorno registado",
+        description: `${retornoModal.serie} — ${res.dias} dias · de volta ao pátio`,
+      });
       setRetornoModal(null);
       setRetornoConeNumero("");
       setRetornoConeError("");
@@ -200,18 +204,18 @@ export default function Saida({ currentUser }) {
       {/* Acções rápidas — o caminho normal desta página */}
       <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button
-          onClick={() => setSaidaRapidaOpen(true)}
+          onClick={() => setLocalizarSaida(true)}
           className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg flex items-center justify-center gap-2 transition-colors"
         >
           <Zap className="w-5 h-5" />
-          SAÍDA RÁPIDA
+          PROCURAR PARA SAÍDA
         </button>
         <button
-          onClick={() => setRetornoRapidoOpen(true)}
+          onClick={() => setLocalizarRetorno(true)}
           className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
-          RETORNO RÁPIDO
+          PROCURAR PARA RETORNO
         </button>
       </div>
 
@@ -378,7 +382,32 @@ export default function Saida({ currentUser }) {
                 </div>
               </div>
             )}
-            <p className="text-xs text-slate-500">A máquina fica fechada e o cone fica disponível para reutilização.</p>
+            <div>
+              <Label className="text-slate-400 text-xs mb-1.5 block">Como volta ao pátio</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: "classificada", label: "A FAZER", hint: "precisa de preparação" },
+                  { value: "pronta", label: "PRONTA", hint: "volta disponível" },
+                ].map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => setRetornoEstado(o.value)}
+                    className={`p-2.5 rounded-lg border-2 text-left transition-all ${
+                      retornoEstado === o.value ? "border-cyan-500 bg-cyan-500/10" : "border-slate-700 bg-slate-900 hover:border-slate-600"
+                    }`}
+                  >
+                    <span className={`text-xs font-bold ${retornoEstado === o.value ? "text-cyan-300" : "text-slate-400"}`}>{o.label}</span>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{o.hint}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              O aluguer fecha com os dias contados e abre-se um ciclo novo com a máquina de volta ao pátio — é assim
+              que ela reaparece no inventário.
+            </p>
           </div>
           <DialogFooter>
             <Button
@@ -393,22 +422,25 @@ export default function Saida({ currentUser }) {
         </DialogContent>
       </Dialog>
 
-      {/* Saída rápida modal */}
-      <SaidaRapidaModal
-        open={saidaRapidaOpen}
-        preselectedCiclo={null}
-        currentUser={currentUser}
-        onClose={() => setSaidaRapidaOpen(false)}
-        onDone={loadData}
+      {/* Localizar pela placa — entrega a máquina ao mesmo modal do card */}
+      <LocalizarMaquinaModal
+        open={localizarSaida}
+        onClose={() => setLocalizarSaida(false)}
+        onEncontrada={openSaidaModal}
+        titulo="Procurar para dar saída"
+        estadoAlvo="pronta"
+        vazioTexto="Nenhuma máquina pronta"
+        Icone={Zap}
       />
-
-      {/* Retorno rápido modal */}
-      <RetornoRapidoModal
-        open={retornoRapidoOpen}
-        preselectedCiclo={null}
-        currentUser={currentUser}
-        onClose={() => setRetornoRapidoOpen(false)}
-        onDone={loadData}
+      <LocalizarMaquinaModal
+        open={localizarRetorno}
+        onClose={() => setLocalizarRetorno(false)}
+        onEncontrada={openRetornoModal}
+        titulo="Procurar para registar retorno"
+        estadoAlvo="em_aluguer"
+        vazioTexto="Nenhuma máquina em aluguer"
+        Icone={ArrowLeft}
+        cor="cyan"
       />
 
       {/* Saída modal */}
