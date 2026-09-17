@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { MessageSquarePlus, Loader2, Check, X, Plus, CheckCircle2 } from "lucide-react";
+import { MessageSquarePlus, Loader2, Check, X, Plus, CheckCircle2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { notificarPedido, notificarRespostaPedido } from "@/components/atlas/mensagens";
 
@@ -19,8 +19,11 @@ const SUGESTOES = ["Bluespot frontal", "Posicionador de garfos", "Sideshift", "E
  * responde e faz chegar à oficina. Cada pedido guarda o comercial que o fez,
  * para a resposta voltar só a ele.
  */
-export default function PedidosMaquina({ ciclo, currentUser, canPedir, canResponder }) {
-  const [pedidos, setPedidos] = useState(null);
+export default function PedidosMaquina({ ciclo, currentUser, canPedir, canResponder, canApagar, pedidosExternos, onChanged, abrirComposer = false }) {
+  // A lista vem da página (uma consulta para todos os cards). Só a carregamos
+  // aqui quando ninguém a forneceu, para o componente continuar autónomo.
+  const [pedidosLocais, setPedidosLocais] = useState(null);
+  const pedidos = pedidosExternos ?? pedidosLocais;
   const [texto, setTexto] = useState("");
   const [aEscrever, setAEscrever] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -30,16 +33,25 @@ export default function PedidosMaquina({ ciclo, currentUser, canPedir, canRespon
   const autor = currentUser?.full_name || currentUser?.perfil || "system";
 
   const load = useCallback(async () => {
+    if (onChanged) { onChanged(); return; }
     if (!ciclo?.id) return;
     try {
       const lista = await base44.entities.PedidoMaquina.filter({ ciclo_id: ciclo.id });
-      setPedidos([...lista].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+      setPedidosLocais([...lista].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
     } catch (_e) {
-      setPedidos([]);
+      setPedidosLocais([]);
     }
-  }, [ciclo?.id]);
+  }, [ciclo?.id, onChanged]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (pedidosExternos === undefined) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ciclo?.id, pedidosExternos === undefined]);
+
+  // Veio do botão do card: o formulário já aparece aberto, sem segundo clique.
+  useEffect(() => {
+    if (abrirComposer && canPedir) setAEscrever(true);
+  }, [abrirComposer, canPedir]);
 
   const criar = async () => {
     const t = texto.trim();
@@ -82,6 +94,17 @@ export default function PedidosMaquina({ ciclo, currentUser, canPedir, canRespon
     setSaving(false);
   };
 
+  const apagar = async (pedido) => {
+    setSaving(true);
+    try {
+      await base44.entities.PedidoMaquina.delete(pedido.id);
+      load();
+    } catch (_e) {
+      // ignorado
+    }
+    setSaving(false);
+  };
+
   const temPedidos = pedidos && pedidos.length > 0;
   if (!canPedir && !temPedidos) return null;
 
@@ -112,6 +135,17 @@ export default function PedidosMaquina({ ciclo, currentUser, canPedir, canRespon
                   <p className="text-[11px] text-slate-400 mt-1 border-l-2 border-slate-700 pl-2">
                     {p.resposta} <span className="text-slate-600">— {p.respondido_por}</span>
                   </p>
+                )}
+
+                {canApagar && (
+                  <button
+                    onClick={() => apagar(p)}
+                    disabled={saving}
+                    title="Eliminar pedido"
+                    className="text-[10px] text-red-400/70 hover:text-red-400 mt-1.5 flex items-center gap-1 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3 h-3" /> eliminar
+                  </button>
                 )}
 
                 {canResponder && p.estado !== "concluido" && p.estado !== "cancelado" && (

@@ -243,6 +243,11 @@ export default function Layout({ children, currentPageName }) {
       <CaixaMensagens
         open={caixaAberta}
         onClose={() => setCaixaAberta(false)}
+        onAbrirMaquina={(m) => {
+          // A mensagem leva à máquina: o inventário abre já com ela procurada e em destaque.
+          setCaixaAberta(false);
+          navigate(`${createPageUrl("Inventario")}?serie=${encodeURIComponent(m.serie)}${m.ciclo_id ? `&ciclo=${m.ciclo_id}` : ""}`);
+        }}
         mensagens={caixa.mensagens}
         porLer={caixa.porLer}
         isLoading={caixa.isLoading}

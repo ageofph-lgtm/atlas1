@@ -101,6 +101,22 @@
       "type": "string",
       "description": "URL da foto da placa na sa\u00edda"
     },
+    "bateria_ns": {
+      "type": "string",
+      "description": "N\u00famero de s\u00e9rie da bateria que saiu com a m\u00e1quina"
+    },
+    "bateria_foto_url": {
+      "type": "string",
+      "description": "Foto da chapa de caracter\u00edsticas da bateria"
+    },
+    "carregador_ns": {
+      "type": "string",
+      "description": "N\u00famero de s\u00e9rie do carregador que saiu com a m\u00e1quina"
+    },
+    "carregador_foto_url": {
+      "type": "string",
+      "description": "Foto da chapa de caracter\u00edsticas do carregador"
+    },
     "reserva_cliente": {
       "type": "string",
       "description": "Cliente da reserva"

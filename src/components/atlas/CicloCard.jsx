@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Pencil, CalendarClock, Trash2, ChevronDown, ChevronUp, Zap, StickyNote, Check } from "lucide-react";
+import { AlertTriangle, Pencil, CalendarClock, Trash2, ChevronDown, ChevronUp, Zap, StickyNote, Check, MessageSquarePlus } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
 import { estadoEfetivo, isCategoriaSemEstado } from "./cicloUtils";
@@ -8,8 +8,17 @@ import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
 import MaquinaNotas from "./MaquinaNotas";
 
-export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onNotasSaved, onTogglePrioridade, onMarcarPronta, currentUser, canPedidos, canResponderPedidos }) {
-  const [expanded, setExpanded] = useState(false);
+export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onNotasSaved, onTogglePrioridade, onMarcarPronta, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, pedidos, onPedidosChanged, destaque = false }) {
+  const [expanded, setExpanded] = useState(destaque);
+  const [pedirAgora, setPedirAgora] = useState(false);
+  const cardRef = useRef(null);
+
+  // Chegou-se aqui por uma notificação: abre e põe-se à vista.
+  useEffect(() => {
+    if (!destaque) return;
+    setExpanded(true);
+    cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [destaque]);
 
   const estado = estadoEfetivo(ciclo);
   const estadoCfg = ESTADO_CONFIG[estado] || ESTADO_CONFIG.entrada;
@@ -39,13 +48,19 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   const showDeleteBtn = canDeleteMaquina && onDelete;
   const canAutorizeState = estado === "classificada" || estado === "manutencao";
   const showAutorizarBtn = canAutorizar && onAutorizar && canAutorizeState;
+  const expandirParaPedido = () => { setExpanded(true); setPedirAgora(true); };
+  const pedidosAbertos = (pedidos || []).filter((p) => p.estado === "aberto" || p.estado === "em_execucao");
+  const showPedirBtn = !!canPedidos;
   const showProntaBtn = !!onMarcarPronta && !isCategoriaSemEstado(ciclo.categoria) && estado !== "pronta";
-  const hasActions = showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showAutorizarBtn || showProntaBtn;
+  const hasActions = showEditBtn || showReservarBtn || showGerirBtn || showDeleteBtn || showAutorizarBtn || showProntaBtn || showPedirBtn;
 
   return (
     <div
-      onClick={() => setExpanded((v) => !v)}
-      className={`relative glass cat-${ciclo.categoria} border ${estadoCfg.border} rounded-lg p-4 cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-lg hover:shadow-black/30 hover:border-slate-600`}
+      ref={cardRef}
+      onClick={() => setExpanded((v) => { if (v) setPedirAgora(false); return !v; })}
+      className={`relative glass cat-${ciclo.categoria} border ${estadoCfg.border} rounded-lg p-4 cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-lg hover:shadow-black/30 hover:border-slate-600 ${
+        destaque ? "ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900" : ""
+      }`}
     >
       {onTogglePrioridade ? (
         <button
@@ -134,6 +149,19 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
         </div>
       )}
 
+      {/* Pedidos por atender — ficam à vista, como a reserva */}
+      {pedidosAbertos.length > 0 && (
+        <div className="mb-2 bg-purple-500/10 border border-purple-500/30 rounded px-2 py-1.5 text-xs text-purple-300">
+          <div className="flex items-center gap-1.5 font-bold">
+            <MessageSquarePlus className="w-3 h-3 flex-shrink-0" />
+            {pedidosAbertos.length} {pedidosAbertos.length === 1 ? "PEDIDO" : "PEDIDOS"}
+          </div>
+          <p className="text-purple-300/80 mt-0.5 break-words line-clamp-2">
+            {pedidosAbertos.map((p) => p.texto).join(" · ")}
+          </p>
+        </div>
+      )}
+
       {/* Dias alugada corrente */}
       {diasCorrente !== null && (
         <div className="mb-2 text-xs text-cyan-400/80">
@@ -191,6 +219,14 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
               GERIR RESERVA
             </button>
           )}
+          {showPedirBtn && (
+            <button
+              onClick={(e) => { e.stopPropagation(); expandirParaPedido(); }}
+              className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-bold flex items-center justify-center gap-1"
+            >
+              <MessageSquarePlus className="w-3 h-3" /> FAZER PEDIDO
+            </button>
+          )}
           {showProntaBtn && (
             <button
               onClick={(e) => { e.stopPropagation(); onMarcarPronta(ciclo); }}
@@ -230,6 +266,10 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
               currentUser={currentUser}
               canPedidos={canPedidos}
               canResponderPedidos={canResponderPedidos}
+              canApagarPedidos={canApagarPedidos}
+              pedidos={pedidos}
+              onPedidosChanged={onPedidosChanged}
+              abrirComposerPedido={pedirAgora}
             />
           </motion.div>
         )}
