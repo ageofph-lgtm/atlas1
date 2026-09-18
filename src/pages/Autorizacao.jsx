@@ -14,6 +14,7 @@ import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
 import { notificarPronta } from "@/components/atlas/mensagens";
+import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
 import { estadoEfetivo, passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
 
 // Máquinas que aguardam decisão da gestora. "indefinido" entra aqui porque é
@@ -156,12 +157,17 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     }
   };
 
-  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress }) => {
+  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, pedidosMigrados = [] }) => {
     if (!tarefasCiclo) return;
     setAuthorizing(tarefasCiclo.id);
     try {
       const data = await authorizeCiclo(tarefasCiclo.id, autor, { tarefas, isVps, isExpress });
-      toast({ title: "✓ Autorizada", description: `Watcher O.S.: ${data.watcher_os_id}` });
+      // Os pedidos que entraram na O.S. deixam de estar à espera da gestão.
+      const migrados = await marcarPedidosNaOS(pedidosMigrados, { autor, osId: data.watcher_os_id });
+      toast({
+        title: "✓ Autorizada",
+        description: `Watcher O.S.: ${data.watcher_os_id}${migrados ? ` · ${migrados} pedido(s) na O.S.` : ""}`,
+      });
       setTarefasCiclo(null);
       loadData();
     } catch (err) {

@@ -8,17 +8,19 @@ import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
 import MaquinaNotas from "./MaquinaNotas";
 
-export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onAtualizado, onTogglePrioridade, onMarcarPronta, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, canLimparRegistos, pedidos, onPedidosChanged, destaque = false }) {
+export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onAtualizado, onTogglePrioridade, onMarcarPronta, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, canLimparRegistos, pedidos, onPedidosChanged, destaque = false, rolarParaVista = true }) {
   const [expanded, setExpanded] = useState(destaque);
   const [pedirAgora, setPedirAgora] = useState(false);
   const cardRef = useRef(null);
 
-  // Chegou-se aqui por uma notificação: abre e põe-se à vista.
+  // Chegou-se aqui por uma notificação: abre e põe-se à vista. Quando o card
+  // está isolado no ecrã não há nada por onde rolar — rolar só o afastaria do
+  // cabeçalho que explica de onde veio.
   useEffect(() => {
     if (!destaque) return;
     setExpanded(true);
-    cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [destaque]);
+    if (rolarParaVista) cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [destaque, rolarParaVista]);
 
   const estado = estadoEfetivo(ciclo);
   const estadoCfg = ESTADO_CONFIG[estado] || ESTADO_CONFIG.entrada;
