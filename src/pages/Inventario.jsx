@@ -16,6 +16,7 @@ import { INVENTARIO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
 import { notificarReserva } from "@/components/atlas/mensagens";
+import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
 import { passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS, isHistorico, tabFilterCiclo } from "@/components/atlas/cicloUtils";
 
 export default function Inventario({ currentUser, userPermissions }) {
@@ -31,7 +32,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [maquinas, setMaquinas] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
-  const [searchQuery, setSearchQuery] = useState(serieAlvo);
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
@@ -81,12 +82,17 @@ export default function Inventario({ currentUser, userPermissions }) {
     setSyncing(false);
   };
 
-  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress }) => {
+  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, pedidosMigrados = [] }) => {
     if (!autorizarCicloState) return;
     setAutorizando(autorizarCicloState.id);
     try {
       const data = await authorizeCiclo(autorizarCicloState.id, autor, { tarefas, isVps, isExpress });
-      toast({ title: "✓ Autorizada", description: `Watcher O.S.: ${data.watcher_os_id}` });
+      // Os pedidos que entraram na O.S. deixam de estar à espera da gestão.
+      const migrados = await marcarPedidosNaOS(pedidosMigrados, { autor, osId: data.watcher_os_id });
+      toast({
+        title: "✓ Autorizada",
+        description: `Watcher O.S.: ${data.watcher_os_id}${migrados ? ` · ${migrados} pedido(s) na O.S.` : ""}`,
+      });
       setAutorizarCicloState(null);
       loadData();
     } catch (err) {
@@ -114,13 +120,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     return map;
   }, [pedidos]);
 
-  // A notificação pode apontar para uma máquina que já fechou o ciclo — essa
-  // não está no inventário, está no histórico. Melhor dizê-lo do que deixar
-  // o ecrã vazio sem explicação.
-  const limparAlvo = () => {
-    setSearchParams({}, { replace: true });
-    setSearchQuery("");
-  };
+  const limparAlvo = () => setSearchParams({}, { replace: true });
 
   const recarregarPedidos = async () => {
     try {
@@ -138,6 +138,24 @@ export default function Inventario({ currentUser, userPermissions }) {
   // Ciclos fechados não entram no inventário — a mesma série apareceria duas
   // vezes, uma fechada e outra ativa. O histórico está nos relatórios.
   const ciclosAtivos = useMemo(() => ciclos.filter((c) => !isHistorico(c)), [ciclos]);
+
+  // Vindo de uma mensagem, o inventário mostra só aquela máquina. Com centenas
+  // de cards, rolar até ela e distingui-la do resto não era exequível.
+  //
+  // O ciclo da mensagem pode já ter fechado e a máquina ter voltado ao pátio
+  // num ciclo novo, por isso procura-se por esta ordem: o ciclo indicado se
+  // ainda estiver aberto, senão a série no pátio, e só depois o ciclo fechado
+  // — esse aparece assinalado como histórico, em vez de dar ecrã vazio.
+  const foco = useMemo(() => {
+    if (!cicloAlvo && !serieAlvo) return null;
+    const porId = cicloAlvo ? ciclosAtivos.find((c) => c.id === cicloAlvo) : null;
+    if (porId) return { ciclos: [porId], historico: false };
+    const porSerie = serieAlvo ? ciclosAtivos.filter((c) => c.serie === serieAlvo) : [];
+    if (porSerie.length) return { ciclos: porSerie, historico: false };
+    const fechado = cicloAlvo ? ciclos.find((c) => c.id === cicloAlvo) : null;
+    if (fechado) return { ciclos: [fechado], historico: true };
+    return { ciclos: [], historico: false };
+  }, [ciclos, ciclosAtivos, cicloAlvo, serieAlvo]);
 
   // Filter pills + advanced filters (partilhados com autorização e saída)
   const passesFilters = (ciclo, maquina) => passesCicloFilters(ciclo, maquina, filters);
@@ -183,8 +201,6 @@ export default function Inventario({ currentUser, userPermissions }) {
     });
     return sortCiclos(filtered);
   }, [ciclosAtivos, maquinas, activeTab, filters, searchQuery]);
-
-  const alvoSemResultado = !!serieAlvo && filteredCiclos.length === 0;
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -278,6 +294,106 @@ export default function Inventario({ currentUser, userPermissions }) {
     );
   }
 
+  // Um só conjunto de modais para os dois modos de ecrã. Mantê-los em duplicado
+  // era garantir que divergiam à primeira alteração de permissões.
+  const modais = (
+    <>
+      <ReservaModal
+        ciclo={reservaCiclo}
+        open={!!reservaCiclo}
+        onClose={() => setReservaCiclo(null)}
+        onSave={handleReservaSave}
+        canEdit={userPermissions?.canEditReserva}
+      />
+      <EditMaquinaModal
+        maquina={editMaquina}
+        ciclo={editCiclo}
+        currentUser={currentUser}
+        open={!!editMaquina}
+        onClose={() => { setEditMaquina(null); setEditCiclo(null); }}
+        onSave={handleMaquinaEdit}
+        canDeleteMaquina={userPermissions?.canDeleteMaquina}
+        onDelete={userPermissions?.canDeleteMaquina ? (maquina) => { setEditMaquina(null); setEditCiclo(null); setDeleteMaquina(maquina); } : null}
+      />
+      <DeleteMaquinaModal
+        maquina={deleteMaquina}
+        open={!!deleteMaquina}
+        onClose={() => setDeleteMaquina(null)}
+        onConfirm={handleDeleteMaquina}
+      />
+      <TarefasModal
+        open={!!autorizarCicloState}
+        ciclo={autorizarCicloState}
+        onClose={() => setAutorizarCicloState(null)}
+        onConfirm={handleTarefasConfirm}
+        authorizing={autorizando !== null}
+      />
+    </>
+  );
+
+  const renderCard = (c, { destaque = false, rolarParaVista = true } = {}) => (
+    <CicloCard
+      key={c.id}
+      ciclo={c}
+      maquina={getMaquina(c)}
+      canEditMaquina={canEditMaquinaRecord(currentUser, getMaquina(c))}
+      canReservar={userPermissions?.canReservar}
+      canDeleteMaquina={userPermissions?.canDeleteMaquina}
+      canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
+      canNotas={userPermissions?.canNotas}
+      onAtualizado={loadData}
+      currentUser={currentUser}
+      canPedidos={userPermissions?.canPedidos}
+      canResponderPedidos={userPermissions?.canResponderPedidos}
+      canApagarPedidos={userPermissions?.canApagarPedidos}
+      canLimparRegistos={currentUser?.perfil === "administrador"}
+      pedidos={pedidosPorCiclo[c.id] || []}
+      onPedidosChanged={recarregarPedidos}
+      destaque={destaque}
+      rolarParaVista={rolarParaVista}
+      onEdit={canEditMaquinaRecord(currentUser, getMaquina(c)) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
+      onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
+      onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}
+      onAutorizar={(currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota") ? (ciclo) => setAutorizarCicloState(ciclo) : null}
+    />
+  );
+
+  // Modo foco: veio-se de uma mensagem e o ecrã mostra só aquela máquina —
+  // sem barra de filtros, sem abas e sem mais cards por onde rolar.
+  if (foco) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-xs glass border border-amber-500/30 rounded-lg px-3 py-2">
+          <Bell className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <span className="text-slate-300">
+            <span className="num font-bold text-slate-100">{serieAlvo || foco.ciclos[0]?.serie || "Máquina"}</span>
+            {foco.historico ? " — ciclo já fechado, vindo das mensagens." : ", vinda das mensagens."}
+          </span>
+          <button
+            onClick={limparAlvo}
+            className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg text-amber-400 hover:bg-amber-500/10 font-medium flex-shrink-0"
+          >
+            <X className="w-3.5 h-3.5" /> Ver inventário
+          </button>
+        </div>
+
+        {foco.ciclos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-500 text-center px-4">
+            <Package className="w-12 h-12 mb-3 opacity-30" />
+            <p>Não encontrámos esta máquina no inventário.</p>
+            <p className="text-xs mt-1">Se o ciclo já fechou, ela está no histórico, em Relatórios.</p>
+          </div>
+        ) : (
+          <div className="max-w-xl space-y-3">
+            {foco.ciclos.map((c) => renderCard(c, { destaque: true, rolarParaVista: false }))}
+          </div>
+        )}
+
+        {modais}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Filter bar */}
@@ -319,24 +435,6 @@ export default function Inventario({ currentUser, userPermissions }) {
         </button>
       </div>
 
-      {/* Vindo de uma notificação */}
-      {serieAlvo && (
-        <div className="flex items-center gap-2 text-xs glass border border-amber-500/30 rounded-lg px-3 py-2">
-          <Bell className="w-4 h-4 text-amber-400 flex-shrink-0" />
-          <span className="text-slate-300">
-            A mostrar <span className="num font-bold text-slate-100">{serieAlvo}</span>, vindo das mensagens.
-            {alvoSemResultado && (
-              <span className="text-amber-400/90">
-                {" "}Não está no inventário — se o ciclo já fechou, procure-a no histórico, em Relatórios.
-              </span>
-            )}
-          </span>
-          <button onClick={limparAlvo} className="ml-auto p-1 text-slate-500 hover:text-slate-200" aria-label="Limpar">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
       {/* Cards */}
       {filteredCiclos.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-slate-500">
@@ -345,65 +443,11 @@ export default function Inventario({ currentUser, userPermissions }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredCiclos.map((c) => (
-            <CicloCard
-              key={c.id}
-              ciclo={c}
-              maquina={getMaquina(c)}
-              canEditMaquina={canEditMaquinaRecord(currentUser, getMaquina(c))}
-              canReservar={userPermissions?.canReservar}
-              canDeleteMaquina={userPermissions?.canDeleteMaquina}
-              canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
-              canNotas={userPermissions?.canNotas}
-              onAtualizado={loadData}
-              currentUser={currentUser}
-              canPedidos={userPermissions?.canPedidos}
-              canResponderPedidos={userPermissions?.canResponderPedidos}
-              canApagarPedidos={userPermissions?.canApagarPedidos}
-              canLimparRegistos={currentUser?.perfil === "administrador"}
-              pedidos={pedidosPorCiclo[c.id] || []}
-              onPedidosChanged={recarregarPedidos}
-              destaque={!!cicloAlvo && c.id === cicloAlvo}
-              onEdit={canEditMaquinaRecord(currentUser, getMaquina(c)) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
-              onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
-              onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}
-              onAutorizar={(currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota") ? (ciclo) => setAutorizarCicloState(ciclo) : null}
-            />
-          ))}
+          {filteredCiclos.map((c) => renderCard(c))}
         </div>
       )}
 
-      {/* Modals */}
-      <ReservaModal
-        ciclo={reservaCiclo}
-        open={!!reservaCiclo}
-        onClose={() => setReservaCiclo(null)}
-        onSave={handleReservaSave}
-        canEdit={userPermissions?.canEditReserva}
-      />
-      <EditMaquinaModal
-        maquina={editMaquina}
-        ciclo={editCiclo}
-        currentUser={currentUser}
-        open={!!editMaquina}
-        onClose={() => { setEditMaquina(null); setEditCiclo(null); }}
-        onSave={handleMaquinaEdit}
-        canDeleteMaquina={userPermissions?.canDeleteMaquina}
-        onDelete={userPermissions?.canDeleteMaquina ? (maquina) => { setEditMaquina(null); setEditCiclo(null); setDeleteMaquina(maquina); } : null}
-      />
-      <DeleteMaquinaModal
-        maquina={deleteMaquina}
-        open={!!deleteMaquina}
-        onClose={() => setDeleteMaquina(null)}
-        onConfirm={handleDeleteMaquina}
-      />
-      <TarefasModal
-        open={!!autorizarCicloState}
-        ciclo={autorizarCicloState}
-        onClose={() => setAutorizarCicloState(null)}
-        onConfirm={handleTarefasConfirm}
-        authorizing={autorizando !== null}
-      />
+      {modais}
     </div>
   );
 }

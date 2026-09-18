@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X, CheckSquare, Square, Loader2, Zap } from "lucide-react";
+import { Plus, X, CheckSquare, Square, Loader2, Zap, MessageSquarePlus } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { textoTarefaDoPedido, PEDIDO_ESTADOS_POR_FAZER } from "@/components/atlas/pedidosOS";
 
 const PREDEFINED_TAREFAS = [
   { key: "preparacao", label: "Preparação geral" },
@@ -15,6 +17,11 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
   const [selected, setSelected] = useState({});
   const [customTasks, setCustomTasks] = useState([]);
   const [customInput, setCustomInput] = useState("");
+  // O que os comerciais pediram nesta máquina. Vem para aqui porque é neste
+  // momento — e só neste — que o pedido pode entrar na O.S. do Watcher.
+  const [pedidos, setPedidos] = useState([]);
+  const [pedidosSel, setPedidosSel] = useState({});
+  const [aCarregarPedidos, setACarregarPedidos] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -23,6 +30,33 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
       setCustomInput("");
     }
   }, [open, ciclo?.id]);
+
+  useEffect(() => {
+    if (!open || !ciclo?.id) {
+      setPedidos([]);
+      setPedidosSel({});
+      return;
+    }
+    let cancelado = false;
+    setACarregarPedidos(true);
+    (async () => {
+      let abertos = [];
+      try {
+        const lista = await base44.entities.PedidoMaquina.filter({ ciclo_id: ciclo.id });
+        abertos = lista.filter((p) => PEDIDO_ESTADOS_POR_FAZER.includes(p.estado));
+      } catch (_e) {
+        // sem pedidos visíveis — a autorização não pode ficar bloqueada por isto
+      }
+      if (cancelado) return;
+      setPedidos(abertos);
+      // Vêm marcados: se a gestão está a autorizar, o normal é quererem-nos na O.S.
+      setPedidosSel(Object.fromEntries(abertos.map((p) => [p.id, true])));
+      setACarregarPedidos(false);
+    })();
+    return () => { cancelado = true; };
+  }, [open, ciclo?.id]);
+
+  const togglePedido = (id) => setPedidosSel((s) => ({ ...s, [id]: !s[id] }));
 
   const togglePredefined = (key) => setSelected((s) => ({ ...s, [key]: !s[key] }));
 
@@ -41,8 +75,12 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
     if (selected.revisao) tarefas.push({ texto: "Revisão 3000h", concluida: false });
     if (selected.vps) tarefas.push({ texto: "VPS", concluida: false });
     if (selected.express) tarefas.push({ texto: "EXPRESS", concluida: false });
+    // Os pedidos do comercial entram na O.S. como tarefas, com o nome de quem
+    // pediu — na oficina, saber a quem perguntar vale mais do que a descrição.
+    const migrados = pedidos.filter((p) => pedidosSel[p.id]);
+    migrados.forEach((p) => tarefas.push({ texto: textoTarefaDoPedido(p), concluida: false }));
     customTasks.forEach((t) => tarefas.push({ texto: t, concluida: false }));
-    onConfirm({ tarefas, isVps: !!selected.vps, isExpress: !!selected.express });
+    onConfirm({ tarefas, isVps: !!selected.vps, isExpress: !!selected.express, pedidosMigrados: migrados });
   };
 
   return (
@@ -77,6 +115,47 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
               </button>
             ))}
           </div>
+
+          {/* Pedidos dos comerciais — seguem para a O.S. com a máquina */}
+          {(aCarregarPedidos || pedidos.length > 0) && (
+            <div>
+              <p className="text-xs text-purple-400 mb-2 uppercase tracking-wide flex items-center gap-1.5">
+                <MessageSquarePlus className="w-3.5 h-3.5" />
+                Pedidos dos comerciais
+                {aCarregarPedidos && <Loader2 className="w-3 h-3 animate-spin text-slate-500" />}
+              </p>
+              <div className="space-y-2">
+                {pedidos.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => togglePedido(p.id)}
+                    className={`w-full flex items-start gap-3 p-3 min-h-[48px] rounded-lg border transition-colors text-left ${
+                      pedidosSel[p.id]
+                        ? "bg-purple-500/15 border-purple-500/50"
+                        : "bg-slate-900/40 border-slate-700 hover:border-slate-600"
+                    }`}
+                  >
+                    {pedidosSel[p.id]
+                      ? <CheckSquare className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                      : <Square className="w-5 h-5 text-slate-600 flex-shrink-0 mt-0.5" />}
+                    <span className="flex-1 min-w-0">
+                      <span className={`block text-sm font-medium break-words ${pedidosSel[p.id] ? "text-purple-200" : "text-slate-300"}`}>
+                        {p.texto}
+                      </span>
+                      <span className="block text-[10px] text-slate-500 mt-0.5">{p.comercial || "—"}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {pedidos.length > 0 && (
+                <p className="text-[10px] text-slate-500 mt-1.5">
+                  Os marcados entram na O.S. como tarefas e o comercial é avisado. Os que desmarcar ficam
+                  no card, por responder.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Custom task input */}
           <div>
