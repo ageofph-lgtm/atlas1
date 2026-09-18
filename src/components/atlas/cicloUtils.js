@@ -159,3 +159,24 @@ export const tabFilterCiclo = (tabKey, ciclo) => {
  */
 export const isVenda = (ciclo) => ciclo?.tipo_saida === "vendida";
 export const isAluguer = (ciclo) => !!ciclo?.data_saida && !isVenda(ciclo);
+
+/**
+ * Estados do circuito da oficina — os que a gestão manda mesmo.
+ *
+ * Fora desta lista ficam os estados que pertencem a outra pessoa: `autorizada`
+ * e `em_execucao` são do Watcher (mexer neles à mão descola o ATLAS da O.S.
+ * real), `entrada`, `em_aluguer`, `retorno` e `fechado` são do movimento do
+ * pátio, e `indefinido` é decidido pela categoria. Esses continuam só do
+ * administrador, que os usa para corrigir registos.
+ */
+export const ESTADOS_OFICINA = ["classificada", "manutencao", "pronta"];
+
+/**
+ * Se a gestão pode mudar o estado desta máquina sem ser administrador.
+ *
+ * Só dentro do circuito da oficina: uma máquina pronta que precise de uma
+ * especificidade volta a "classificada" e entra outra vez na fila de
+ * autorização. Uma que esteja alugada ou às mãos do Watcher não se mexe daqui.
+ */
+export const podeGerirEstadoOficina = (ciclo) =>
+  !isCategoriaSemEstado(ciclo?.categoria) && ESTADOS_OFICINA.includes(estadoEfetivo(ciclo));

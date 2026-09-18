@@ -43,7 +43,7 @@ export async function saveMaquinaEdit({ maquina, ciclo, specs, cicloUpdates = {}
         de_estado: ciclo.estado,
         para_estado: cicloUpdates.estado,
         autor,
-        nota: "Estado alterado (admin)",
+        nota: "Estado alterado manualmente",
       });
     }
   }
