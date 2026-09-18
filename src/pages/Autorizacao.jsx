@@ -4,6 +4,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Package } from "lucide-react";
 import { AUTORIZACAO_TABS } from "@/components/atlas/constants";
 import CicloCard from "@/components/atlas/CicloCard";
+import CiclosView from "@/components/atlas/CiclosView";
+import ViewModeBar from "@/components/atlas/ViewModeBar";
 import CicloMiniCard from "@/components/atlas/CicloMiniCard";
 import FilterBar from "@/components/atlas/FilterBar";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
@@ -16,6 +18,7 @@ import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
 import { notificarPronta } from "@/components/atlas/mensagens";
 import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
 import { estadoEfetivo, passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
+import { useViewPrefs } from "@/components/atlas/viewPrefs";
 
 // Máquinas que aguardam decisão da gestora. "indefinido" entra aqui porque é
 // onde sucata/indefinida ficam à espera de ser reclassificadas.
@@ -33,6 +36,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
+  const { modo, setModo, tamanho, setTamanho } = useViewPrefs("autorizacao");
   const [isLoading, setIsLoading] = useState(true);
   const [authorizing, setAuthorizing] = useState(null);
   const [tarefasCiclo, setTarefasCiclo] = useState(null);
@@ -184,6 +188,32 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     );
   }
 
+  const renderCard = (c, { destaque = false, rolarParaVista = true } = {}) => {
+    const m = getMaquina(c);
+    return (
+      <CicloCard
+        key={c.id}
+        ciclo={c}
+        maquina={m}
+        canEditMaquina={canEditMaquinaRecord(currentUser, m)}
+        canAutorizar={canAutorizar && authorizing !== c.id}
+        canNotas={userPermissions?.canNotas}
+        onAtualizado={loadData}
+        currentUser={currentUser}
+        canPedidos={userPermissions?.canPedidos}
+        canResponderPedidos={userPermissions?.canResponderPedidos}
+        canApagarPedidos={userPermissions?.canApagarPedidos}
+        canLimparRegistos={currentUser?.perfil === "administrador"}
+        destaque={destaque}
+        rolarParaVista={rolarParaVista}
+        onEdit={canEditMaquinaRecord(currentUser, m) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
+        onAutorizar={canAutorizar ? (ciclo) => setTarefasCiclo(ciclo) : null}
+        onTogglePrioridade={canAutorizar ? togglePrioridade : null}
+        onMarcarPronta={canMarcarPronta ? handleMarcarPronta : null}
+      />
+    );
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-bold text-slate-100">Autorização de Máquinas</h2>
@@ -217,43 +247,28 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         ))}
       </div>
 
+      <div className="flex justify-end">
+        <ViewModeBar modo={modo} onModo={setModo} tamanho={tamanho} onTamanho={setTamanho} />
+      </div>
+
       {/* A autorizar */}
       <div>
         <h3 className="text-sm font-bold uppercase tracking-wide text-amber-400 mb-3">
           A Autorizar ({filteredCiclos.length})
         </h3>
-        {filteredCiclos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-            <Package className="w-12 h-12 mb-3 opacity-30" />
-            <p>Nenhuma máquina aguardando autorização</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredCiclos.map((c) => {
-              const m = getMaquina(c);
-              return (
-                <CicloCard
-                  key={c.id}
-                  ciclo={c}
-                  maquina={m}
-                  canEditMaquina={canEditMaquinaRecord(currentUser, m)}
-                  canAutorizar={canAutorizar && authorizing !== c.id}
-                  canNotas={userPermissions?.canNotas}
-                  onAtualizado={loadData}
-                  currentUser={currentUser}
-                  canPedidos={userPermissions?.canPedidos}
-                  canResponderPedidos={userPermissions?.canResponderPedidos}
-                  canApagarPedidos={userPermissions?.canApagarPedidos}
-              canLimparRegistos={currentUser?.perfil === "administrador"}
-                  onEdit={canEditMaquinaRecord(currentUser, m) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
-                  onAutorizar={canAutorizar ? (ciclo) => setTarefasCiclo(ciclo) : null}
-                  onTogglePrioridade={canAutorizar ? togglePrioridade : null}
-                  onMarcarPronta={canMarcarPronta ? handleMarcarPronta : null}
-                />
-              );
-            })}
-          </div>
-        )}
+        <CiclosView
+          ciclos={filteredCiclos}
+          getMaquina={getMaquina}
+          modo={modo}
+          tamanho={tamanho}
+          renderCard={renderCard}
+          vazio={
+            <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+              <Package className="w-12 h-12 mb-3 opacity-30" />
+              <p>Nenhuma máquina aguardando autorização</p>
+            </div>
+          }
+        />
       </div>
 
       {/* Em andamento no Watcher */}

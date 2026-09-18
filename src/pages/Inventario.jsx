@@ -4,6 +4,8 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { RefreshCw, Package, Bell, X } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
+import CiclosView from "@/components/atlas/CiclosView";
+import ViewModeBar from "@/components/atlas/ViewModeBar";
 import FilterBar from "@/components/atlas/FilterBar";
 import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
@@ -18,6 +20,7 @@ import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
 import { notificarReserva } from "@/components/atlas/mensagens";
 import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
 import { passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS, isHistorico, tabFilterCiclo } from "@/components/atlas/cicloUtils";
+import { useViewPrefs } from "@/components/atlas/viewPrefs";
 
 export default function Inventario({ currentUser, userPermissions }) {
   const { toast } = useToast();
@@ -33,6 +36,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [pedidos, setPedidos] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
+  const { modo, setModo, tamanho, setTamanho } = useViewPrefs("inventario");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
@@ -430,22 +434,28 @@ export default function Inventario({ currentUser, userPermissions }) {
             </button>
           );
         })}
-        <button onClick={loadData} className="ml-auto p-2 text-slate-400 hover:text-amber-400">
+        <button onClick={loadData} className="ml-auto p-2 text-slate-400 hover:text-amber-400" title="Recarregar">
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Cards */}
-      {filteredCiclos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-          <Package className="w-12 h-12 mb-3 opacity-30" />
-          <p>Nenhuma máquina encontrada</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredCiclos.map((c) => renderCard(c))}
-        </div>
-      )}
+      <div className="flex justify-end">
+        <ViewModeBar modo={modo} onModo={setModo} tamanho={tamanho} onTamanho={setTamanho} />
+      </div>
+
+      <CiclosView
+        ciclos={filteredCiclos}
+        getMaquina={getMaquina}
+        modo={modo}
+        tamanho={tamanho}
+        renderCard={renderCard}
+        vazio={
+          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+            <Package className="w-12 h-12 mb-3 opacity-30" />
+            <p>Nenhuma máquina encontrada</p>
+          </div>
+        }
+      />
 
       {modais}
     </div>
