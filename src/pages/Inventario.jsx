@@ -3,6 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
+import AcoesEmMassa from "@/components/atlas/AcoesEmMassa";
+import { executarEmLote, resumirLote } from "@/components/atlas/executarEmLote";
+import { podeAutorizar } from "@/components/atlas/acoesCiclo";
 import { useToast } from "@/components/ui/use-toast";
 import { RefreshCw, Package, Bell, X } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
@@ -52,6 +55,16 @@ export default function Inventario({ currentUser, userPermissions }) {
   // Quando a leitura bate no travão, dizemo-lo: um limite calado faz os
   // relatórios mentir sem ninguém dar por isso.
   const [truncado, setTruncado] = useState(false);
+  const [selecao, setSelecao] = useState(new Set());
+  const [autorizarEmMassa, setAutorizarEmMassa] = useState(null);
+  const [progressoLote, setProgressoLote] = useState(null);
+
+  // O que se selecionou deixa de estar à vista quando se muda de aba, de
+  // filtro, de pesquisa ou de modo. Guardar uma seleção escondida é como se
+  // acaba a decidir sobre máquinas erradas.
+  useEffect(() => {
+    setSelecao(new Set());
+  }, [activeTab, filters, searchQuery, modo]);
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -94,23 +107,44 @@ export default function Inventario({ currentUser, userPermissions }) {
     setSyncing(false);
   };
 
-  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, pedidosMigrados = [] }) => {
-    if (!autorizarCicloState) return;
-    setAutorizando(autorizarCicloState.id);
-    try {
-      const data = await authorizeCiclo(autorizarCicloState.id, autor, { tarefas, isVps, isExpress });
-      // Os pedidos que entraram na O.S. deixam de estar à espera da gestão.
-      const migrados = await marcarPedidosNaOS(pedidosMigrados, { autor, osId: data.watcher_os_id });
-      toast({
-        title: "✓ Autorizada",
-        description: `Watcher O.S.: ${data.watcher_os_id}${migrados ? ` · ${migrados} pedido(s) na O.S.` : ""}`,
-      });
-      setAutorizarCicloState(null);
-      loadData();
-    } catch (err) {
-      toast({ variant: "destructive", title: "Erro na autorização", description: err.message });
-    }
+  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, pedidosMigrados = [], alvos = [] }) => {
+    const lista = alvos.length ? alvos : autorizarCicloState ? [autorizarCicloState] : [];
+    if (!lista.length) return;
+
+    // Os pedidos vêm todos juntos do modal; cada máquina leva os seus para a
+    // sua própria O.S.
+    const pedidosPorCiclo = new Map();
+    pedidosMigrados.forEach((p) => {
+      if (!pedidosPorCiclo.has(p.ciclo_id)) pedidosPorCiclo.set(p.ciclo_id, []);
+      pedidosPorCiclo.get(p.ciclo_id).push(p);
+    });
+
+    setAutorizando(lista[0].id);
+    setProgressoLote({ feito: 0, total: lista.length });
+
+    // Em série, de propósito: cada autorização é uma chamada ao Watcher.
+    const resultado = await executarEmLote(lista, {
+      aplicavel: (c) => (podeAutorizar(c) ? true : "não estava classificada nem em manutenção"),
+      executar: async (c) => {
+        const data = await authorizeCiclo(c.id, autor, { tarefas, isVps, isExpress });
+        await marcarPedidosNaOS(pedidosPorCiclo.get(c.id) || [], { autor, osId: data.watcher_os_id });
+      },
+      onProgresso: ({ feito, total }) => setProgressoLote({ feito, total }),
+    });
+
+    setProgressoLote(null);
     setAutorizando(null);
+    setAutorizarCicloState(null);
+    setAutorizarEmMassa(null);
+    setSelecao(new Set());
+
+    const houveProblema = resultado.falhadas.length > 0 || resultado.ignoradas.length > 0;
+    toast({
+      variant: resultado.feitas.length === 0 ? "destructive" : undefined,
+      title: houveProblema ? "Concluído com ressalvas" : "✓ Autorizada",
+      description: resumirLote(resultado, "autorizada"),
+    });
+    loadData();
   };
 
   const maquinaMap = useMemo(() => {
@@ -213,6 +247,13 @@ export default function Inventario({ currentUser, userPermissions }) {
     });
     return sortCiclos(filtered);
   }, [ciclosAtivos, maquinas, activeTab, filters, searchQuery]);
+
+  // Só o que ainda está à vista: se um filtro escondeu uma máquina, ela não
+  // pode continuar a contar para a ação em massa.
+  const selecionados = useMemo(
+    () => filteredCiclos.filter((c) => selecao.has(c.id)),
+    [filteredCiclos, selecao]
+  );
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -334,9 +375,11 @@ export default function Inventario({ currentUser, userPermissions }) {
         onConfirm={handleDeleteMaquina}
       />
       <TarefasModal
-        open={!!autorizarCicloState}
+        open={!!autorizarCicloState || !!autorizarEmMassa}
         ciclo={autorizarCicloState}
-        onClose={() => setAutorizarCicloState(null)}
+        ciclos={autorizarEmMassa}
+        progresso={progressoLote}
+        onClose={() => { setAutorizarCicloState(null); setAutorizarEmMassa(null); setProgressoLote(null); }}
         onConfirm={handleTarefasConfirm}
         authorizing={autorizando !== null}
       />
@@ -401,7 +444,18 @@ export default function Inventario({ currentUser, userPermissions }) {
           </div>
         )}
 
-        {modais}
+        <AcoesEmMassa
+        selecionados={selecionados}
+        onLimpar={() => setSelecao(new Set())}
+        onConcluido={loadData}
+        getMaquina={getMaquina}
+        pagina="inventario"
+        autor={autor}
+        podeGerir={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
+        onAutorizar={(lista) => setAutorizarEmMassa(lista)}
+      />
+
+      {modais}
       </div>
     );
   }
@@ -462,6 +516,8 @@ export default function Inventario({ currentUser, userPermissions }) {
         renderCard={renderCard}
         ordenacao={ordenacao}
         onOrdenacao={setOrdenacao}
+        selecao={selecao}
+        onSelecao={setSelecao}
         vazio={
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
             <Package className="w-12 h-12 mb-3 opacity-30" />

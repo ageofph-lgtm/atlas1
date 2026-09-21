@@ -13,7 +13,15 @@ const PREDEFINED_TAREFAS = [
   { key: "express", label: "EXPRESS" },
 ];
 
-export default function TarefasModal({ open, ciclo, onClose, onConfirm, authorizing }) {
+/**
+ * `ciclos` (lista) autoriza várias de uma vez: as tarefas escolhidas aplicam-se
+ * a todas e os pedidos aparecem agrupados por máquina. `ciclo` continua a valer
+ * para o caso de uma só, que é o caminho de sempre.
+ */
+export default function TarefasModal({ open, ciclo, ciclos, onClose, onConfirm, authorizing, progresso }) {
+  const alvos = ciclos?.length ? ciclos : ciclo ? [ciclo] : [];
+  const emMassa = alvos.length > 1;
+  const chaveAlvos = alvos.map((c) => c.id).join(",");
   const [selected, setSelected] = useState({});
   const [customTasks, setCustomTasks] = useState([]);
   const [customInput, setCustomInput] = useState("");
@@ -29,10 +37,10 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
       setCustomTasks([]);
       setCustomInput("");
     }
-  }, [open, ciclo?.id]);
+  }, [open, chaveAlvos]);
 
   useEffect(() => {
-    if (!open || !ciclo?.id) {
+    if (!open || alvos.length === 0) {
       setPedidos([]);
       setPedidosSel({});
       return;
@@ -42,8 +50,12 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
     (async () => {
       let abertos = [];
       try {
-        const lista = await base44.entities.PedidoMaquina.filter({ ciclo_id: ciclo.id });
-        abertos = lista.filter((p) => PEDIDO_ESTADOS_POR_FAZER.includes(p.estado));
+        // Em lote, os pedidos de todas as máquinas — apresentados agrupados,
+        // para se ver de quem é cada um antes de o mandar para a O.S.
+        const listas = await Promise.all(
+          alvos.map((c) => base44.entities.PedidoMaquina.filter({ ciclo_id: c.id }).catch(() => []))
+        );
+        abertos = listas.flat().filter((p) => PEDIDO_ESTADOS_POR_FAZER.includes(p.estado));
       } catch (_e) {
         // sem pedidos visíveis — a autorização não pode ficar bloqueada por isto
       }
@@ -54,7 +66,7 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
       setACarregarPedidos(false);
     })();
     return () => { cancelado = true; };
-  }, [open, ciclo?.id]);
+  }, [open, chaveAlvos]);
 
   const togglePedido = (id) => setPedidosSel((s) => ({ ...s, [id]: !s[id] }));
 
@@ -80,7 +92,7 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
     const migrados = pedidos.filter((p) => pedidosSel[p.id]);
     migrados.forEach((p) => tarefas.push({ texto: textoTarefaDoPedido(p), concluida: false }));
     customTasks.forEach((t) => tarefas.push({ texto: t, concluida: false }));
-    onConfirm({ tarefas, isVps: !!selected.vps, isExpress: !!selected.express, pedidosMigrados: migrados });
+    onConfirm({ tarefas, isVps: !!selected.vps, isExpress: !!selected.express, pedidosMigrados: migrados, alvos });
   };
 
   return (
@@ -89,9 +101,13 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
         <DialogHeader>
           <DialogTitle className="text-slate-100 flex items-center gap-2">
             <Zap className="w-5 h-5 text-amber-400" />
-            Autorizar — Tarefas da O.S.
+            {emMassa ? `Autorizar ${alvos.length} máquinas` : "Autorizar — Tarefas da O.S."}
           </DialogTitle>
-          <p className="text-sm text-slate-400">NS: {ciclo?.serie}</p>
+          <p className="text-sm text-slate-400">
+            {emMassa
+              ? "As tarefas escolhidas aplicam-se a todas. Cada uma leva os seus próprios pedidos."
+              : `NS: ${ciclo?.serie}`}
+          </p>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -143,7 +159,10 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
                       <span className={`block text-sm font-medium break-words ${pedidosSel[p.id] ? "text-purple-200" : "text-slate-300"}`}>
                         {p.texto}
                       </span>
-                      <span className="block text-[10px] text-slate-500 mt-0.5">{p.comercial || "—"}</span>
+                      <span className="block text-[10px] text-slate-500 mt-0.5">
+                        {p.comercial || "—"}
+                        {emMassa && p.serie && <span className="num text-slate-600"> · {p.serie}</span>}
+                      </span>
                     </span>
                   </button>
                 ))}
@@ -196,7 +215,9 @@ export default function TarefasModal({ open, ciclo, onClose, onConfirm, authoriz
           </Button>
           <Button onClick={handleConfirm} disabled={authorizing} type="button" className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold">
             {authorizing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" />}
-            AUTORIZAR
+            {authorizing && progresso?.total
+              ? `A AUTORIZAR ${progresso.feito}/${progresso.total}`
+              : emMassa ? `AUTORIZAR ${alvos.length}` : "AUTORIZAR"}
           </Button>
         </DialogFooter>
       </DialogContent>

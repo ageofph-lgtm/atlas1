@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
+import { AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
 import { estadoEfetivo } from "@/components/atlas/cicloUtils";
@@ -36,14 +36,44 @@ const Prioridade = () => (
  *
  * `renderCard` vem da página, já com todas as ligações e permissões montadas.
  */
-export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, tamanho, renderCard, vazio, ordenacao, onOrdenacao }) {
+export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, tamanho, renderCard, vazio, ordenacao, onOrdenacao, selecao, onSelecao }) {
   const [aberto, setAberto] = useState(null);
+
+  // A seleção só existe onde se opera — nos modos de ícone a pessoa está a
+  // navegar. `onSelecao` ausente desliga-a por completo.
+  const podeSelecionar = !!onSelecao && (modo === "lista" || modo === "detalhe");
 
   // Só o modo Detalhe tem cabeçalhos por onde ordenar; nos outros a ordem é a
   // que a página definiu (prioridade primeiro, depois as mais antigas).
   const ciclos = modo === "detalhe" ? ordenarCiclos(ciclosRecebidos, ordenacao, getMaquina) : ciclosRecebidos;
 
   if (!ciclos.length) return vazio || null;
+
+  const selecionado = (c) => !!selecao?.has(c.id);
+  const alternar = (c) => {
+    const novo = new Set(selecao || []);
+    if (novo.has(c.id)) novo.delete(c.id); else novo.add(c.id);
+    onSelecao(novo);
+  };
+  // Apanha o que está à vista — o filtrado e ordenado, não tudo o que foi lido.
+  const todosVisiveisSelecionados = ciclos.every(selecionado);
+  const alternarTodos = () => onSelecao(todosVisiveisSelecionados ? new Set() : new Set(ciclos.map((c) => c.id)));
+
+  const Caixa = ({ marcada, onMarcar, rotulo }) => (
+    <span
+      role="checkbox"
+      aria-checked={marcada}
+      aria-label={rotulo}
+      tabIndex={0}
+      onClick={(e) => { e.stopPropagation(); onMarcar(); }}
+      onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); onMarcar(); } }}
+      className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer transition-colors ${
+        marcada ? "bg-amber-500 border-amber-500" : "border-slate-600 hover:border-amber-500"
+      }`}
+    >
+      {marcada && <Check className="w-3 h-3 text-slate-900" strokeWidth={3} />}
+    </span>
+  );
 
   const abrir = (ciclo) => setAberto(ciclo);
   const cicloAberto = aberto && ciclos.find((c) => c.id === aberto.id);
@@ -143,6 +173,12 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
   if (modo === "lista") {
     return (
       <>
+        {podeSelecionar && (
+          <div className="flex items-center gap-2.5 px-3 pb-1.5 text-[10px] uppercase tracking-wide text-slate-500">
+            <Caixa marcada={todosVisiveisSelecionados} onMarcar={alternarTodos} rotulo="Selecionar todas as visíveis" />
+            Selecionar todas as visíveis
+          </div>
+        )}
         <div className="space-y-1">
           {ciclos.map((c) => {
             const m = getMaquina(c);
@@ -150,8 +186,13 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
               <button
                 key={c.id}
                 onClick={() => abrir(c)}
-                className={`w-full glass cat-${c.categoria} border border-slate-700 rounded-lg px-3 py-1.5 flex items-center gap-2.5 text-left hover:border-amber-500 transition-colors`}
+                className={`w-full glass cat-${c.categoria} border rounded-lg px-3 py-1.5 flex items-center gap-2.5 text-left transition-colors ${
+                  selecionado(c) ? "border-amber-500 bg-amber-500/5" : "border-slate-700 hover:border-amber-500"
+                }`}
               >
+                {podeSelecionar && (
+                  <Caixa marcada={selecionado(c)} onMarcar={() => alternar(c)} rotulo={`Selecionar ${c.serie}`} />
+                )}
                 {temCone(c) ? (
                   <span className="flex items-center gap-1 flex-shrink-0 w-14">
                     <ConeIcon color={c.cone_cor} size={18} />
@@ -181,6 +222,11 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
+              {podeSelecionar && (
+                <th className="px-3 py-2 w-8">
+                  <Caixa marcada={todosVisiveisSelecionados} onMarcar={alternarTodos} rotulo="Selecionar todas as visíveis" />
+                </th>
+              )}
               {COLUNAS_ORDENAVEIS.map((col) => {
                 const ativa = ordenacao?.coluna === col.chave;
                 const Seta = !ativa ? ChevronsUpDown : ordenacao.direcao === "asc" ? ArrowUp : ArrowDown;
@@ -210,8 +256,15 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                 <tr
                   key={c.id}
                   onClick={() => abrir(c)}
-                  className="border-b border-slate-800 last:border-0 cursor-pointer hover:bg-slate-800/50 transition-colors"
+                  className={`border-b border-slate-800 last:border-0 cursor-pointer transition-colors ${
+                    selecionado(c) ? "bg-amber-500/10" : "hover:bg-slate-800/50"
+                  }`}
                 >
+                  {podeSelecionar && (
+                    <td className="px-3 py-2 w-8">
+                      <Caixa marcada={selecionado(c)} onMarcar={() => alternar(c)} rotulo={`Selecionar ${c.serie}`} />
+                    </td>
+                  )}
                   <td className="px-3 py-2 whitespace-nowrap">
                     {temCone(c) ? (
                       <span className="flex items-center gap-1">
