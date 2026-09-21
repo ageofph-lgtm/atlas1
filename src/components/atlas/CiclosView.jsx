@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
 import { estadoEfetivo } from "@/components/atlas/cicloUtils";
 import { GRELHA, CONE_TAMANHO, NS_CLASSE, CONE_NUM_CLASSE } from "@/components/atlas/viewPrefs";
 import ConeIcon from "@/components/atlas/ConeIcon";
+import { COLUNAS_ORDENAVEIS, ordenarCiclos, proximaOrdenacao } from "@/components/atlas/ordenarCiclos";
 
 const temCone = (ciclo) => CONE_COLORS.some((c) => c.value === ciclo.cone_cor) && ciclo.cone_numero;
 
@@ -35,8 +36,12 @@ const Prioridade = () => (
  *
  * `renderCard` vem da página, já com todas as ligações e permissões montadas.
  */
-export default function CiclosView({ ciclos, getMaquina, modo, tamanho, renderCard, vazio }) {
+export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, tamanho, renderCard, vazio, ordenacao, onOrdenacao }) {
   const [aberto, setAberto] = useState(null);
+
+  // Só o modo Detalhe tem cabeçalhos por onde ordenar; nos outros a ordem é a
+  // que a página definiu (prioridade primeiro, depois as mais antigas).
+  const ciclos = modo === "detalhe" ? ordenarCiclos(ciclosRecebidos, ordenacao, getMaquina) : ciclosRecebidos;
 
   if (!ciclos.length) return vazio || null;
 
@@ -176,13 +181,25 @@ export default function CiclosView({ ciclos, getMaquina, modo, tamanho, renderCa
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
-              <th className="px-3 py-2 font-medium">Cone</th>
-              <th className="px-3 py-2 font-medium">Série</th>
-              <th className="px-3 py-2 font-medium">Modelo</th>
-              <th className="px-3 py-2 font-medium">Categoria</th>
-              <th className="px-3 py-2 font-medium">Estado</th>
-              <th className="px-3 py-2 font-medium">Cliente</th>
-              <th className="px-3 py-2 font-medium">Entrada</th>
+              {COLUNAS_ORDENAVEIS.map((col) => {
+                const ativa = ordenacao?.coluna === col.chave;
+                const Seta = !ativa ? ChevronsUpDown : ordenacao.direcao === "asc" ? ArrowUp : ArrowDown;
+                return (
+                  <th key={col.chave} className="px-3 py-2 font-medium" aria-sort={ativa ? (ordenacao.direcao === "asc" ? "ascending" : "descending") : "none"}>
+                    <button
+                      type="button"
+                      onClick={() => onOrdenacao?.(proximaOrdenacao(ordenacao, col.chave))}
+                      disabled={!onOrdenacao}
+                      className={`flex items-center gap-1 uppercase tracking-wide transition-colors disabled:cursor-default ${
+                        ativa ? "text-amber-400" : "hover:text-slate-300"
+                      }`}
+                    >
+                      {col.label}
+                      {onOrdenacao && <Seta className={`w-3 h-3 ${ativa ? "opacity-100" : "opacity-40"}`} />}
+                    </button>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>

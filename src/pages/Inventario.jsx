@@ -6,6 +6,7 @@ import { RefreshCw, Package, Bell, X } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
 import CiclosView from "@/components/atlas/CiclosView";
 import ViewModeBar from "@/components/atlas/ViewModeBar";
+import BotaoExportar from "@/components/atlas/BotaoExportar";
 import FilterBar from "@/components/atlas/FilterBar";
 import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
@@ -36,7 +37,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [pedidos, setPedidos] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
-  const { modo, setModo, tamanho, setTamanho } = useViewPrefs("inventario");
+  const { modo, setModo, tamanho, setTamanho, ordenacao, setOrdenacao } = useViewPrefs("inventario");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
@@ -439,7 +440,8 @@ export default function Inventario({ currentUser, userPermissions }) {
         </button>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-2 flex-wrap">
+        <BotaoExportar ciclos={filteredCiclos} getMaquina={getMaquina} pagina="inventario" />
         <ViewModeBar modo={modo} onModo={setModo} tamanho={tamanho} onTamanho={setTamanho} />
       </div>
 
@@ -449,6 +451,8 @@ export default function Inventario({ currentUser, userPermissions }) {
         modo={modo}
         tamanho={tamanho}
         renderCard={renderCard}
+        ordenacao={ordenacao}
+        onOrdenacao={setOrdenacao}
         vazio={
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
             <Package className="w-12 h-12 mb-3 opacity-30" />

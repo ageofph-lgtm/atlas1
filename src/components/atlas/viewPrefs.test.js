@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MODOS, TAMANHOS, modoUsaEscala, GRELHA, CONE_TAMANHO, NS_CLASSE, CONE_NUM_CLASSE } from "@/components/atlas/viewPrefs";
+import { MODOS, TAMANHOS, modoUsaEscala, GRELHA, CONE_TAMANHO, NS_CLASSE, CONE_NUM_CLASSE, validarPrefs, MODO_PADRAO, TAMANHO_PADRAO } from "@/components/atlas/viewPrefs";
 
 describe("modos e tamanhos", () => {
   it("os cinco modos existem e têm nome e ícone", () => {
@@ -44,5 +44,33 @@ describe("tabelas de classes", () => {
 
   it("o número do cone tem classe para cada tamanho", () => {
     expect(Object.keys(CONE_NUM_CLASSE).sort()).toEqual([...chaves].sort());
+  });
+});
+
+describe("validarPrefs", () => {
+  it("aceita uma preferência inteira", () => {
+    const r = validarPrefs({ modo: "detalhe", tamanho: "grande", ordenacao: { coluna: "serie", direcao: "desc" } });
+    expect(r).toEqual({ modo: "detalhe", tamanho: "grande", ordenacao: { coluna: "serie", direcao: "desc" } });
+  });
+
+  it("um modo ou tamanho que já não existe cai no padrão, em vez de partir o ecrã", () => {
+    const r = validarPrefs({ modo: "carrossel", tamanho: "gigante" });
+    expect(r.modo).toBe(MODO_PADRAO);
+    expect(r.tamanho).toBe(TAMANHO_PADRAO);
+  });
+
+  it("uma direção estranha vira ascendente", () => {
+    expect(validarPrefs({ modo: "cards", tamanho: "medio", ordenacao: { coluna: "cone", direcao: "??" } }).ordenacao)
+      .toEqual({ coluna: "cone", direcao: "asc" });
+  });
+
+  it("ordenação sem coluna não conta", () => {
+    expect(validarPrefs({ modo: "cards", tamanho: "medio", ordenacao: { direcao: "desc" } }).ordenacao).toBe(null);
+    expect(validarPrefs({ modo: "cards", tamanho: "medio" }).ordenacao).toBe(null);
+  });
+
+  it("lixo devolve nada", () => {
+    expect(validarPrefs(null)).toBe(null);
+    expect(validarPrefs("texto")).toBe(null);
   });
 });

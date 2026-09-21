@@ -8,6 +8,7 @@ import BackupPanel from "@/components/atlas/BackupPanel";
 import HistoricoCiclos from "@/components/atlas/HistoricoCiclos";
 import ManutencaoCiclosPanel from "@/components/atlas/ManutencaoCiclosPanel";
 import { isVenda, isAluguer } from "@/components/atlas/cicloUtils";
+import BotaoExportar from "@/components/atlas/BotaoExportar";
 
 const CATEGORIA_COLORS = {
   str: "#f59e0b",
@@ -277,7 +278,10 @@ export default function Relatorios({ currentUser, userPermissions }) {
 
       {/* Histórico de saídas table */}
       <div className="glass border border-slate-700 rounded-lg overflow-hidden">
-        <h3 className="text-sm font-bold text-slate-300 p-4 border-b border-slate-700">Histórico de saídas</h3>
+        <div className="flex items-center justify-between gap-2 p-4 border-b border-slate-700">
+          <h3 className="text-sm font-bold text-slate-300">Histórico de saídas</h3>
+          <BotaoExportar ciclos={historicoSaidas} getMaquina={getMaquina} pagina="historico-saidas" />
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
