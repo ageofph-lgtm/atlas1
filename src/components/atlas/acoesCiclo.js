@@ -1,6 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { estadoEfetivo, isCategoriaSemEstado } from "@/components/atlas/cicloUtils";
 import { notificarPronta } from "@/components/atlas/mensagens";
+import { exigirRede } from "@/components/atlas/rede";
 
 /**
  * As operações que se fazem a uma máquina, numa implementação só.
@@ -26,6 +27,7 @@ export const podeMarcarPronta = (ciclo) =>
 
 /** Liga ou desliga a prioridade. Devolve o ciclo como ficou. */
 export async function definirPrioridade(ciclo, valor) {
+  exigirRede("Alterar a prioridade");
   await base44.entities.Ciclo.update(ciclo.id, { prioridade: valor });
   return { ...ciclo, prioridade: valor };
 }
@@ -37,6 +39,7 @@ export async function definirPrioridade(ciclo, valor) {
  * a logística, a gestão e os comerciais com reserva ou pedido nesta máquina.
  */
 export async function marcarPronta(ciclo, { autor }) {
+  exigirRede("Marcar como pronta");
   const now = new Date().toISOString();
   await base44.entities.Ciclo.update(ciclo.id, { estado: "pronta", data_pronta: now });
   await base44.entities.EventoCiclo.create({

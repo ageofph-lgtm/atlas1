@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { RotateCcw } from "lucide-react";
 import EntradaPassoRegisto from "@/components/atlas/EntradaPassoRegisto";
 import EntradaPassoCaracteristicas from "@/components/atlas/EntradaPassoCaracteristicas";
 import EntradaPassoClassificacao from "@/components/atlas/EntradaPassoClassificacao";
@@ -8,6 +9,7 @@ import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { isCategoriaSemEstado } from "@/components/atlas/cicloUtils";
 import { registarEntrada } from "@/components/atlas/registarEntrada";
 import { procurarMaquina } from "@/components/atlas/procurarMaquina";
+import { guardarRascunho, lerRascunho, apagarRascunho } from "@/components/atlas/rascunho";
 
 export default function Entrada({ currentUser }) {
   const { toast } = useToast();
@@ -33,6 +35,32 @@ export default function Entrada({ currentUser }) {
   const [coneError, setConeError] = useState("");
   const [notas, setNotas] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // O prejuízo de um registo feito no pátio com mau sinal não é a falha — é
+  // escrever tudo outra vez. O que está no formulário fica guardado no
+  // aparelho e volta ao abrir.
+  const [rascunhoReposto, setRascunhoReposto] = useState(false);
+
+  useEffect(() => {
+    const r = lerRascunho("entrada");
+    if (!r) return;
+    if (r.serie) setSerie(r.serie);
+    if (r.modelo) setModelo(r.modelo);
+    if (r.ano) setAno(r.ano);
+    if (r.specs) setSpecs(r.specs);
+    if (r.categoria) setCategoria(r.categoria);
+    if (r.estadoInicial) setEstadoInicial(r.estadoInicial);
+    if (r.coneNumero) setConeNumero(r.coneNumero);
+    if (r.notas) setNotas(r.notas);
+    if (r.step) setStep(r.step);
+    setRascunhoReposto(true);
+  }, []);
+
+  useEffect(() => {
+    // Só vale a pena guardar a partir do momento em que há série.
+    if (!serie) return;
+    guardarRascunho("entrada", { serie, modelo, ano, specs, categoria, estadoInicial, coneNumero, notas, step });
+  }, [serie, modelo, ano, specs, categoria, estadoInicial, coneNumero, notas, step]);
 
   const NOTA_LABELS = ["Duplicada", "Não funciona", "Garfos 2400", "Mau estado"];
   const toggleNotaLabel = (label) => {
@@ -123,15 +151,20 @@ export default function Entrada({ currentUser }) {
 
   const validateCone = async () => {
     if (!needsCone || !coneNumero) { setConeError(""); return; }
-    const result = await validateConeNumber(categoria, coneNumero);
-    if (!result.free) {
-      setConeError(`Cone ${coneNumero} ${coneCor} já está em uso — NS ${result.conflito.serie}`);
-    } else {
+    try {
+      const result = await validateConeNumber(categoria, coneNumero);
+      setConeError(result.free ? "" : `Cone ${coneNumero} ${coneCor} já está em uso — NS ${result.conflito.serie}`);
+    } catch (_e) {
+      // Sem rede não se consegue saber se o cone está livre. Não se inventa uma
+      // resposta: deixa-se seguir e a mesma verificação corre no registo, que
+      // sem rede também não passa.
       setConeError("");
     }
   };
 
   const limparFormulario = () => {
+    apagarRascunho("entrada");
+    setRascunhoReposto(false);
     setStep(1);
     setSerie("");
     setModelo("");
@@ -206,6 +239,19 @@ export default function Entrada({ currentUser }) {
           </div>
         ))}
       </div>
+
+      {rascunhoReposto && (
+        <div className="flex items-center gap-2 text-xs glass border border-cyan-500/40 rounded-lg px-3 py-2">
+          <RotateCcw className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+          <span className="text-slate-300">Repusemos o que tinha escrito da última vez.</span>
+          <button
+            onClick={() => { apagarRascunho("entrada"); limparFormulario(); }}
+            className="ml-auto text-cyan-400 hover:text-cyan-300 font-medium flex-shrink-0"
+          >
+            Começar de novo
+          </button>
+        </div>
+      )}
 
       {step === 1 && (
         <EntradaPassoRegisto
