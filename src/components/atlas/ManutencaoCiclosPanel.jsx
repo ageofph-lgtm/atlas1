@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { listarTudo } from "@/components/atlas/carregarTudo";
 import { Wrench, Loader2, Search, AlertTriangle, Trash2, CheckSquare, Square, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "@/components/atlas/constants";
@@ -73,7 +74,7 @@ export default function ManutencaoCiclosPanel() {
     reset();
     setSerie("");
     try {
-      const todos = await base44.entities.Ciclo.list("-created_date", 1000);
+      const todos = (await listarTudo(base44.entities.Ciclo)).registos;
       const porSerie = {};
       todos.forEach((c) => {
         if (!c.serie) return;

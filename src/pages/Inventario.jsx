@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { listarTudo } from "@/components/atlas/carregarTudo";
+import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { useToast } from "@/components/ui/use-toast";
 import { RefreshCw, Package, Bell, X } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
@@ -47,17 +49,22 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [autorizando, setAutorizando] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // Quando a leitura bate no travão, dizemo-lo: um limite calado faz os
+  // relatórios mentir sem ninguém dar por isso.
+  const [truncado, setTruncado] = useState(false);
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
-      const allCiclos = await base44.entities.Ciclo.list("-created_date", 500);
-      const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
+      const ciclosLidos = await listarTudo(base44.entities.Ciclo);
+      const allCiclos = ciclosLidos.registos;
+      setTruncado(ciclosLidos.truncado);
+      const allMaquinas = (await listarTudo(base44.entities.Maquina)).registos;
       setCiclos(await normalizarEstadosIndefinidos(allCiclos));
       setMaquinas(allMaquinas);
       // Os pedidos vêm numa consulta só, para os cards não fazerem uma cada.
       try {
-        setPedidos(await base44.entities.PedidoMaquina.list("-created_date", 500));
+        setPedidos((await listarTudo(base44.entities.PedidoMaquina)).registos);
       } catch (_e) {
         setPedidos([]);
       }
@@ -129,7 +136,7 @@ export default function Inventario({ currentUser, userPermissions }) {
 
   const recarregarPedidos = async () => {
     try {
-      setPedidos(await base44.entities.PedidoMaquina.list("-created_date", 500));
+      setPedidos((await listarTudo(base44.entities.PedidoMaquina)).registos);
     } catch (_e) {
       // mantém o que já estava
     }
@@ -439,6 +446,8 @@ export default function Inventario({ currentUser, userPermissions }) {
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
+
+      <AvisoTruncado truncado={truncado} />
 
       <div className="flex justify-end items-center gap-2 flex-wrap">
         <BotaoExportar ciclos={filteredCiclos} getMaquina={getMaquina} pagina="inventario" />

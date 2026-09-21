@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { listarTudo } from "@/components/atlas/carregarTudo";
+import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { useToast } from "@/components/ui/use-toast";
 import { Package } from "lucide-react";
 import { AUTORIZACAO_TABS } from "@/components/atlas/constants";
@@ -39,6 +41,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
   const { modo, setModo, tamanho, setTamanho, ordenacao, setOrdenacao } = useViewPrefs("autorizacao");
   const [isLoading, setIsLoading] = useState(true);
+  const [truncado, setTruncado] = useState(false);
   const [authorizing, setAuthorizing] = useState(null);
   const [tarefasCiclo, setTarefasCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
@@ -47,8 +50,10 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
-      const allCiclos = await base44.entities.Ciclo.list("-created_date", 500);
-      const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
+      const ciclosLidos = await listarTudo(base44.entities.Ciclo);
+      const allCiclos = ciclosLidos.registos;
+      setTruncado(ciclosLidos.truncado);
+      const allMaquinas = (await listarTudo(base44.entities.Maquina)).registos;
       setCiclos(await normalizarEstadosIndefinidos(allCiclos));
       setMaquinas(allMaquinas);
     } catch (e) {
@@ -247,6 +252,8 @@ export default function Autorizacao({ currentUser, userPermissions }) {
           </button>
         ))}
       </div>
+
+      <AvisoTruncado truncado={truncado} />
 
       <div className="flex justify-end items-center gap-2 flex-wrap">
         <BotaoExportar ciclos={filteredCiclos} getMaquina={getMaquina} pagina="autorizacao" />
