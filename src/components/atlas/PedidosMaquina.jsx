@@ -45,7 +45,7 @@ export default function PedidosMaquina({ ciclo, currentUser, canPedir, canRespon
 
   useEffect(() => {
     if (pedidosExternos === undefined) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [ciclo?.id, pedidosExternos === undefined]);
 
   // Veio do botão do card: o formulário já aparece aberto, sem segundo clique.

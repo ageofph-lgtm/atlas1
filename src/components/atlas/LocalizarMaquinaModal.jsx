@@ -34,7 +34,7 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
     if (!open) return;
     setProcura("");
     mostrarLista();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [open]);
 
   const elegiveis = async () => {
