@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { listarTudo } from "@/components/atlas/carregarTudo";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,7 @@ export default function Saida({ currentUser }) {
       setProntas(p.filter((c) => estadoEfetivo(c) === "pronta"));
       const a = await base44.entities.Ciclo.filter({ estado: "em_aluguer" });
       setAlugadas(a);
-      const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
+      const allMaquinas = (await listarTudo(base44.entities.Maquina)).registos;
       setMaquinas(allMaquinas);
     } catch (e) {
       console.error(e);

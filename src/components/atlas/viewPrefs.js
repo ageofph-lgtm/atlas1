@@ -25,6 +25,8 @@ export const TAMANHOS = [
 
 export const MODO_PADRAO = "cards";
 export const TAMANHO_PADRAO = "medio";
+/** Sem ordenação escolhida, manda a ordem da página: prioridade e depois as mais antigas. */
+export const ORDENACAO_PADRAO = null;
 
 /** O tamanho só se aplica aos modos com ícone; lista e detalhe são sempre compactos. */
 export const modoUsaEscala = (modo) => !!MODOS.find((m) => m.key === modo)?.escala;
@@ -65,14 +67,23 @@ export const NS_CLASSE = {
 
 const CHAVE = (pagina) => `atlas:vista:${pagina}`;
 
+/** Só se aceita o que ainda existe: um valor gravado por uma versão antiga não pode partir o ecrã. */
+export const validarPrefs = (guardado) => {
+  if (!guardado || typeof guardado !== "object") return null;
+  const ordenacao =
+    guardado.ordenacao && typeof guardado.ordenacao === "object" && guardado.ordenacao.coluna
+      ? { coluna: guardado.ordenacao.coluna, direcao: guardado.ordenacao.direcao === "desc" ? "desc" : "asc" }
+      : ORDENACAO_PADRAO;
+  return {
+    modo: MODOS.some((m) => m.key === guardado.modo) ? guardado.modo : MODO_PADRAO,
+    tamanho: TAMANHOS.some((t) => t.key === guardado.tamanho) ? guardado.tamanho : TAMANHO_PADRAO,
+    ordenacao,
+  };
+};
+
 const ler = (pagina) => {
   try {
-    const guardado = JSON.parse(localStorage.getItem(CHAVE(pagina)) || "null");
-    if (!guardado) return null;
-    return {
-      modo: MODOS.some((m) => m.key === guardado.modo) ? guardado.modo : MODO_PADRAO,
-      tamanho: TAMANHOS.some((t) => t.key === guardado.tamanho) ? guardado.tamanho : TAMANHO_PADRAO,
-    };
+    return validarPrefs(JSON.parse(localStorage.getItem(CHAVE(pagina)) || "null"));
   } catch (_e) {
     // janela privada, armazenamento bloqueado ou valor corrompido — vale o padrão
     return null;
@@ -90,17 +101,19 @@ export function useViewPrefs(pagina) {
   const inicial = ler(pagina);
   const [modo, setModoState] = useState(inicial?.modo || MODO_PADRAO);
   const [tamanho, setTamanhoState] = useState(inicial?.tamanho || TAMANHO_PADRAO);
+  const [ordenacao, setOrdenacaoState] = useState(inicial?.ordenacao ?? ORDENACAO_PADRAO);
 
-  const guardar = useCallback((m, t) => {
+  const guardar = useCallback((prefs) => {
     try {
-      localStorage.setItem(CHAVE(pagina), JSON.stringify({ modo: m, tamanho: t }));
+      localStorage.setItem(CHAVE(pagina), JSON.stringify(prefs));
     } catch (_e) {
       // não poder guardar não pode impedir de mudar de vista
     }
   }, [pagina]);
 
-  const setModo = useCallback((m) => { setModoState(m); guardar(m, tamanho); }, [guardar, tamanho]);
-  const setTamanho = useCallback((t) => { setTamanhoState(t); guardar(modo, t); }, [guardar, modo]);
+  const setModo = useCallback((m) => { setModoState(m); guardar({ modo: m, tamanho, ordenacao }); }, [guardar, tamanho, ordenacao]);
+  const setTamanho = useCallback((t) => { setTamanhoState(t); guardar({ modo, tamanho: t, ordenacao }); }, [guardar, modo, ordenacao]);
+  const setOrdenacao = useCallback((o) => { setOrdenacaoState(o); guardar({ modo, tamanho, ordenacao: o }); }, [guardar, modo, tamanho]);
 
-  return { modo, setModo, tamanho, setTamanho };
+  return { modo, setModo, tamanho, setTamanho, ordenacao, setOrdenacao };
 }

@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { listarTudo } from "@/components/atlas/carregarTudo";
+import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { useToast } from "@/components/ui/use-toast";
 import { RefreshCw, Package, Bell, X } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
 import CiclosView from "@/components/atlas/CiclosView";
 import ViewModeBar from "@/components/atlas/ViewModeBar";
+import BotaoExportar from "@/components/atlas/BotaoExportar";
 import FilterBar from "@/components/atlas/FilterBar";
 import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
@@ -36,7 +39,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [pedidos, setPedidos] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
-  const { modo, setModo, tamanho, setTamanho } = useViewPrefs("inventario");
+  const { modo, setModo, tamanho, setTamanho, ordenacao, setOrdenacao } = useViewPrefs("inventario");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
   const [reservaCiclo, setReservaCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
@@ -46,17 +49,22 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [autorizando, setAutorizando] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // Quando a leitura bate no travão, dizemo-lo: um limite calado faz os
+  // relatórios mentir sem ninguém dar por isso.
+  const [truncado, setTruncado] = useState(false);
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
-      const allCiclos = await base44.entities.Ciclo.list("-created_date", 500);
-      const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
+      const ciclosLidos = await listarTudo(base44.entities.Ciclo);
+      const allCiclos = ciclosLidos.registos;
+      setTruncado(ciclosLidos.truncado);
+      const allMaquinas = (await listarTudo(base44.entities.Maquina)).registos;
       setCiclos(await normalizarEstadosIndefinidos(allCiclos));
       setMaquinas(allMaquinas);
       // Os pedidos vêm numa consulta só, para os cards não fazerem uma cada.
       try {
-        setPedidos(await base44.entities.PedidoMaquina.list("-created_date", 500));
+        setPedidos((await listarTudo(base44.entities.PedidoMaquina)).registos);
       } catch (_e) {
         setPedidos([]);
       }
@@ -128,7 +136,7 @@ export default function Inventario({ currentUser, userPermissions }) {
 
   const recarregarPedidos = async () => {
     try {
-      setPedidos(await base44.entities.PedidoMaquina.list("-created_date", 500));
+      setPedidos((await listarTudo(base44.entities.PedidoMaquina)).registos);
     } catch (_e) {
       // mantém o que já estava
     }
@@ -439,7 +447,10 @@ export default function Inventario({ currentUser, userPermissions }) {
         </button>
       </div>
 
-      <div className="flex justify-end">
+      <AvisoTruncado truncado={truncado} />
+
+      <div className="flex justify-end items-center gap-2 flex-wrap">
+        <BotaoExportar ciclos={filteredCiclos} getMaquina={getMaquina} pagina="inventario" />
         <ViewModeBar modo={modo} onModo={setModo} tamanho={tamanho} onTamanho={setTamanho} />
       </div>
 
@@ -449,6 +460,8 @@ export default function Inventario({ currentUser, userPermissions }) {
         modo={modo}
         tamanho={tamanho}
         renderCard={renderCard}
+        ordenacao={ordenacao}
+        onOrdenacao={setOrdenacao}
         vazio={
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
             <Package className="w-12 h-12 mb-3 opacity-30" />

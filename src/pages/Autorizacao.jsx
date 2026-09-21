@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { listarTudo } from "@/components/atlas/carregarTudo";
+import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { useToast } from "@/components/ui/use-toast";
 import { Package } from "lucide-react";
 import { AUTORIZACAO_TABS } from "@/components/atlas/constants";
 import CicloCard from "@/components/atlas/CicloCard";
 import CiclosView from "@/components/atlas/CiclosView";
 import ViewModeBar from "@/components/atlas/ViewModeBar";
+import BotaoExportar from "@/components/atlas/BotaoExportar";
 import CicloMiniCard from "@/components/atlas/CicloMiniCard";
 import FilterBar from "@/components/atlas/FilterBar";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
@@ -36,8 +39,9 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const [activeTab, setActiveTab] = useState("todas");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
-  const { modo, setModo, tamanho, setTamanho } = useViewPrefs("autorizacao");
+  const { modo, setModo, tamanho, setTamanho, ordenacao, setOrdenacao } = useViewPrefs("autorizacao");
   const [isLoading, setIsLoading] = useState(true);
+  const [truncado, setTruncado] = useState(false);
   const [authorizing, setAuthorizing] = useState(null);
   const [tarefasCiclo, setTarefasCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
@@ -46,8 +50,10 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
-      const allCiclos = await base44.entities.Ciclo.list("-created_date", 500);
-      const allMaquinas = await base44.entities.Maquina.list("-created_date", 500);
+      const ciclosLidos = await listarTudo(base44.entities.Ciclo);
+      const allCiclos = ciclosLidos.registos;
+      setTruncado(ciclosLidos.truncado);
+      const allMaquinas = (await listarTudo(base44.entities.Maquina)).registos;
       setCiclos(await normalizarEstadosIndefinidos(allCiclos));
       setMaquinas(allMaquinas);
     } catch (e) {
@@ -247,7 +253,10 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         ))}
       </div>
 
-      <div className="flex justify-end">
+      <AvisoTruncado truncado={truncado} />
+
+      <div className="flex justify-end items-center gap-2 flex-wrap">
+        <BotaoExportar ciclos={filteredCiclos} getMaquina={getMaquina} pagina="autorizacao" />
         <ViewModeBar modo={modo} onModo={setModo} tamanho={tamanho} onTamanho={setTamanho} />
       </div>
 
@@ -262,6 +271,8 @@ export default function Autorizacao({ currentUser, userPermissions }) {
           modo={modo}
           tamanho={tamanho}
           renderCard={renderCard}
+          ordenacao={ordenacao}
+          onOrdenacao={setOrdenacao}
           vazio={
             <div className="flex flex-col items-center justify-center py-16 text-slate-500">
               <Package className="w-12 h-12 mb-3 opacity-30" />

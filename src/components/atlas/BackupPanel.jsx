@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { listarTudo } from "@/components/atlas/carregarTudo";
 import { Download, Upload, Loader2, ShieldCheck } from "lucide-react";
 
 const BACKUP_ENTITIES = ["Maquina", "Ciclo", "EventoCiclo", "Mensagem", "PedidoMaquina", "Pedido", "OrdemServico", "FrotaACP", "Notificacao"];
@@ -40,8 +41,16 @@ export default function BackupPanel() {
     setStatus(null);
     try {
       const entities = {};
+      // Um backup truncado em silêncio é o pior caso de todos: parece
+      // completo e não é. Lê-se tudo, por páginas.
+      const incompletas = [];
       for (const name of BACKUP_ENTITIES) {
-        entities[name] = await base44.entities[name].list("-created_date", 5000);
+        const { registos, truncado } = await listarTudo(base44.entities[name], { maximo: 50000 });
+        entities[name] = registos;
+        if (truncado) incompletas.push(name);
+      }
+      if (incompletas.length > 0) {
+        throw new Error(`Backup incompleto — ${incompletas.join(", ")} passou o limite de leitura. Não é seguro guardar este ficheiro.`);
       }
       const payload = { app: "ATLAS", version: 1, exportedAt: new Date().toISOString(), entities };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -72,7 +81,7 @@ export default function BackupPanel() {
         if (!data?.entities) throw new Error("formato inválido");
         const summary = {};
         for (const name of BACKUP_ENTITIES) {
-          const existing = await base44.entities[name].list("-created_date", 5000);
+          const existing = (await listarTudo(base44.entities[name], { maximo: 50000 })).registos;
           const existingKeys = new Set(existing.map(NATURAL_KEYS[name]).filter(Boolean));
           const recs = (data.entities[name] || [])
             .map(strip)

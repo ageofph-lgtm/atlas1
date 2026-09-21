@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { listarTudo } from "@/components/atlas/carregarTudo";
+import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar, Tag } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
@@ -8,6 +10,7 @@ import BackupPanel from "@/components/atlas/BackupPanel";
 import HistoricoCiclos from "@/components/atlas/HistoricoCiclos";
 import ManutencaoCiclosPanel from "@/components/atlas/ManutencaoCiclosPanel";
 import { isVenda, isAluguer } from "@/components/atlas/cicloUtils";
+import BotaoExportar from "@/components/atlas/BotaoExportar";
 
 const CATEGORIA_COLORS = {
   str: "#f59e0b",
@@ -22,13 +25,18 @@ export default function Relatorios({ currentUser, userPermissions }) {
   const [ciclos, setCiclos] = useState([]);
   const [maquinas, setMaquinas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Os relatórios são a página onde um limite calado faz mais estragos:
+  // as médias passariam a ser de uma fatia, a dizer que eram de tudo.
+  const [truncado, setTruncado] = useState(false);
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
-      const allCiclos = await base44.entities.Ciclo.list("-created_date", 1000);
+      const ciclosLidos = await listarTudo(base44.entities.Ciclo);
+      const allCiclos = ciclosLidos.registos;
+      setTruncado(ciclosLidos.truncado);
       setCiclos(allCiclos);
-      const allMaquinas = await base44.entities.Maquina.list("-created_date", 1000);
+      const allMaquinas = (await listarTudo(base44.entities.Maquina)).registos;
       setMaquinas(allMaquinas);
     } catch (e) {
       console.error(e);
@@ -163,6 +171,8 @@ export default function Relatorios({ currentUser, userPermissions }) {
 
   return (
     <div className="space-y-6">
+      <AvisoTruncado truncado={truncado} />
+
       {/* Backup / restore + manutenção — admin only */}
       {currentUser?.perfil === "administrador" && (
         <>
@@ -277,7 +287,10 @@ export default function Relatorios({ currentUser, userPermissions }) {
 
       {/* Histórico de saídas table */}
       <div className="glass border border-slate-700 rounded-lg overflow-hidden">
-        <h3 className="text-sm font-bold text-slate-300 p-4 border-b border-slate-700">Histórico de saídas</h3>
+        <div className="flex items-center justify-between gap-2 p-4 border-b border-slate-700">
+          <h3 className="text-sm font-bold text-slate-300">Histórico de saídas</h3>
+          <BotaoExportar ciclos={historicoSaidas} getMaquina={getMaquina} pagina="historico-saidas" />
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
