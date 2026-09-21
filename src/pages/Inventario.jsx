@@ -268,7 +268,7 @@ export default function Inventario({ currentUser, userPermissions }) {
     if (disabled || empty) {
       setActiveTab("todas");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [filters.categoria]);
 
   // Reserva save
