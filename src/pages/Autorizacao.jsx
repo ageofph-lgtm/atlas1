@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
+import AcoesEmMassa from "@/components/atlas/AcoesEmMassa";
+import { executarEmLote, resumirLote } from "@/components/atlas/executarEmLote";
+import { podeAutorizar } from "@/components/atlas/acoesCiclo";
 import { useToast } from "@/components/ui/use-toast";
 import { Package } from "lucide-react";
 import { AUTORIZACAO_TABS } from "@/components/atlas/constants";
@@ -18,7 +21,7 @@ import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
-import { notificarPronta } from "@/components/atlas/mensagens";
+import { definirPrioridade, marcarPronta } from "@/components/atlas/acoesCiclo";
 import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
 import { estadoEfetivo, passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
 import { useViewPrefs } from "@/components/atlas/viewPrefs";
@@ -42,6 +45,16 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const { modo, setModo, tamanho, setTamanho, ordenacao, setOrdenacao } = useViewPrefs("autorizacao");
   const [isLoading, setIsLoading] = useState(true);
   const [truncado, setTruncado] = useState(false);
+  const [selecao, setSelecao] = useState(new Set());
+  const [autorizarEmMassa, setAutorizarEmMassa] = useState(null);
+  const [progressoLote, setProgressoLote] = useState(null);
+
+  // O que se selecionou deixa de estar à vista quando se muda de aba, de
+  // filtro, de pesquisa ou de modo. Guardar uma seleção escondida é como se
+  // acaba a decidir sobre máquinas erradas.
+  useEffect(() => {
+    setSelecao(new Set());
+  }, [activeTab, filters, searchQuery, modo]);
   const [authorizing, setAuthorizing] = useState(null);
   const [tarefasCiclo, setTarefasCiclo] = useState(null);
   const [editMaquina, setEditMaquina] = useState(null);
@@ -122,13 +135,20 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     [ciclos, maquinas, activeTab, filters, searchQuery]
   );
 
+  // Só o que ainda está à vista: se um filtro escondeu uma máquina, ela não
+  // pode continuar a contar para a ação em massa.
+  const selecionados = useMemo(
+    () => filteredCiclos.filter((c) => selecao.has(c.id)),
+    [filteredCiclos, selecao]
+  );
+
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const togglePrioridade = async (ciclo) => {
     try {
-      await base44.entities.Ciclo.update(ciclo.id, { prioridade: !ciclo.prioridade });
+      await definirPrioridade(ciclo, !ciclo.prioridade);
       setCiclos((prev) => prev.map((c) => (c.id === ciclo.id ? { ...c, prioridade: !c.prioridade } : c)));
     } catch (e) {
       toast({ variant: "destructive", title: "Erro", description: e.message });
@@ -137,17 +157,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
 
   const handleMarcarPronta = async (ciclo) => {
     try {
-      const now = new Date().toISOString();
-      await base44.entities.Ciclo.update(ciclo.id, { estado: "pronta", data_pronta: now });
-      await base44.entities.EventoCiclo.create({
-        ciclo_id: ciclo.id,
-        serie: ciclo.serie,
-        de_estado: ciclo.estado,
-        para_estado: "pronta",
-        autor,
-        nota: "Marcada como pronta (sem O.S. no Watcher)",
-      });
-      await notificarPronta(ciclo, { autor });
+      await marcarPronta(ciclo, { autor });
       toast({ title: "✓ Marcada como pronta", description: `NS: ${ciclo.serie}` });
       loadData();
     } catch (err) {
@@ -167,23 +177,44 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     }
   };
 
-  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, pedidosMigrados = [] }) => {
-    if (!tarefasCiclo) return;
-    setAuthorizing(tarefasCiclo.id);
-    try {
-      const data = await authorizeCiclo(tarefasCiclo.id, autor, { tarefas, isVps, isExpress });
-      // Os pedidos que entraram na O.S. deixam de estar à espera da gestão.
-      const migrados = await marcarPedidosNaOS(pedidosMigrados, { autor, osId: data.watcher_os_id });
-      toast({
-        title: "✓ Autorizada",
-        description: `Watcher O.S.: ${data.watcher_os_id}${migrados ? ` · ${migrados} pedido(s) na O.S.` : ""}`,
-      });
-      setTarefasCiclo(null);
-      loadData();
-    } catch (err) {
-      toast({ variant: "destructive", title: "Erro na autorização", description: err.message });
-    }
+  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, pedidosMigrados = [], alvos = [] }) => {
+    const lista = alvos.length ? alvos : tarefasCiclo ? [tarefasCiclo] : [];
+    if (!lista.length) return;
+
+    // Os pedidos vêm todos juntos do modal; cada máquina leva os seus para a
+    // sua própria O.S.
+    const pedidosPorCiclo = new Map();
+    pedidosMigrados.forEach((p) => {
+      if (!pedidosPorCiclo.has(p.ciclo_id)) pedidosPorCiclo.set(p.ciclo_id, []);
+      pedidosPorCiclo.get(p.ciclo_id).push(p);
+    });
+
+    setAuthorizing(lista[0].id);
+    setProgressoLote({ feito: 0, total: lista.length });
+
+    // Em série, de propósito: cada autorização é uma chamada ao Watcher.
+    const resultado = await executarEmLote(lista, {
+      aplicavel: (c) => (podeAutorizar(c) ? true : "não estava classificada nem em manutenção"),
+      executar: async (c) => {
+        const data = await authorizeCiclo(c.id, autor, { tarefas, isVps, isExpress });
+        await marcarPedidosNaOS(pedidosPorCiclo.get(c.id) || [], { autor, osId: data.watcher_os_id });
+      },
+      onProgresso: ({ feito, total }) => setProgressoLote({ feito, total }),
+    });
+
+    setProgressoLote(null);
     setAuthorizing(null);
+    setTarefasCiclo(null);
+    setAutorizarEmMassa(null);
+    setSelecao(new Set());
+
+    const houveProblema = resultado.falhadas.length > 0 || resultado.ignoradas.length > 0;
+    toast({
+      variant: resultado.feitas.length === 0 ? "destructive" : undefined,
+      title: houveProblema ? "Concluído com ressalvas" : "✓ Autorizada",
+      description: resumirLote(resultado, "autorizada"),
+    });
+    loadData();
   };
 
   if (isLoading) {
@@ -273,6 +304,8 @@ export default function Autorizacao({ currentUser, userPermissions }) {
           renderCard={renderCard}
           ordenacao={ordenacao}
           onOrdenacao={setOrdenacao}
+          selecao={selecao}
+          onSelecao={setSelecao}
           vazio={
             <div className="flex flex-col items-center justify-center py-16 text-slate-500">
               <Package className="w-12 h-12 mb-3 opacity-30" />
@@ -308,6 +341,17 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         </div>
       )}
 
+      <AcoesEmMassa
+        selecionados={selecionados}
+        onLimpar={() => setSelecao(new Set())}
+        onConcluido={loadData}
+        getMaquina={getMaquina}
+        pagina="autorizacao"
+        autor={autor}
+        podeGerir={canAutorizar}
+        onAutorizar={(lista) => setAutorizarEmMassa(lista)}
+      />
+
       <EditMaquinaModal
         maquina={editMaquina}
         ciclo={editCiclo}
@@ -317,9 +361,11 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         onSave={handleMaquinaEdit}
       />
       <TarefasModal
-        open={!!tarefasCiclo}
+        open={!!tarefasCiclo || !!autorizarEmMassa}
         ciclo={tarefasCiclo}
-        onClose={() => setTarefasCiclo(null)}
+        ciclos={autorizarEmMassa}
+        progresso={progressoLote}
+        onClose={() => { setTarefasCiclo(null); setAutorizarEmMassa(null); setProgressoLote(null); }}
         onConfirm={handleTarefasConfirm}
         authorizing={authorizing !== null}
       />
