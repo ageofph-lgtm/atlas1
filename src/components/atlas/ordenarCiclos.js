@@ -11,15 +11,32 @@ import { estadoEfetivo } from "@/components/atlas/cicloUtils";
  *    cliente quer ver os clientes, não uma página de traços.
  */
 
-export const COLUNAS_ORDENAVEIS = [
-  { chave: "cone", label: "Cone", tipo: "numero", valor: (c) => c.cone_numero },
-  { chave: "serie", label: "Série", tipo: "texto", valor: (c) => c.serie },
-  { chave: "modelo", label: "Modelo", tipo: "texto", valor: (c, m) => m?.modelo },
-  { chave: "categoria", label: "Categoria", tipo: "texto", valor: (c) => CATEGORIA_CONFIG[c.categoria]?.label || c.categoria },
-  { chave: "estado", label: "Estado", tipo: "texto", valor: (c) => ESTADO_CONFIG[estadoEfetivo(c)]?.label || estadoEfetivo(c) },
-  { chave: "cliente", label: "Cliente", tipo: "texto", valor: (c) => c.reserva_cliente },
-  { chave: "entrada", label: "Entrada", tipo: "data", valor: (c) => c.data_entrada },
+/**
+ * Por onde se pode organizar uma lista de máquinas.
+ *
+ * `coluna: true` marca as que também são cabeçalhos da tabela no modo Detalhe.
+ * As restantes só existem no organizador — não fazia sentido pôr mais três
+ * colunas na tabela só para se poder ordenar por elas.
+ */
+export const CAMPOS_ORDENACAO = [
+  { chave: "cone", label: "Cone", tipo: "numero", coluna: true, valor: (c) => c.cone_numero },
+  { chave: "serie", label: "Série", tipo: "texto", coluna: true, valor: (c) => c.serie },
+  { chave: "modelo", label: "Modelo", tipo: "texto", coluna: true, valor: (c, m) => m?.modelo },
+  { chave: "categoria", label: "Categoria", tipo: "texto", coluna: true, valor: (c) => CATEGORIA_CONFIG[c.categoria]?.label || c.categoria },
+  { chave: "estado", label: "Estado", tipo: "texto", coluna: true, valor: (c) => ESTADO_CONFIG[estadoEfetivo(c)]?.label || estadoEfetivo(c) },
+  { chave: "cliente", label: "Cliente", tipo: "texto", coluna: true, valor: (c) => c.reserva_cliente },
+  { chave: "entrada", label: "Entrada", tipo: "data", coluna: true, valor: (c) => c.data_entrada },
+  // Data em que o registo foi criado — não é o mesmo que a entrada no pátio:
+  // uma máquina pode ser registada dias depois de chegar.
+  { chave: "registo", label: "Data de registo", tipo: "data", valor: (c) => c.created_date },
+  // Última vez que alguém lhe mexeu. É o que se quer para ver o que mudou hoje.
+  { chave: "alteracao", label: "Última alteração", tipo: "data", valor: (c) => c.updated_date || c.created_date },
+  { chave: "ano", label: "Ano da máquina", tipo: "numero", valor: (c, m) => m?.ano },
+  { chave: "pronta", label: "Data pronta", tipo: "data", valor: (c) => c.data_pronta },
 ];
+
+/** As que aparecem como cabeçalho na tabela do modo Detalhe. */
+export const COLUNAS_ORDENAVEIS = CAMPOS_ORDENACAO.filter((c) => c.coluna);
 
 const vazio = (v) => v === null || v === undefined || String(v).trim() === "";
 
@@ -35,7 +52,7 @@ const comparar = {
  * mexe até alguém carregar num cabeçalho.
  */
 export function ordenarCiclos(ciclos, ordenacao, getMaquina = () => null) {
-  const col = COLUNAS_ORDENAVEIS.find((c) => c.chave === ordenacao?.coluna);
+  const col = CAMPOS_ORDENACAO.find((c) => c.chave === ordenacao?.coluna);
   if (!col) return ciclos;
 
   const sinal = ordenacao.direcao === "desc" ? -1 : 1;

@@ -1,4 +1,12 @@
-import { estadoEfetivo, ESTADOS_FORA_DO_PATIO, isHistorico, isVenda, isAluguer } from "@/components/atlas/cicloUtils";
+import {
+  estadoEfetivo,
+  ESTADOS_FORA_DO_PATIO,
+  ESTADOS_AGUARDAM_AUTORIZACAO,
+  ESTADOS_EM_PREPARACAO,
+  isHistorico,
+  isVenda,
+  isAluguer,
+} from "@/components/atlas/cicloUtils";
 
 /**
  * Quantas máquinas estão mesmo nas instalações, agora.
@@ -26,11 +34,13 @@ export function ocupacaoPatio(ciclos = []) {
   const disponiveis = prontas.filter((c) => !c.reserva_cliente);
   const reservadas = prontas.filter((c) => !!c.reserva_cliente);
   const indefinidas = noPatio.filter((c) => estadoEfetivo(c) === "indefinido");
-  // Tudo o que está cá e ainda não pode sair: entre a entrada e o "pronta".
-  const emPreparacao = noPatio.filter((c) => {
-    const e = estadoEfetivo(c);
-    return e !== "pronta" && e !== "indefinido";
-  });
+
+  // "Em preparação" é só o que está mesmo a ser preparado — com O.S. aberta no
+  // Watcher. O que está classificado aguarda uma decisão da gestão e ainda não
+  // entrou na oficina; contá-lo como preparação dizia que havia trabalho a
+  // decorrer onde há trabalho à espera de começar.
+  const emPreparacao = noPatio.filter((c) => ESTADOS_EM_PREPARACAO.includes(estadoEfetivo(c)));
+  const aguardamAutorizacao = noPatio.filter((c) => ESTADOS_AGUARDAM_AUTORIZACAO.includes(estadoEfetivo(c)));
 
   return {
     noPatio: noPatio.length,
@@ -39,9 +49,10 @@ export function ocupacaoPatio(ciclos = []) {
     prontas: prontas.length,
     disponiveis: disponiveis.length,
     reservadas: reservadas.length,
+    aguardamAutorizacao: aguardamAutorizacao.length,
     emPreparacao: emPreparacao.length,
     indefinidas: indefinidas.length,
-    listas: { noPatio, fora, disponiveis, emPreparacao },
+    listas: { noPatio, fora, disponiveis, aguardamAutorizacao, emPreparacao },
   };
 }
 

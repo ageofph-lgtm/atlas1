@@ -63,8 +63,14 @@ describe("o que está cá, em detalhe", () => {
     expect(o.reservadas).toBe(1);
   });
 
-  it("conta o que está em preparação", () => {
-    expect(o.emPreparacao).toBe(2);
+  it("em preparação é só o que tem O.S. aberta no Watcher", () => {
+    // `em_execucao` está a ser trabalhada; `classificada` está à espera de
+    // uma decisão da gestão. São gargalos em sítios diferentes.
+    expect(o.emPreparacao).toBe(1);
+  });
+
+  it("e o que aguarda autorização conta-se à parte", () => {
+    expect(o.aguardamAutorizacao).toBe(1);
   });
 
   it("a sucata conta como indefinida, não como em preparação", () => {
@@ -73,7 +79,31 @@ describe("o que está cá, em detalhe", () => {
   });
 
   it("as partes somam o que está no pátio", () => {
-    expect(o.prontas + o.emPreparacao + o.indefinidas).toBe(o.noPatio);
+    expect(o.prontas + o.aguardamAutorizacao + o.emPreparacao + o.indefinidas).toBe(o.noPatio);
+  });
+});
+
+describe("cada estado no seu grupo", () => {
+  it.each([
+    ["entrada", "aguardamAutorizacao"],
+    ["classificada", "aguardamAutorizacao"],
+    ["manutencao", "aguardamAutorizacao"],
+    ["autorizada", "emPreparacao"],
+    ["em_execucao", "emPreparacao"],
+  ])("%s conta em %s", (estado, grupo) => {
+    const o = ocupacaoPatio([c(1, estado)]);
+    expect(o[grupo]).toBe(1);
+    const outro = grupo === "emPreparacao" ? "aguardamAutorizacao" : "emPreparacao";
+    expect(o[outro]).toBe(0);
+  });
+
+  it("nenhum estado fica de fora: as partes somam sempre o pátio", () => {
+    const todos = ["entrada", "classificada", "manutencao", "autorizada", "em_execucao", "pronta"]
+      .map((e, i) => c(i, e));
+    todos.push(c(99, "classificada", { categoria: "sucata" }));
+    const o = ocupacaoPatio(todos);
+    expect(o.prontas + o.aguardamAutorizacao + o.emPreparacao + o.indefinidas).toBe(o.noPatio);
+    expect(o.noPatio).toBe(7);
   });
 });
 
