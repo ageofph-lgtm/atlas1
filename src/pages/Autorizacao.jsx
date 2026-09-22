@@ -11,6 +11,7 @@ import { AUTORIZACAO_TABS } from "@/components/atlas/constants";
 import CicloCard from "@/components/atlas/CicloCard";
 import CiclosView from "@/components/atlas/CiclosView";
 import ViewModeBar from "@/components/atlas/ViewModeBar";
+import Ordenador from "@/components/atlas/Ordenador";
 import BotaoExportar from "@/components/atlas/BotaoExportar";
 import CicloMiniCard from "@/components/atlas/CicloMiniCard";
 import FilterBar from "@/components/atlas/FilterBar";
@@ -288,6 +289,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
 
       <div className="flex justify-end items-center gap-2 flex-wrap">
         <BotaoExportar ciclos={filteredCiclos} getMaquina={getMaquina} pagina="autorizacao" />
+        <Ordenador ordenacao={ordenacao} onOrdenacao={setOrdenacao} />
         <ViewModeBar modo={modo} onModo={setModo} tamanho={tamanho} onTamanho={setTamanho} />
       </div>
 

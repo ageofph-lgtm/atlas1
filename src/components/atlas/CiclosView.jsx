@@ -43,9 +43,11 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
   // navegar. `onSelecao` ausente desliga-a por completo.
   const podeSelecionar = !!onSelecao && (modo === "lista" || modo === "detalhe");
 
-  // Só o modo Detalhe tem cabeçalhos por onde ordenar; nos outros a ordem é a
-  // que a página definiu (prioridade primeiro, depois as mais antigas).
-  const ciclos = modo === "detalhe" ? ordenarCiclos(ciclosRecebidos, ordenacao, getMaquina) : ciclosRecebidos;
+  // A ordenação aplica-se em todos os modos. O Detalhe tem os cabeçalhos da
+  // tabela, mas quem usa cards escolhe o mesmo no organizador — é a mesma
+  // preferência, e mudá-la num sítio tem de valer no outro. Sem escolha, fica a
+  // ordem que a página definiu (prioridade primeiro, depois as mais antigas).
+  const ciclos = ordenarCiclos(ciclosRecebidos, ordenacao, getMaquina);
 
   if (!ciclos.length) return vazio || null;
 

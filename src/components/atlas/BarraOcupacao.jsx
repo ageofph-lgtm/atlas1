@@ -1,5 +1,5 @@
 import React from "react";
-import { Warehouse, Truck, CheckCircle2, Wrench, HelpCircle, CalendarClock } from "lucide-react";
+import { Warehouse, Truck, CheckCircle2, Wrench, HelpCircle, CalendarClock, Stamp } from "lucide-react";
 import { ocupacaoPatio, taxaUtilizacao } from "@/components/atlas/ocupacaoPatio";
 
 /**
@@ -37,6 +37,11 @@ export default function BarraOcupacao({ ciclos }) {
           na barra não fecham com o total e quem somar de cabeça estranha. */}
       {o.reservadas > 0 && (
         <Parte Icone={CalendarClock} valor={o.reservadas} rotulo="reservadas" cor="text-cyan-300" />
+      )}
+      {/* Duas coisas diferentes: uma está à espera de uma decisão, a outra já
+          está a ser trabalhada na oficina. Juntá-las escondia onde é o gargalo. */}
+      {o.aguardamAutorizacao > 0 && (
+        <Parte Icone={Stamp} valor={o.aguardamAutorizacao} rotulo="a aguardar autorização" cor="text-amber-400" />
       )}
       <Parte Icone={Wrench} valor={o.emPreparacao} rotulo="em preparação" cor="text-cyan-400" />
       {o.indefinidas > 0 && (

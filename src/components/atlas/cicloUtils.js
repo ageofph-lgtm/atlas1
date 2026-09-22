@@ -126,7 +126,19 @@ export const classificarCiclosAbertos = (ciclos = []) => {
   };
 };
 
-export const POR_FAZER_ESTADOS = ["entrada", "classificada", "autorizada", "em_execucao", "manutencao"];
+/**
+ * Os dois lados do "por fazer", que não são a mesma coisa.
+ *
+ * Uma máquina classificada está parada à espera de uma decisão da gestão;
+ * uma autorizada já tem O.S. no Watcher e está a ser trabalhada. Misturá-las
+ * numa contagem só de "em preparação" diz que há trabalho a decorrer onde há
+ * trabalho à espera de começar — e é a diferença entre um gargalo na oficina
+ * e um gargalo na secretária.
+ */
+export const ESTADOS_AGUARDAM_AUTORIZACAO = ["entrada", "classificada", "manutencao"];
+export const ESTADOS_EM_PREPARACAO = ["autorizada", "em_execucao"];
+
+export const POR_FAZER_ESTADOS = [...ESTADOS_AGUARDAM_AUTORIZACAO, ...ESTADOS_EM_PREPARACAO];
 
 /**
  * Um ciclo fechado é histórico: a máquina já saiu do pátio e aquele ciclo

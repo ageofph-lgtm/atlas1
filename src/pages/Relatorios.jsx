@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
-import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar, Tag, Warehouse, Scale, Percent, PauseCircle } from "lucide-react";
+import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar, Tag, Warehouse, Scale, Percent, PauseCircle, Stamp, Wrench } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -180,6 +180,8 @@ export default function Relatorios({ currentUser, userPermissions }) {
   const statCards = [
     { label: "Nas instalações", value: stats.ocupacao.noPatio, icon: Warehouse, color: "text-amber-400", bg: "bg-amber-500/10" },
     { label: "Fora, em aluguer", value: stats.ocupacao.fora, icon: TrendingDown, color: "text-purple-400", bg: "bg-purple-500/10" },
+    { label: "Precisam de autorização", value: stats.ocupacao.aguardamAutorizacao, icon: Stamp, color: stats.ocupacao.aguardamAutorizacao > 0 ? "text-amber-400" : "text-slate-400", bg: stats.ocupacao.aguardamAutorizacao > 0 ? "bg-amber-500/10" : "bg-slate-500/10" },
+    { label: "Em preparação (Watcher)", value: stats.ocupacao.emPreparacao, icon: Wrench, color: "text-cyan-400", bg: "bg-cyan-500/10" },
     {
       label: "Balanço do período",
       value: `${balanco > 0 ? "+" : ""}${balanco}`,
