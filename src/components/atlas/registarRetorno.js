@@ -1,6 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { CATEGORIA_CONE_MAP } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
+import { exigirRede } from "@/components/atlas/rede";
 
 /** Dias que a máquina esteve alugada, contados a partir da data de saída. */
 export const diasAlugada = (ciclo, ate = new Date()) =>
@@ -20,6 +21,7 @@ export const diasAlugada = (ciclo, ate = new Date()) =>
  * reentrada pela página de Entrada, que recolhe categoria, cone e notas de raiz.
  */
 export async function registarRetorno(ciclo, { coneNumero = "", autor, nota, reabrir = true, estadoRegresso = "classificada" } = {}) {
+  exigirRede("Registar o retorno");
   const cor = CATEGORIA_CONE_MAP[ciclo.categoria] || null;
 
   if (reabrir && cor && coneNumero) {

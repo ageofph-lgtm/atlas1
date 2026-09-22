@@ -4,6 +4,7 @@ import { CATEGORIA_CONE_MAP } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
 import { notificarEntrada } from "@/components/atlas/mensagens";
+import { exigirRede } from "@/components/atlas/rede";
 
 /**
  * Registo de entrada de uma máquina no pátio.
@@ -31,6 +32,7 @@ export async function registarEntrada({
   reentradaConfirmada = false,
   autor,
 }) {
+  exigirRede("Registar a entrada");
   const semEstado = isCategoriaSemEstado(categoria);
   const estadoFinal = semEstado ? "indefinido" : estadoInicial;
   const coneCor = CATEGORIA_CONE_MAP[categoria] || null;
