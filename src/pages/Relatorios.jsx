@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
-import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar, Tag } from "lucide-react";
+import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar, Tag, Warehouse, Scale, Percent, PauseCircle } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -11,6 +11,11 @@ import HistoricoCiclos from "@/components/atlas/HistoricoCiclos";
 import ManutencaoCiclosPanel from "@/components/atlas/ManutencaoCiclosPanel";
 import { isVenda, isAluguer } from "@/components/atlas/cicloUtils";
 import BotaoExportar from "@/components/atlas/BotaoExportar";
+import BarraOcupacao from "@/components/atlas/BarraOcupacao";
+import { ocupacaoPatio, taxaUtilizacao, balancoPeriodo, paradasHaMuito } from "@/components/atlas/ocupacaoPatio";
+
+/** A partir de quantos dias uma máquina pronta e parada passa a ser capital parado. */
+const DIAS_PARADA = 30;
 
 const CATEGORIA_COLORS = {
   str: "#f59e0b",
@@ -95,7 +100,16 @@ export default function Relatorios({ currentUser, userPermissions }) {
       ? Math.round((withFila.reduce((s, c) => s + (new Date(c.data_autorizacao) - new Date(c.data_entrada)), 0) / withFila.length / (1000 * 60 * 60 * 24)) * 10) / 10
       : 0;
 
-    return { entradas, saidas, vendidas, alugadas, activeByCategoria, mediaDias, mediaPrateleira, mediaFila };
+    // O que está mesmo cá, agora — distinto do que entrou e saiu no período.
+    const ocupacao = ocupacaoPatio(ciclos);
+    const balanco = balancoPeriodo(ciclos, periodStart);
+    const paradas = paradasHaMuito(ciclos, { dias: DIAS_PARADA });
+
+    return {
+      entradas, saidas, vendidas, alugadas, activeByCategoria,
+      mediaDias, mediaPrateleira, mediaFila,
+      ocupacao, balanco, paradas,
+    };
   }, [ciclos, periodStart]);
 
   // Daily chart data
@@ -159,7 +173,22 @@ export default function Relatorios({ currentUser, userPermissions }) {
     );
   }
 
+  const taxa = taxaUtilizacao(stats.ocupacao);
+  const balanco = stats.balanco.balanco;
+
+  // Primeiro o que está a acontecer agora; depois o que aconteceu no período.
   const statCards = [
+    { label: "Nas instalações", value: stats.ocupacao.noPatio, icon: Warehouse, color: "text-amber-400", bg: "bg-amber-500/10" },
+    { label: "Fora, em aluguer", value: stats.ocupacao.fora, icon: TrendingDown, color: "text-purple-400", bg: "bg-purple-500/10" },
+    {
+      label: "Balanço do período",
+      value: `${balanco > 0 ? "+" : ""}${balanco}`,
+      icon: Scale,
+      color: balanco > 0 ? "text-green-400" : balanco < 0 ? "text-red-400" : "text-slate-400",
+      bg: balanco > 0 ? "bg-green-500/10" : balanco < 0 ? "bg-red-500/10" : "bg-slate-500/10",
+    },
+    { label: "Parque a render", value: taxa === null ? "—" : `${taxa}%`, icon: Percent, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+    { label: `Paradas +${DIAS_PARADA} dias`, value: stats.paradas.length, icon: PauseCircle, color: stats.paradas.length > 0 ? "text-red-400" : "text-slate-400", bg: stats.paradas.length > 0 ? "bg-red-500/10" : "bg-slate-500/10" },
     { label: "Entradas", value: stats.entradas.length, icon: TrendingUp, color: "text-green-400", bg: "bg-green-500/10" },
     { label: "Saídas", value: stats.saidas.length, icon: TrendingDown, color: "text-cyan-400", bg: "bg-cyan-500/10" },
     { label: "Alugadas", value: stats.alugadas.length, icon: TrendingDown, color: "text-cyan-400", bg: "bg-cyan-500/10" },
@@ -172,6 +201,8 @@ export default function Relatorios({ currentUser, userPermissions }) {
   return (
     <div className="space-y-6">
       <AvisoTruncado truncado={truncado} />
+
+      <BarraOcupacao ciclos={ciclos} />
 
       {/* Backup / restore + manutenção — admin only */}
       {currentUser?.perfil === "administrador" && (
@@ -282,6 +313,38 @@ export default function Relatorios({ currentUser, userPermissions }) {
               <Bar dataKey="dias" fill="#f59e0b" name="Dias" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Capital parado: o número sozinho não dá para agir, é preciso saber quais */}
+      {stats.paradas.length > 0 && (
+        <div className="glass border border-red-500/30 rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between gap-2 p-4 border-b border-slate-700">
+            <div className="flex items-center gap-2">
+              <PauseCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <h3 className="text-sm font-bold text-slate-300">
+                Prontas há mais de {DIAS_PARADA} dias, ainda cá
+              </h3>
+            </div>
+            <BotaoExportar ciclos={stats.paradas.map((x) => x.ciclo)} getMaquina={getMaquina} pagina="paradas" />
+          </div>
+          <p className="px-4 pt-3 text-xs text-slate-500">
+            Preparadas e à espera. Cada dia aqui é trabalho já feito que ainda não rendeu.
+          </p>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {stats.paradas.slice(0, 12).map(({ ciclo, dias }) => (
+              <div key={ciclo.id} className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-2.5 py-2">
+                <span className="num text-sm font-bold text-slate-200 break-all">{ciclo.serie}</span>
+                <span className="text-xs text-slate-500 truncate">{getMaquina(ciclo)?.modelo || "—"}</span>
+                <span className="num ml-auto text-sm font-bold text-red-400 flex-shrink-0">{dias}d</span>
+              </div>
+            ))}
+          </div>
+          {stats.paradas.length > 12 && (
+            <p className="px-4 pb-4 text-xs text-slate-500">
+              e mais <span className="num font-bold">{stats.paradas.length - 12}</span> — a folha leva-as todas.
+            </p>
+          )}
         </div>
       )}
 
