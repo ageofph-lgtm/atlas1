@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
+import BarraOcupacao from "@/components/atlas/BarraOcupacao";
 import AcoesEmMassa from "@/components/atlas/AcoesEmMassa";
 import { executarEmLote, resumirLote } from "@/components/atlas/executarEmLote";
 import { podeAutorizar } from "@/components/atlas/acoesCiclo";
@@ -500,6 +501,8 @@ export default function Inventario({ currentUser, userPermissions }) {
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
+
+      <BarraOcupacao ciclos={ciclos} />
 
       <AvisoTruncado truncado={truncado} />
 
