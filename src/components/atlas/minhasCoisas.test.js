@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   eMinhaReserva, eMeuPedido, minhasReservas, meusPedidos,
   contarPorEstado, kpisComercial, inicioDoPeriodo, PERIODOS,
+  estadoEfetivoPedido, pedidosComEstado,
 } from "@/components/atlas/minhasCoisas";
 
 const carlos = { id: "u-carlos", full_name: "Carlos Gonçalves" };
@@ -194,5 +195,106 @@ describe("períodos", () => {
   it("30 dias dá uma data 30 dias atrás", () => {
     const agora = new Date("2026-09-23T00:00:00Z").getTime();
     expect(inicioDoPeriodo(30, agora)).toBe("2026-08-24T00:00:00.000Z");
+  });
+});
+
+describe("estadoEfetivoPedido", () => {
+  const feitoEm = "2026-09-01T00:00:00Z";
+  const pedido = (extra = {}) => ({ id: "p", estado: "em_execucao", created_date: feitoEm, ...extra });
+
+  it("com a máquina pronta depois do pedido, o pedido está feito", () => {
+    // O caso real: a oficina acabou, a máquina até já foi alugada, e o pedido
+    // continuava "EM CURSO" porque nada o fechava.
+    const ciclo = { id: "c", data_pronta: "2026-09-10T00:00:00Z", estado: "em_aluguer" };
+    expect(estadoEfetivoPedido(pedido(), ciclo)).toBe("concluido");
+    expect(estadoEfetivoPedido(pedido({ estado: "aberto" }), ciclo)).toBe("concluido");
+  });
+
+  it("um pedido feito DEPOIS de a máquina ficar pronta continua por fazer", () => {
+    // Trocar uma mentira por outra seria dá-lo por concluído: é trabalho novo.
+    const ciclo = { id: "c", data_pronta: "2026-08-01T00:00:00Z", estado: "pronta" };
+    expect(estadoEfetivoPedido(pedido(), ciclo)).toBe("em_execucao");
+  });
+
+  it("sem máquina pronta fica como está", () => {
+    expect(estadoEfetivoPedido(pedido(), { id: "c", estado: "em_execucao" })).toBe("em_execucao");
+    expect(estadoEfetivoPedido(pedido(), null)).toBe("em_execucao");
+  });
+
+  it("cancelado fica cancelado — não se conclui o que se decidiu não fazer", () => {
+    const ciclo = { id: "c", data_pronta: "2026-09-10T00:00:00Z" };
+    expect(estadoEfetivoPedido(pedido({ estado: "cancelado" }), ciclo)).toBe("cancelado");
+  });
+
+  it("concluído continua concluído", () => {
+    expect(estadoEfetivoPedido(pedido({ estado: "concluido" }), null)).toBe("concluido");
+  });
+
+  it("datas que não prestam não mudam nada", () => {
+    expect(estadoEfetivoPedido(pedido({ created_date: null }), { data_pronta: "2026-09-10T00:00:00Z" })).toBe("em_execucao");
+    expect(estadoEfetivoPedido(pedido(), { data_pronta: "não é data" })).toBe("em_execucao");
+  });
+
+  it("sem estado gravado parte de aberto, que é o que o schema diz", () => {
+    expect(estadoEfetivoPedido({ created_date: feitoEm }, { data_pronta: "2026-09-10T00:00:00Z" })).toBe("concluido");
+  });
+});
+
+describe("pedidosComEstado", () => {
+  const ciclos = [
+    { id: "c1", serie: "NS-1", estado: "em_aluguer", data_pronta: "2026-09-10T00:00:00Z" },
+    { id: "c2", serie: "NS-1", estado: "classificada" },
+  ];
+  const pedidos = [
+    { id: "p1", ciclo_id: "c1", serie: "NS-1", estado: "em_execucao", created_date: "2026-09-01T00:00:00Z" },
+    { id: "p2", ciclo_id: "c2", serie: "NS-1", estado: "aberto", created_date: "2026-09-20T00:00:00Z" },
+    { id: "p3", ciclo_id: "desaparecido", serie: "NS-9", estado: "aberto", created_date: "2026-09-01T00:00:00Z" },
+  ];
+
+  it("liga cada pedido ao seu ciclo e diz o estado da máquina", () => {
+    const r = pedidosComEstado(pedidos, ciclos);
+    expect(r[0]).toMatchObject({ estado: "concluido", estadoMaquina: "em_aluguer" });
+    expect(r[1]).toMatchObject({ estado: "aberto", estadoMaquina: "classificada" });
+  });
+
+  it("liga pelo ciclo, nunca pela série", () => {
+    // Os dois ciclos têm a mesma série — uma máquina que entrou, saiu e voltou.
+    // Ligar pela série punha o pedido do ciclo novo a herdar o estado do velho.
+    const r = pedidosComEstado(pedidos, ciclos);
+    expect(r[1].ciclo.id).toBe("c2");
+    expect(r[1].estado).toBe("aberto");
+  });
+
+  it("um pedido cujo ciclo já não existe não rebenta nem inventa estado", () => {
+    const r = pedidosComEstado(pedidos, ciclos);
+    expect(r[2]).toMatchObject({ ciclo: null, estado: "aberto", estadoMaquina: null });
+  });
+
+  it("listas vazias não rebentam", () => {
+    expect(pedidosComEstado()).toEqual([]);
+    expect(pedidosComEstado([], [])).toEqual([]);
+  });
+});
+
+describe("pedidos concluídos por dedução", () => {
+  it("marcam-se como derivados, para o ecrã poder explicar a diferença", () => {
+    // O estado diz CONCLUÍDO mas a última resposta ainda diz "passou à oficina".
+    // Sem saber que foi deduzido, o ecrã não consegue justificar a contradição.
+    const ciclo = { id: "c", data_pronta: "2026-09-10T00:00:00Z", estado: "em_aluguer" };
+    const [r] = pedidosComEstado(
+      [{ id: "p", ciclo_id: "c", estado: "em_execucao", created_date: "2026-09-01T00:00:00Z" }], [ciclo],
+    );
+    expect(r).toMatchObject({ estado: "concluido", derivado: true });
+  });
+
+  it("um pedido fechado a sério não é derivado", () => {
+    const ciclo = { id: "c", data_pronta: "2026-09-10T00:00:00Z" };
+    const [r] = pedidosComEstado([{ id: "p", ciclo_id: "c", estado: "concluido" }], [ciclo]);
+    expect(r).toMatchObject({ estado: "concluido", derivado: false });
+  });
+
+  it("nem um que continua por fazer", () => {
+    const [r] = pedidosComEstado([{ id: "p", ciclo_id: "c", estado: "aberto" }], [{ id: "c" }]);
+    expect(r.derivado).toBe(false);
   });
 });

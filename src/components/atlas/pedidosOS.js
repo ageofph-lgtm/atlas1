@@ -41,3 +41,38 @@ export async function marcarPedidosNaOS(pedidos, { autor, osId = "" } = {}) {
   }
   return feitos;
 }
+
+/**
+ * Fecha os pedidos de uma máquina que acabou de ficar pronta.
+ *
+ * Faltava esta metade do circuito. A autorização punha o pedido "em curso" e
+ * mais nada lhe tocava: quando a oficina acabava o trabalho e a máquina ficava
+ * pronta — ou era alugada, ou vendida — o pedido continuava "EM CURSO" no ecrã
+ * do comercial, para sempre, a menos que alguém da gestão se lembrasse de o
+ * fechar à mão. Ninguém se lembrava, e não havia razão para se lembrar: a
+ * informação já estava no estado da máquina.
+ *
+ * Só se fecha o que estava por fazer. Um pedido cancelado fica cancelado — não
+ * se "conclui" o que alguém decidiu não fazer.
+ */
+export async function fecharPedidosDaMaquina(pedidos, { autor, nota = "" } = {}) {
+  const porFazer = (pedidos || []).filter((p) => PEDIDO_ESTADOS_POR_FAZER.includes(p.estado || "aberto"));
+  if (!porFazer.length) return 0;
+
+  const resposta = nota || "Concluído: a máquina ficou pronta.";
+  let feitos = 0;
+  for (const pedido of porFazer) {
+    try {
+      await base44.entities.PedidoMaquina.update(pedido.id, {
+        estado: "concluido",
+        resposta,
+        respondido_por: autor,
+      });
+      feitos += 1;
+    } catch (_e) {
+      continue; // a máquina já está pronta; um pedido que não gravou não desfaz isso
+    }
+    await notificarRespostaPedido(pedido, { autor, resposta, estado: "concluido" });
+  }
+  return feitos;
+}

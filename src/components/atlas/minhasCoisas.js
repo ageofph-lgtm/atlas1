@@ -124,3 +124,57 @@ export const PERIODOS = [
 
 export const inicioDoPeriodo = (dias, agora = Date.now()) =>
   dias == null ? null : new Date(agora - dias * 86400000).toISOString();
+
+/**
+ * O estado que um pedido tem mesmo, e não o que ficou gravado.
+ *
+ * O estado do pedido é uma cópia do andamento da máquina, e as cópias soltam-se.
+ * Durante meses nada fechava um pedido quando a oficina acabava o trabalho, por
+ * isso há pedidos gravados como "em curso" em máquinas que já foram preparadas,
+ * alugadas e devolvidas. Fechar o circuito daqui para a frente não arruma o que
+ * ficou para trás.
+ *
+ * A regra: se a máquina ficou pronta **depois** de o pedido ser feito, o pedido
+ * foi feito. O "depois" não é um pormenor — um pedido novo numa máquina que já
+ * estava pronta ainda está por fazer, e dá-lo por concluído seria trocar uma
+ * mentira por outra.
+ *
+ * Só se aplica ao que estava por fazer: cancelado fica cancelado.
+ */
+export function estadoEfetivoPedido(pedido, ciclo) {
+  const estado = pedido?.estado || "aberto";
+  if (estado === "concluido" || estado === "cancelado") return estado;
+  if (!ciclo?.data_pronta || !pedido?.created_date) return estado;
+
+  const pronta = new Date(ciclo.data_pronta).getTime();
+  const feito = new Date(pedido.created_date).getTime();
+  if (!Number.isFinite(pronta) || !Number.isFinite(feito)) return estado;
+
+  return pronta > feito ? "concluido" : estado;
+}
+
+/**
+ * Junta cada pedido à sua máquina.
+ *
+ * A ligação é pelo `ciclo_id` e só por ele. A série seria tentador — está
+ * gravada no pedido — mas uma máquina que entra, sai e volta tem vários ciclos
+ * com a mesma série, e o pedido iria parar ao ciclo errado.
+ */
+export function pedidosComEstado(pedidos = [], ciclos = []) {
+  const porId = new Map(ciclos.map((c) => [c.id, c]));
+  return pedidos.map((pedido) => {
+    const ciclo = porId.get(pedido.ciclo_id) || null;
+    const estado = estadoEfetivoPedido(pedido, ciclo);
+    return {
+      pedido,
+      ciclo,
+      estado,
+      // `derivado` marca os que estão concluídos por dedução e não por alguém o
+      // ter gravado. Interessa ao ecrã: nesses, a última resposta da gestão
+      // ainda diz "passou à oficina", e sem uma palavra a explicar parece que o
+      // estado e a mensagem se contradizem.
+      derivado: estado !== (pedido.estado || "aberto"),
+      estadoMaquina: ciclo ? estadoEfetivo(ciclo) : null,
+    };
+  });
+}

@@ -1,6 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { estadoEfetivo, isCategoriaSemEstado } from "@/components/atlas/cicloUtils";
 import { notificarPronta } from "@/components/atlas/mensagens";
+import { fecharPedidosDaMaquina } from "@/components/atlas/pedidosOS";
 import { exigirRede } from "@/components/atlas/rede";
 
 /**
@@ -51,5 +52,13 @@ export async function marcarPronta(ciclo, { autor }) {
     nota: "Marcada como pronta (sem O.S. no Watcher)",
   });
   await notificarPronta(ciclo, { autor });
+  // O que o comercial pediu foi feito com a preparação: fechar o pedido é a
+  // outra metade do circuito que a autorização abriu.
+  try {
+    const pedidos = await base44.entities.PedidoMaquina.filter({ ciclo_id: ciclo.id });
+    await fecharPedidosDaMaquina(pedidos, { autor });
+  } catch (_e) {
+    // a máquina está pronta; não se desfaz isso por causa dos pedidos
+  }
   return { ...ciclo, estado: "pronta", data_pronta: now };
 }
