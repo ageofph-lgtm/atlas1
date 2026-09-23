@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, BarChart3, Bell } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { User } from "@/entities/all";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import EcraEntrada from "./components/auth/EcraEntrada";
 import TrocarPerfil, { rotuloPerfil } from "./components/auth/TrocarPerfil";
 import { nomeDe, podeTrocarPerfil, estadoDeAcesso } from "@/components/atlas/acessos";
 import { abrirSessao, guardarPerfil, limparSessao } from "@/components/atlas/sessao";
+import { baseDaApp, urlDeLogin, urlDeLogout } from "@/components/atlas/autenticacao";
+import { appParams } from "@/lib/app-params";
 import ThemeSwitcher from "./components/atlas/ThemeSwitcher";
 import CaixaMensagens from "./components/atlas/CaixaMensagens";
 import AvisoSemRede from "./components/atlas/AvisoSemRede";
@@ -106,7 +107,7 @@ export default function Layout({ children, currentPageName }) {
     // Uma sessão que passou dos 60 dias obriga a entrar outra vez, e o ecrã
     // diz porquê — um fim de sessão calado parece uma avaria.
     if (sessao.estado?.motivo === "expirada") {
-      await terminar();
+      terminar();
       return setEntrada("expirada");
     }
 
@@ -114,23 +115,31 @@ export default function Layout({ children, currentPageName }) {
     setEntrada("dentro");
   };
 
-  /** Fecha a sessão dos dois lados: a nossa contagem e a da plataforma. */
-  const terminar = async () => {
+  /** Limpa só o que é nosso. A sessão da plataforma sai pelo `handleLogout`. */
+  const terminar = () => {
     limparSessao();
     setPerfil(null);
-    try {
-      await base44.auth.logout();
-    } catch (_e) {
-      // já sem sessão, ou sem rede — o estado local já foi limpo
-    }
   };
 
-  const handleEntrar = () => base44.auth.redirectToLogin(window.location.href);
+  // As URLs são construídas aqui e não pelo SDK: ele interpola `appBaseUrl`
+  // sem o validar, e quando falta produz caminhos como "null/login".
+  const base = () => baseDaApp(appParams, window.location.origin);
 
-  const handleLogout = async () => {
-    await terminar();
-    setUser(null);
-    setEntrada("entrar");
+  const handleEntrar = () => { window.location.href = urlDeLogin(base(), window.location.href); };
+
+  /**
+   * Sair, e ir dar ao ecrã de credenciais.
+   *
+   * Não usa `base44.auth.logout()` porque esse traz de volta à aplicação sem
+   * sessão: a plataforma deteta que falta autenticação, tenta reencaminhar
+   * para o login, e enquanto isso o `App.jsx` não desenha nada. Se esse salto
+   * falhar — e falhava — fica-se num ecrã em branco sem forma de sair.
+   * Mandar direto para o logout da plataforma com o login como destino corta
+   * o salto do meio.
+   */
+  const handleLogout = () => {
+    terminar();
+    window.location.href = urlDeLogout(base(), window.location.origin);
   };
 
   const handleTrocarPerfil = (novo) => {
