@@ -7,7 +7,7 @@ import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { ESTADO_CONFIG } from "@/components/atlas/constants";
 import {
   minhasReservas, meusPedidos, contarPorEstado, kpisComercial,
-  PERIODOS, inicioDoPeriodo,
+  PERIODOS, inicioDoPeriodo, pedidosComEstado,
 } from "@/components/atlas/minhasCoisas";
 
 const ESTADO_PEDIDO = {
@@ -74,8 +74,18 @@ export default function MinhaArea({ currentUser }) {
   const modeloDe = (c) => porId.get(c.maquina_id)?.modelo || "—";
 
   const reservas = useMemo(() => minhasReservas(ciclos, currentUser), [ciclos, currentUser]);
-  const pedidosMeus = useMemo(() => meusPedidos(pedidos, currentUser), [pedidos, currentUser]);
-  const estados = useMemo(() => contarPorEstado(pedidosMeus), [pedidosMeus]);
+  // O estado gravado no pedido é uma cópia do andamento da máquina, e as cópias
+  // soltam-se: durante meses nada fechava um pedido quando a oficina acabava.
+  // Vale o estado efetivo, e mostra-se a máquina ao lado para nunca mais haver
+  // dúvida sobre qual dos dois é a verdade.
+  const pedidosMeus = useMemo(
+    () => pedidosComEstado(meusPedidos(pedidos, currentUser), ciclos),
+    [pedidos, ciclos, currentUser],
+  );
+  const estados = useMemo(
+    () => contarPorEstado(pedidosMeus.map(({ pedido, estado }) => ({ ...pedido, estado }))),
+    [pedidosMeus],
+  );
   const kpis = useMemo(
     () => kpisComercial(ciclos, currentUser, { desde: inicioDoPeriodo(dias) }),
     [ciclos, currentUser, dias],
@@ -177,8 +187,9 @@ export default function MinhaArea({ currentUser }) {
           <Vazio texto="Ainda não fez pedidos." />
         ) : (
           <div className="space-y-1.5">
-            {pedidosMeus.map((p) => {
-              const cfg = ESTADO_PEDIDO[p.estado] || ESTADO_PEDIDO.aberto;
+            {pedidosMeus.map(({ pedido: p, estado, estadoMaquina, derivado }) => {
+              const cfg = ESTADO_PEDIDO[estado] || ESTADO_PEDIDO.aberto;
+              const maq = estadoMaquina ? ESTADO_CONFIG[estadoMaquina] : null;
               return (
                 <div key={p.id} className="glass border border-slate-700 rounded-lg px-3 py-2">
                   <div className="flex items-center gap-3 flex-wrap">
@@ -186,12 +197,27 @@ export default function MinhaArea({ currentUser }) {
                     <span className="text-xs text-slate-400 flex-1 min-w-0">{p.texto}</span>
                     <span className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-[11px] text-slate-600">{data(p.created_date)}</span>
+                      {/* O estado da máquina ao lado do estado do pedido: é a
+                          máquina que manda, e assim vê-se logo qual é qual. */}
+                      {maq && (
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium inline-flex items-center gap-1 ${maq.bg} ${maq.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full state-dot ${maq.dot}`} />
+                          {maq.label}
+                        </span>
+                      )}
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${cfg.cls}`}>{cfg.label}</span>
                     </span>
                   </div>
                   {p.resposta && (
                     <p className="text-xs text-slate-400 mt-1.5 pl-2 border-l-2 border-slate-700">
                       <span className="text-slate-500">{p.respondido_por || "Gestão"}:</span> {p.resposta}
+                    </p>
+                  )}
+                  {/* Sem esta linha, o estado e a última mensagem parecem
+                      contradizer-se: "CONCLUÍDO" por cima de "passou à oficina". */}
+                  {derivado && (
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Concluído com a preparação da máquina.
                     </p>
                   )}
                 </div>

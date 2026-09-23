@@ -206,6 +206,47 @@ Deno.serve(async (req) => {
         }
       };
 
+      /**
+       * Fecha os pedidos dos comerciais quando a oficina acaba o trabalho.
+       *
+       * A autorização punha o pedido em "em_execucao" e mais nada lhe tocava.
+       * Como é por aqui — e só por aqui — que o ATLAS fica a saber que a O.S.
+       * foi concluída, era aqui que faltava fechar o circuito: sem isto o
+       * pedido ficava "EM CURSO" no ecrã do comercial com a máquina já pronta,
+       * e até já alugada.
+       *
+       * Só se fecha o que estava por fazer; um pedido cancelado fica cancelado.
+       */
+      const fecharPedidosDoCiclo = async (ciclo) => {
+        try {
+          const pedidos = await base44.asServiceRole.entities.PedidoMaquina.filter({ ciclo_id: ciclo.id });
+          const porFazer = pedidos.filter(p => ['aberto', 'em_execucao'].includes(p.estado || 'aberto'));
+          const resposta = 'Concluído: a máquina ficou pronta.';
+          for (const pedido of porFazer) {
+            await base44.asServiceRole.entities.PedidoMaquina.update(pedido.id, {
+              estado: 'concluido',
+              resposta,
+              respondido_por: autorName
+            });
+            if (pedido.comercial_user_id) {
+              await base44.asServiceRole.entities.Mensagem.create({
+                destino: '',
+                destino_user_id: pedido.comercial_user_id,
+                tipo: 'pedido',
+                serie: ciclo.serie,
+                ciclo_id: ciclo.id,
+                autor: autorName,
+                lida_por: [],
+                titulo: `Pedido concluído — ${ciclo.serie}`,
+                corpo: `${pedido.texto} — ${resposta}`
+              });
+            }
+          }
+        } catch (_e) {
+          // a máquina está pronta; um pedido por fechar não desfaz o sync
+        }
+      };
+
       // Apply a estado transition + audit event if the estado actually changes
       const applyTransition = async (ciclo, novoEstado, updateData, nota) => {
         if (!novoEstado || novoEstado === ciclo.estado) return false;
@@ -222,6 +263,7 @@ Deno.serve(async (req) => {
           nota: nota
         });
         await avisarDaOficina(ciclo, novoEstado);
+        if (novoEstado === 'pronta') await fecharPedidosDoCiclo(ciclo);
         return true;
       };
 
