@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, BarChart3, Bell } from "lucide-react";
+import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, BarChart3, Bell, Handshake } from "lucide-react";
 import { User } from "@/entities/all";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import EcraEntrada from "./components/auth/EcraEntrada";
@@ -22,6 +22,7 @@ const ALL_NAV_ITEMS = [
   { key: "Autorizacao", title: "Autorização", url: createPageUrl("Autorizacao"), icon: ShieldCheck, permKey: "canAutorizacao" },
   { key: "Saida", title: "Saída", url: createPageUrl("Saida"), icon: Truck, permKey: "canSaida" },
   { key: "Relatorios", title: "Relatórios", url: createPageUrl("Relatorios"), icon: BarChart3, permKey: "canRelatorios" },
+  { key: "MinhaArea", title: "A minha área", url: createPageUrl("MinhaArea"), icon: Handshake, permKey: "canMinhaArea" },
 ];
 
 const PAGE_TITLES = {
@@ -30,6 +31,7 @@ const PAGE_TITLES = {
   Autorizacao: "AUTORIZAÇÃO",
   Saida: "SAÍDA / RETORNO",
   Relatorios: "RELATÓRIOS",
+  MinhaArea: "A MINHA ÁREA",
 };
 
 /** Sino da caixa de mensagens, com o número de mensagens por ler. */
