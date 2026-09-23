@@ -1,13 +1,17 @@
-import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
+import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "@/components/atlas/constants";
 import { estadoEfetivo } from "@/components/atlas/cicloUtils";
 
 /**
  * Exportação das máquinas para Excel.
  *
  * As colunas são o que se vê no programa — série, modelo, estado, cliente,
- * datas. Ficam de fora as especificações técnicas (mastro, vias, joystick,
- * pneus, H3, bateria, acessórios): quem abre a folha quer saber o que está no
- * pátio, não a ficha técnica de cada máquina.
+ * datas — mais as quatro especificações que decidem se uma máquina serve um
+ * cliente: H3, horímetro, bateria e joystick. São as que se perguntam ao
+ * telefone antes de prometer uma máquina.
+ *
+ * Continuam de fora o mastro, as vias, os pneus e os acessórios: quem abre a
+ * folha quer saber o que está no pátio, não a ficha técnica completa de cada
+ * máquina.
  *
  * As datas saem como datas e os números como números, para o Excel poder
  * ordenar e filtrar a sério em vez de tratar tudo como texto.
@@ -29,6 +33,12 @@ export const COLUNAS = [
   { label: "Cone nº", largura: 9, valor: (c) => numero(c.cone_numero) },
   { label: "Série", largura: 20, valor: (c) => c.serie || "" },
   { label: "Modelo", largura: 16, valor: (c, m) => m?.modelo || "" },
+  // Número, não texto: quem filtra por altura quer "maior que 4000", e com
+  // texto o Excel ordenaria 10000 antes de 4455.
+  { label: "H3 (mm)", largura: 10, valor: (c, m) => numero(m?.h3) },
+  { label: "Horímetro (h)", largura: 13, valor: (c, m) => numero(m?.horimetro) },
+  { label: "Bateria", largura: 11, valor: (c, m) => (m?.bateria ? SPEC_LABELS.bateria?.[m.bateria] || m.bateria : "") },
+  { label: "Joystick", largura: 12, valor: (c, m) => (m?.joystick ? SPEC_LABELS.joystick?.[m.joystick] || m.joystick : "") },
   { label: "Categoria", largura: 13, valor: (c) => rotuloCategoria(c) },
   { label: "Estado", largura: 15, valor: (c) => rotuloEstado(c) },
   { label: "Prioridade", largura: 11, valor: (c) => (c.prioridade ? "Sim" : "") },

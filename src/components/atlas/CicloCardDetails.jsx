@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { SPEC_LABELS } from "./constants";
 import MaquinaNotas from "./MaquinaNotas";
+import FotosMaquina from "./FotosMaquina";
+import { podeGerirFotos } from "./fotosMaquina";
 import PedidosMaquina from "./PedidosMaquina";
 import FotoModal from "./FotoModal";
 
@@ -79,12 +81,21 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onAtualizad
           <SpecRow label="Bateria" value={maquina?.bateria ? (SPEC_LABELS.bateria?.[maquina.bateria] || maquina.bateria) : null} />
           <SpecRow label="Joystick" value={maquina?.joystick ? (SPEC_LABELS.joystick?.[maquina.joystick] || maquina.joystick) : null} />
           <SpecRow label="Pneus" value={maquina?.tipo_pneu ? (SPEC_LABELS.tipo_pneu?.[maquina.tipo_pneu] || maquina.tipo_pneu) : null} />
+          <SpecRow label="Horímetro" value={maquina?.horimetro ? `${maquina.horimetro} h` : null} />
         </div>
         <div className="mt-2 text-xs">
           <span className="text-slate-500">Acessórios: </span>
           <span className="text-slate-200">{maquina?.acessorios?.length ? maquina.acessorios.map((a) => SPEC_LABELS.acessorios?.[a] || a).join(", ") : "—"}</span>
         </div>
       </div>
+
+      {/* Fotografias do estado da máquina no pátio. Tira-as quem lá anda;
+          vê-as toda a gente, que é para isso que existem. */}
+      <FotosMaquina
+        maquina={maquina}
+        podeGerir={podeGerirFotos(currentUser?.perfil)}
+        onAtualizado={onAtualizado}
+      />
 
       {/* Notas da Máquina (aviso) */}
       <div>

@@ -28,7 +28,7 @@ export default function Entrada({ currentUser }) {
   const [cicloFora, setCicloFora] = useState(null);
   const [reentradaConfirmada, setReentradaConfirmada] = useState(false);
   const [searching, setSearching] = useState(false);
-  const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
+  const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
   const [categoria, setCategoria] = useState("");
   const [estadoInicial, setEstadoInicial] = useState("classificada");
   const [coneNumero, setConeNumero] = useState("");

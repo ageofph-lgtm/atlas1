@@ -94,6 +94,7 @@ export async function registarEntrada({
       acessorios: specs.acessorios || [],
       h3: specs.h3 || "",
       bateria: specs.bateria || "",
+      horimetro: specs.horimetro || "",
       observacoes: notas || "",
     });
     maquinaId = nova.id;
@@ -110,6 +111,9 @@ export async function registarEntrada({
       acessorios: specs.acessorios?.length ? specs.acessorios : existingMaquina.acessorios,
       h3: specs.h3 || existingMaquina.h3 || "",
       bateria: specs.bateria || existingMaquina.bateria || "",
+      // Em branco não apaga o que já lá estava: o horímetro pode ter sido
+      // apontado noutra entrada e quem regista agora pode não o ter lido.
+      horimetro: specs.horimetro || existingMaquina.horimetro || "",
       observacoes: notas,
     });
   }

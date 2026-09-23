@@ -22,7 +22,7 @@ const OptionButton = ({ option, isSelected, onClick }) => (
 );
 
 export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, onClose, onSave, canDeleteMaquina, onDelete }) {
-  const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
+  const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
   const [categoria, setCategoria] = useState("");
   const [estado, setEstado] = useState("");
   const [tipoSaida, setTipoSaida] = useState("");
@@ -56,6 +56,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
         acessorios: maquina.acessorios || [],
         h3: maquina.h3 || "",
         bateria: maquina.bateria || "",
+        horimetro: maquina.horimetro || "",
       });
       setCategoria(ciclo?.categoria || "");
       setEstado(estadoEfetivo(ciclo) || "");
@@ -230,6 +231,23 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
               value={specs.h3}
               onChange={(e) => setSpecs((prev) => ({ ...prev, h3: e.target.value }))}
               placeholder="ex. 4455"
+              className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
+            />
+          </div>
+
+          {/* Pode entrar aqui em qualquer altura: as máquinas já registadas não
+              o têm, e obrigar a repetir o registo para o acrescentar não faria
+              sentido nenhum. */}
+          <div>
+            <h3 className="text-sm font-medium text-slate-300 mb-2">
+              Horímetro (horas) <span className="text-slate-600 font-normal">(opcional)</span>
+            </h3>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={specs.horimetro}
+              onChange={(e) => setSpecs((prev) => ({ ...prev, horimetro: e.target.value }))}
+              placeholder="ex. 3420"
               className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
             />
           </div>

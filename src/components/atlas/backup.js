@@ -93,20 +93,28 @@ export const ficheiroValido = (dados) =>
   !!dados && typeof dados === "object" && !!dados.entities && typeof dados.entities === "object";
 
 /**
- * Onde é que cada entidade guarda endereços de fotografias.
+ * Onde é que cada entidade guarda endereços de fotografias **que vale a pena
+ * guardar**.
  *
- * O backup só guardava o endereço, não a imagem. Enquanto a app existe o
- * endereço chega; no dia em que ela deixar de existir — que é o dia para que um
- * backup serve — o restauro traz os registos com todas as fotos em branco. As
- * placas de características são o pior caso: é delas que sai o número de série
- * quando a chapa da máquina já não se lê.
+ * Não são todas. A foto da placa do número de série (`Maquina.foto_url`) e a
+ * da placa na saída (`Ciclo.foto_saida`) servem para ler o NS no momento em que
+ * são tiradas e não voltam a fazer falta — guardá-las multiplicava o tamanho do
+ * ficheiro por nada.
+ *
+ * As que ficam são as que vivem no cartão da máquina: a bateria e o carregador
+ * que saíram com ela, e as fotografias do estado da máquina no pátio. Essas são
+ * insubstituíveis — não se voltam a tirar depois de a máquina sair.
  */
 export const CAMPOS_FOTO = {
-  Maquina: ["foto_url"],
-  Ciclo: ["foto_saida", "bateria_foto_url", "carregador_foto_url"],
+  Maquina: ["fotos"],
+  Ciclo: ["bateria_foto_url", "carregador_foto_url"],
 };
 
 const eEndereco = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
+
+/** Um campo de foto pode ser um endereço ou uma lista deles (`Maquina.fotos`). */
+const enderecosDoCampo = (valor) =>
+  (Array.isArray(valor) ? valor : [valor]).filter(eEndereco);
 
 /** Todos os endereços de foto de um conjunto de entidades, sem repetições. */
 export function urlsDeFotos(entities = {}) {
@@ -114,7 +122,7 @@ export function urlsDeFotos(entities = {}) {
   for (const [nome, campos] of Object.entries(CAMPOS_FOTO)) {
     for (const registo of entities[nome] || []) {
       for (const campo of campos) {
-        if (eEndereco(registo?.[campo])) urls.add(registo[campo]);
+        for (const url of enderecosDoCampo(registo?.[campo])) urls.add(url);
       }
     }
   }
@@ -190,7 +198,8 @@ export function trocarEnderecosDeFoto(registo, nomeEntidade, mapa = {}) {
   const out = { ...registo };
   for (const campo of campos) {
     const atual = out[campo];
-    if (eEndereco(atual) && mapa[atual]) out[campo] = mapa[atual];
+    if (Array.isArray(atual)) out[campo] = atual.map((u) => (eEndereco(u) && mapa[u] ? mapa[u] : u));
+    else if (eEndereco(atual) && mapa[atual]) out[campo] = mapa[atual];
   }
   return out;
 }
