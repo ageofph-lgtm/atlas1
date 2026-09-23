@@ -86,3 +86,36 @@ export const serieConfidence = (s) => {
   if (SERIE_WEAK.test(s)) return "medium";
   return "low";
 };
+/**
+ * Encolhe uma fotografia mantendo a cor, para guardar no cartão da máquina.
+ *
+ * A `prepareImage` acima não serve aqui: ela tira a cor e força o contraste
+ * porque foi feita para o OCR ler uma placa. Estas fotos são para uma pessoa
+ * ver o estado da máquina, e a cor é metade da informação — a ferrugem, a
+ * pintura, o cabo partido.
+ *
+ * O encolhimento não é cosmético. Um telemóvel atual dá ficheiros de 4 a 8 MB;
+ * com quatro por máquina e algumas centenas de máquinas, o backup com fotos
+ * passava de grande a impossível. A 1600px de lado maior continua a ver-se tudo
+ * o que interessa.
+ */
+export async function comprimirFoto(file, { maxLado = 1600, qualidade = 0.82 } = {}) {
+  const img = await loadImage(URL.createObjectURL(file));
+  let w = img.naturalWidth || img.width;
+  let h = img.naturalHeight || img.height;
+  if (Math.max(w, h) > maxLado) {
+    const s = maxLado / Math.max(w, h);
+    w = Math.round(w * s);
+    h = Math.round(h * s);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", qualidade));
+  // Se o browser não souber produzir o blob, vale mais mandar o original do que
+  // perder a fotografia.
+  if (!blob) return file;
+  return new File([blob], (file.name || "foto").replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+}

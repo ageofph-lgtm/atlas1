@@ -35,6 +35,20 @@ export default function EntradaPassoCaracteristicas({ NOTA_LABELS, handleAcessor
         />
       </div>
 
+      {/* Opcional: nem sempre se consegue ler, e quem regista no pátio não pode
+          ficar bloqueado por causa disso. Entra depois pela edição da máquina. */}
+      <div>
+        <h3 className="text-sm font-medium text-slate-300 mb-2">Horímetro (horas) <span className="text-slate-600 font-normal">(opcional)</span></h3>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={specs.horimetro || ""}
+          onChange={(e) => setSpecs((prev) => ({ ...prev, horimetro: e.target.value }))}
+          placeholder="ex. 3420"
+          className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
+        />
+      </div>
+
       <div>
         <h3 className="text-sm font-medium text-slate-300 mb-2">Vias do Mastro</h3>
         <div className="grid grid-cols-3 gap-2">

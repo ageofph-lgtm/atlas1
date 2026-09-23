@@ -131,29 +131,44 @@ describe("ficheiroValido", () => {
 describe("fotos: que campos e que endereços", () => {
   const entities = {
     Maquina: [
-      { serie: "NS-1", foto_url: "https://s.co/a.jpg" },
-      { serie: "NS-2", foto_url: "" },
+      // `foto_url` é a placa do NS: serve para ler a série no registo e não
+      // volta a fazer falta. Guardá-la multiplicava o ficheiro por nada.
+      { serie: "NS-1", foto_url: "https://s.co/placa.jpg", fotos: ["https://s.co/m1.jpg", "https://s.co/m2.jpg"] },
+      { serie: "NS-2", fotos: [] },
       { serie: "NS-3" },
     ],
     Ciclo: [
-      { id: "c1", foto_saida: "https://s.co/b.png", bateria_foto_url: "https://s.co/c.jpg", carregador_foto_url: null },
-      { id: "c2", foto_saida: "https://s.co/a.jpg" },
+      { id: "c1", foto_saida: "https://s.co/saida.jpg", bateria_foto_url: "https://s.co/bat.jpg", carregador_foto_url: "https://s.co/car.jpg" },
+      { id: "c2", bateria_foto_url: "https://s.co/bat.jpg" },
     ],
     Mensagem: [{ titulo: "x" }],
   };
 
-  it("apanha todos os campos de foto das duas entidades que os têm", () => {
+  it("guarda o que vive no cartão: fotos da máquina, bateria e carregador", () => {
     expect(urlsDeFotos(entities).sort())
-      .toEqual(["https://s.co/a.jpg", "https://s.co/b.png", "https://s.co/c.jpg"]);
+      .toEqual(["https://s.co/bat.jpg", "https://s.co/car.jpg", "https://s.co/m1.jpg", "https://s.co/m2.jpg"]);
+  });
+
+  it("deixa de fora as placas do número de série", () => {
+    // Lêem-se uma vez, no registo, e não voltam a fazer falta.
+    const urls = urlsDeFotos(entities);
+    expect(urls).not.toContain("https://s.co/placa.jpg");
+    expect(urls).not.toContain("https://s.co/saida.jpg");
+  });
+
+  it("lê o campo em lista da máquina, não só os campos soltos do ciclo", () => {
+    expect(urlsDeFotos({ Maquina: [{ fotos: ["https://s.co/a.jpg", "https://s.co/b.jpg"] }] }))
+      .toEqual(["https://s.co/a.jpg", "https://s.co/b.jpg"]);
   });
 
   it("não repete o mesmo endereço usado em dois sítios", () => {
-    // a.jpg aparece numa máquina e num ciclo: descarrega-se uma vez só.
-    expect(urlsDeFotos(entities).filter((u) => u.endsWith("a.jpg"))).toHaveLength(1);
+    // bat.jpg aparece em dois ciclos: descarrega-se uma vez só.
+    expect(urlsDeFotos(entities).filter((u) => u.endsWith("bat.jpg"))).toHaveLength(1);
   });
 
   it("ignora campos vazios, nulos e o que não é endereço", () => {
-    expect(urlsDeFotos({ Maquina: [{ foto_url: "" }, { foto_url: null }, { foto_url: "fotos/local.jpg" }] })).toEqual([]);
+    expect(urlsDeFotos({ Maquina: [{ fotos: ["", null, "fotos/local.jpg", 42] }, { fotos: null }] })).toEqual([]);
+    expect(urlsDeFotos({ Ciclo: [{ bateria_foto_url: "" }, { bateria_foto_url: null }] })).toEqual([]);
   });
 
   it("entidades sem fotos não contribuem", () => {
@@ -161,7 +176,7 @@ describe("fotos: que campos e que endereços", () => {
   });
 
   it("conta as fotos antes de começar, para se poder avisar", () => {
-    expect(contarFotos(entities)).toBe(3);
+    expect(contarFotos(entities)).toBe(4);
     expect(contarFotos({})).toBe(0);
   });
 });
@@ -239,26 +254,30 @@ describe("recolherFotos", () => {
 });
 
 describe("trocarEnderecosDeFoto", () => {
-  const mapa = { "https://s.co/a.jpg": "https://novo.co/a.jpg" };
+  const mapa = { "https://s.co/a.jpg": "https://novo.co/a.jpg", "https://s.co/b.jpg": "https://novo.co/b.jpg" };
 
-  it("troca os endereços que foram recarregados", () => {
-    const r = trocarEnderecosDeFoto({ serie: "NS-1", foto_url: "https://s.co/a.jpg" }, "Maquina", mapa);
-    expect(r.foto_url).toBe("https://novo.co/a.jpg");
+  it("troca os endereços dentro da lista de fotos da máquina", () => {
+    const r = trocarEnderecosDeFoto({ serie: "NS-1", fotos: ["https://s.co/a.jpg", "https://s.co/b.jpg"] }, "Maquina", mapa);
+    expect(r.fotos).toEqual(["https://novo.co/a.jpg", "https://novo.co/b.jpg"]);
   });
 
-  it("um endereço que não foi recarregado fica como estava", () => {
+  it("dentro da lista, o que não foi recarregado fica como estava", () => {
     // Melhor o endereço antigo, que ainda funciona enquanto a app de origem
-    // existir, do que um campo vazio.
-    const r = trocarEnderecosDeFoto({ foto_url: "https://s.co/z.jpg" }, "Maquina", mapa);
-    expect(r.foto_url).toBe("https://s.co/z.jpg");
+    // existir, do que um buraco no meio da lista.
+    const r = trocarEnderecosDeFoto({ fotos: ["https://s.co/a.jpg", "https://s.co/z.jpg"] }, "Maquina", mapa);
+    expect(r.fotos).toEqual(["https://novo.co/a.jpg", "https://s.co/z.jpg"]);
   });
 
-  it("mexe em todos os campos de foto do ciclo", () => {
-    const m = { "https://s.co/1": "novo1", "https://s.co/2": "novo2" };
+  it("mexe nos dois campos de foto do ciclo", () => {
     const r = trocarEnderecosDeFoto(
-      { foto_saida: "https://s.co/1", bateria_foto_url: "https://s.co/2", carregador_foto_url: null }, "Ciclo", m,
+      { bateria_foto_url: "https://s.co/a.jpg", carregador_foto_url: "https://s.co/b.jpg" }, "Ciclo", mapa,
     );
-    expect(r).toMatchObject({ foto_saida: "novo1", bateria_foto_url: "novo2", carregador_foto_url: null });
+    expect(r).toMatchObject({ bateria_foto_url: "https://novo.co/a.jpg", carregador_foto_url: "https://novo.co/b.jpg" });
+  });
+
+  it("não toca na placa do NS, que não entra no backup", () => {
+    const r = trocarEnderecosDeFoto({ foto_saida: "https://s.co/a.jpg" }, "Ciclo", mapa);
+    expect(r.foto_saida).toBe("https://s.co/a.jpg");
   });
 
   it("uma entidade sem fotos passa intacta", () => {
@@ -267,8 +286,8 @@ describe("trocarEnderecosDeFoto", () => {
   });
 
   it("não modifica o registo original", () => {
-    const original = { foto_url: "https://s.co/a.jpg" };
+    const original = { fotos: ["https://s.co/a.jpg"] };
     trocarEnderecosDeFoto(original, "Maquina", mapa);
-    expect(original.foto_url).toBe("https://s.co/a.jpg");
+    expect(original.fotos).toEqual(["https://s.co/a.jpg"]);
   });
 });

@@ -19,6 +19,7 @@ export async function saveMaquinaEdit({ maquina, ciclo, specs, cicloUpdates = {}
     acessorios: specs.acessorios || [],
     h3: specs.h3 || "",
     bateria: specs.bateria || "",
+    horimetro: specs.horimetro || "",
   };
   if (newSerie) maquinaUpdate.serie = newSerie;
   await base44.entities.Maquina.update(maquina.id, maquinaUpdate);

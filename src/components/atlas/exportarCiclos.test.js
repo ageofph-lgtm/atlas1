@@ -22,10 +22,16 @@ const getMaquina = (c) => maquinas[c.id];
 const linhas = () => construirLinhas(ciclos, getMaquina);
 
 describe("colunas", () => {
-  it("não leva nenhuma especificação técnica — foi o que foi pedido", () => {
+  it("leva as quatro specs que se perguntam ao telefone, e mais nenhumas", () => {
+    // H3, horímetro, bateria e joystick decidem se a máquina serve o cliente.
+    // O mastro, as vias, os pneus e os acessórios são ficha técnica: quem abre
+    // a folha quer saber o que está no pátio.
     const rotulos = COLUNAS.map((c) => c.label.toLowerCase()).join(" ");
-    for (const fora of ["mastro", "vias", "joystick", "pneu", "h3", "bateria", "acessório"]) {
-      expect(rotulos).not.toContain(fora);
+    for (const dentro of ["h3", "horímetro", "bateria", "joystick"]) {
+      expect(rotulos, dentro).toContain(dentro);
+    }
+    for (const fora of ["mastro", "vias", "pneu", "acessório"]) {
+      expect(rotulos, fora).not.toContain(fora);
     }
   });
 
@@ -127,16 +133,70 @@ describe("o ficheiro que sai", () => {
     expect(b["Dias alugada"]).toBe(21);
   });
 
-  it("nenhuma célula carrega uma especificação técnica", () => {
+  it("nenhuma célula carrega a ficha técnica completa", () => {
     const lido = folhaGerada();
     const tudo = JSON.stringify(XLSX.utils.sheet_to_json(lido.Sheets["Máquinas"])).toLowerCase();
+    // O mastro continua de fora; o joystick agora é uma coluna, por isso o que
+    // se verifica é o valor do mastro e não a palavra "joystick".
     expect(tudo).not.toContain("triplex");
-    expect(tudo).not.toContain("joystick");
+    expect(tudo).not.toContain("telesc");
   });
 });
 
 describe("nomeFicheiro", () => {
   it("leva a página e o dia", () => {
     expect(nomeFicheiro("inventario", new Date("2026-09-21T10:00:00Z"))).toBe("atlas-inventario-2026-09-21.xlsx");
+  });
+});
+
+describe("as quatro colunas técnicas que decidem se a máquina serve", () => {
+  const maquina = { modelo: "RX20-16", h3: "4455", horimetro: "3420", bateria: "litio", joystick: "minilever" };
+  const linha = (m) => construirLinhas([{ id: "c1", serie: "NS-1", categoria: "str", estado: "pronta" }], () => m)[0];
+
+  it("H3 e horímetro saem como números, para o Excel poder filtrar por eles", () => {
+    // Em texto, o Excel punha 10000 antes de 4455 — inútil para quem procura
+    // uma máquina acima de certa altura.
+    const l = linha(maquina);
+    expect(l["H3 (mm)"]).toBe(4455);
+    expect(l["Horímetro (h)"]).toBe(3420);
+  });
+
+  it("bateria e joystick saem com o nome que se usa, não o código interno", () => {
+    const l = linha(maquina);
+    expect(l["Bateria"]).toBe("Lítio");
+    expect(l["Joystick"]).toBe("Mini.");
+  });
+
+  it("uma máquina sem estes dados deixa as células vazias, não zeros", () => {
+    // Um zero no horímetro seria lido como máquina nova, que é outra coisa.
+    const l = linha({ modelo: "X" });
+    expect(l["H3 (mm)"]).toBe(null);
+    expect(l["Horímetro (h)"]).toBe(null);
+    expect(l["Bateria"]).toBe("");
+    expect(l["Joystick"]).toBe("");
+  });
+
+  it("um valor que não é número não vira NaN na folha", () => {
+    expect(linha({ h3: "cerca de 4m", horimetro: "—" })["H3 (mm)"]).toBe(null);
+    expect(linha({ horimetro: "—" })["Horímetro (h)"]).toBe(null);
+  });
+
+  it("um código desconhecido sai como está, em vez de desaparecer", () => {
+    const l = linha({ bateria: "hidrogenio", joystick: "novo_tipo" });
+    expect(l["Bateria"]).toBe("hidrogenio");
+    expect(l["Joystick"]).toBe("novo_tipo");
+  });
+
+  it("sem máquina ligada não rebenta", () => {
+    const l = linha(null);
+    expect(l["H3 (mm)"]).toBe(null);
+    expect(l["Bateria"]).toBe("");
+  });
+
+  it("continuam de fora as specs que não se perguntam ao telefone", () => {
+    const rotulos = COLUNAS.map((c) => c.label);
+    for (const fora of ["Mastro", "Vias", "Pneus", "Acessórios"]) {
+      expect(rotulos).not.toContain(fora);
+    }
   });
 });
