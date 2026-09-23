@@ -2,13 +2,11 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown, Check } from "lucide-react";
 import { format } from "date-fns";
-import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
-import { estadoEfetivo } from "@/components/atlas/cicloUtils";
+import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "@/components/atlas/constants";
+import { estadoEfetivo, temCone } from "@/components/atlas/cicloUtils";
 import { GRELHA, CONE_TAMANHO, NS_CLASSE, CONE_NUM_CLASSE } from "@/components/atlas/viewPrefs";
 import ConeIcon from "@/components/atlas/ConeIcon";
 import { COLUNAS_ORDENAVEIS, ordenarCiclos, proximaOrdenacao } from "@/components/atlas/ordenarCiclos";
-
-const temCone = (ciclo) => CONE_COLORS.some((c) => c.value === ciclo.cone_cor) && ciclo.cone_numero;
 
 const Estado = ({ ciclo, mini = false }) => {
   const cfg = ESTADO_CONFIG[estadoEfetivo(ciclo)] || ESTADO_CONFIG.entrada;

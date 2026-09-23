@@ -41,7 +41,7 @@ const ATLAS_PERMISSIONS = {
     canRelatorios: true,
     canMinhaArea: false,
     canEditMaquina: true,
-    canDeleteMaquina: false,
+    canDeleteMaquina: true,
     canReservar: false,
     canEditReserva: false,
     canNotas: true,

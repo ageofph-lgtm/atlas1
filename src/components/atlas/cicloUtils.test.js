@@ -15,6 +15,7 @@ import {
   isVenda,
   isAluguer,
   podeGerirEstadoOficina,
+  cicloOcupaCone, temCone, LIBERTAR_CONE,
 } from "@/components/atlas/cicloUtils";
 
 let base44;
@@ -220,5 +221,58 @@ describe("normalizarEstadosIndefinidos", () => {
     base44.entities.Ciclo.update.mockRejectedValueOnce(new Error("sem rede"));
     const saida = await normalizarEstadosIndefinidos([{ id: "1", categoria: "sucata", estado: "pronta" }]);
     expect(saida[0].estado).toBe("indefinido");
+  });
+});
+
+describe("o cone fica no pátio quando a máquina sai", () => {
+  const c = (estado, extra = {}) => ({ id: "c1", categoria: "str", estado, cone_cor: "amarelo", cone_numero: "7", ...extra });
+
+  it("uma máquina no pátio ocupa o seu cone", () => {
+    for (const e of ["entrada", "classificada", "autorizada", "em_execucao", "pronta", "manutencao"]) {
+      expect(cicloOcupaCone(c(e)), e).toBe(true);
+      expect(temCone(c(e)), e).toBe(true);
+    }
+  });
+
+  it("uma máquina alugada já não ocupa cone — é este o caso que faltava", () => {
+    // O cone é um objeto físico: fica no chão do pátio e vai para outra máquina.
+    expect(cicloOcupaCone(c("em_aluguer"))).toBe(false);
+    expect(temCone(c("em_aluguer"))).toBe(false);
+  });
+
+  it("nem uma a caminho do retorno, nem uma vendida", () => {
+    expect(temCone(c("retorno"))).toBe(false);
+    expect(temCone(c("fechado"))).toBe(false);
+  });
+
+  it("um número gravado num ciclo que saiu não se mostra", () => {
+    // Os registos antigos guardaram o número: não se apaga o passado, mas
+    // também não se mostra um cone que já não está na máquina.
+    const saiu = c("em_aluguer", { cone_numero: "42", cone_cor: "verde" });
+    expect(saiu.cone_numero).toBe("42");
+    expect(temCone(saiu)).toBe(false);
+  });
+
+  it("uma sucata continua no pátio e continua com o seu cone", () => {
+    // O estado efetivo dela é "indefinido", mas ela está mesmo lá fora, e o
+    // cone dela está ocupado.
+    expect(cicloOcupaCone(c("classificada", { categoria: "sucata" }))).toBe(true);
+  });
+
+  it("sem cor ou sem número não há cone para mostrar, mesmo no pátio", () => {
+    expect(temCone(c("pronta", { cone_cor: null }))).toBe(false);
+    expect(temCone(c("pronta", { cone_numero: "" }))).toBe(false);
+    expect(temCone(c("pronta", { cone_cor: "roxo-inventado" }))).toBe(false);
+  });
+
+  it("aguenta um ciclo em falta sem rebentar", () => {
+    expect(temCone(null)).toBe(false);
+    expect(temCone(undefined)).toBe(false);
+    expect(temCone({})).toBe(false);
+  });
+
+  it("LIBERTAR_CONE limpa os dois campos, não só o número", () => {
+    // Deixar a cor para trás dava uma máquina com cone de cor e sem número.
+    expect(LIBERTAR_CONE).toEqual({ cone_cor: null, cone_numero: null });
   });
 });
