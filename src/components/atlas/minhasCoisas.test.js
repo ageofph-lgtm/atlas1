@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   eMinhaReserva, eMeuPedido, minhasReservas, meusPedidos,
   contarPorEstado, kpisComercial, inicioDoPeriodo, PERIODOS,
-  estadoEfetivoPedido, pedidosComEstado,
+  estadoEfetivoPedido, pedidosComEstado, ciclosDaPessoa,
 } from "@/components/atlas/minhasCoisas";
 
 const carlos = { id: "u-carlos", full_name: "Carlos Gonçalves" };
@@ -296,5 +296,60 @@ describe("pedidos concluídos por dedução", () => {
   it("nem um que continua por fazer", () => {
     const [r] = pedidosComEstado([{ id: "p", ciclo_id: "c", estado: "aberto" }], [{ id: "c" }]);
     expect(r.derivado).toBe(false);
+  });
+});
+
+describe("atribuição pelo pedido, e não só pela reserva", () => {
+  const agora = new Date("2026-09-23T00:00:00Z").getTime();
+  const haDias = (n) => new Date(agora - n * 86400000).toISOString();
+
+  // O caso real: a máquina saiu sem nunca ter sido reservada, mas o comercial
+  // fez-lhe um pedido. Contar só reservas dava zero com saídas todas as semanas.
+  const semReserva = {
+    id: "c1", serie: "516309P00852", categoria: "str",
+    estado: "em_aluguer", tipo_saida: "alugada", data_saida: haDias(2),
+  };
+  const meuPedido = { id: "p1", ciclo_id: "c1", comercial_user_id: "u-carlos", comercial: "Carlos Gonçalves" };
+
+  it("uma saída sem reserva conta se eu lhe fiz um pedido", () => {
+    const k = kpisComercial([semReserva], carlos, { desde: haDias(30), pedidos: [meuPedido] });
+    expect(k.alugadas).toBe(1);
+    expect(k.total).toBe(1);
+    expect(k.semComercial).toBe(0);
+  });
+
+  it("sem pedidos, a mesma saída não conta para ninguém", () => {
+    const k = kpisComercial([semReserva], carlos, { desde: haDias(30), pedidos: [] });
+    expect(k.total).toBe(0);
+    expect(k.semComercial).toBe(1);
+  });
+
+  it("o pedido de outro comercial não me dá a máquina", () => {
+    const doNuno = { id: "p2", ciclo_id: "c1", comercial_user_id: "u-nuno", comercial: "Nuno Lopes" };
+    expect(kpisComercial([semReserva], carlos, { desde: haDias(30), pedidos: [doNuno] }).total).toBe(0);
+    // Mas a máquina deixa de estar órfã: alguém lhe tocou.
+    expect(kpisComercial([semReserva], carlos, { desde: haDias(30), pedidos: [doNuno] }).semComercial).toBe(0);
+  });
+
+  it("uma máquina onde dois mexeram conta para os dois", () => {
+    const doNuno = { id: "p2", ciclo_id: "c1", comercial_user_id: "u-nuno" };
+    const pedidos = [meuPedido, doNuno];
+    expect(kpisComercial([semReserva], carlos, { desde: haDias(30), pedidos }).total).toBe(1);
+    expect(kpisComercial([semReserva], nuno, { desde: haDias(30), pedidos }).total).toBe(1);
+  });
+
+  it("a reserva continua a valer sozinha, sem pedido nenhum", () => {
+    const comReserva = { ...semReserva, id: "c2", reserva_comercial_id: "u-carlos", reserva_comercial: "Carlos Gonçalves" };
+    expect(kpisComercial([comReserva], carlos, { desde: haDias(30) }).total).toBe(1);
+  });
+
+  it("um pedido sem ciclo_id não atribui máquina nenhuma", () => {
+    const solto = { id: "p3", ciclo_id: "", comercial_user_id: "u-carlos" };
+    expect(kpisComercial([semReserva], carlos, { desde: haDias(30), pedidos: [solto] }).total).toBe(0);
+  });
+
+  it("ciclosDaPessoa junta as duas vias sem repetir", () => {
+    const comAmbas = { ...semReserva, reserva_comercial_id: "u-carlos" };
+    expect(ciclosDaPessoa([comAmbas], carlos, [meuPedido])).toHaveLength(1);
   });
 });

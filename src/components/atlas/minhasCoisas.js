@@ -84,22 +84,46 @@ const dentroDoPeriodo = (data, desde) => {
 };
 
 /**
+ * Os ciclos que são desta pessoa, por qualquer das duas vias.
+ *
+ * A reserva era a única via, e na prática quase nunca é usada: a logística dá
+ * saída direta às máquinas, e o comercial deixa a sua marca no **pedido** que
+ * fez para aquela máquina. Contar só as reservas dava zero a toda a gente com
+ * saídas a acontecer todas as semanas — que foi exatamente o que apareceu no
+ * ecrã: sete saídas, sete sem comercial.
+ *
+ * O pedido é um sinal mais fraco do que a reserva: "esta máquina precisa de um
+ * bluespot" não é "eu coloquei esta máquina". Mas é o sinal que existe, e uma
+ * máquina em que só um comercial mexeu é dele muito mais provavelmente do que
+ * de qualquer outro. Onde dois tenham mexido, conta para os dois — preferível a
+ * não contar para ninguém, e o total da empresa não sai daqui.
+ */
+export function ciclosDaPessoa(ciclos = [], pessoa, pedidos = []) {
+  const meus = new Set(pedidos.filter((p) => eMeuPedido(p, pessoa)).map((p) => p.ciclo_id).filter(Boolean));
+  return ciclos.filter((c) => eMinhaReserva(c, pessoa) || meus.has(c.id));
+}
+
+/** Ciclos em que nenhum comercial deixou marca — nem reserva, nem pedido. */
+const semDono = (ciclos, pedidos) => {
+  const comPedido = new Set(pedidos.map((p) => p.ciclo_id).filter(Boolean));
+  return ciclos.filter((c) => !c.reserva_comercial && !c.reserva_comercial_id && !comPedido.has(c.id));
+};
+
+/**
  * Quantas saíram por esta pessoa, no período.
  *
  * **O que este número não pode ser lido como sendo:** o total de saídas da
- * empresa. Uma máquina só se consegue atribuir a um comercial quando passou por
- * uma reserva dele — é o único sítio onde o nome fica agarrado ao ciclo. Uma
- * venda direta, sem reserva, não tem comercial nenhum e não entra na conta de
- * ninguém.
+ * empresa. Uma máquina só se atribui a alguém quando essa pessoa lhe tocou —
+ * reservando-a ou pedindo-lhe trabalho. Uma saída em que ninguém mexeu não
+ * entra na conta de ninguém.
  *
  * Por isso devolve-se também `semComercial`: quem vir "2 vendas" e souber que
  * houve 5 saídas percebe onde está a diferença. Um total que esconde o que não
  * conseguiu contar é pior do que não haver total.
  */
-export function kpisComercial(ciclos = [], pessoa, { desde = null } = {}) {
+export function kpisComercial(ciclos = [], pessoa, { desde = null, pedidos = [] } = {}) {
   const saidas = ciclos.filter((c) => c.tipo_saida && dentroDoPeriodo(c.data_saida, desde));
-  const minhas = saidas.filter((c) => eMinhaReserva(c, pessoa));
-  const semComercial = saidas.filter((c) => !c.reserva_comercial && !c.reserva_comercial_id);
+  const minhas = ciclosDaPessoa(saidas, pessoa, pedidos);
 
   const alugadas = minhas.filter(isAluguer);
   const vendidas = minhas.filter(isVenda);
@@ -109,7 +133,7 @@ export function kpisComercial(ciclos = [], pessoa, { desde = null } = {}) {
     vendidas: vendidas.length,
     total: minhas.length,
     saidasNoPeriodo: saidas.length,
-    semComercial: semComercial.length,
+    semComercial: semDono(saidas, pedidos).length,
     listas: { alugadas, vendidas },
   };
 }

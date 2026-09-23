@@ -86,9 +86,11 @@ export default function MinhaArea({ currentUser }) {
     () => contarPorEstado(pedidosMeus.map(({ pedido, estado }) => ({ ...pedido, estado }))),
     [pedidosMeus],
   );
+  // Os pedidos entram nos KPIs: na prática a reserva quase não é usada, e é no
+  // pedido que fica a marca de quem tratou daquela máquina.
   const kpis = useMemo(
-    () => kpisComercial(ciclos, currentUser, { desde: inicioDoPeriodo(dias) }),
-    [ciclos, currentUser, dias],
+    () => kpisComercial(ciclos, currentUser, { desde: inicioDoPeriodo(dias), pedidos }),
+    [ciclos, currentUser, dias, pedidos],
   );
 
   if (isLoading) {
@@ -150,8 +152,8 @@ export default function MinhaArea({ currentUser }) {
           <Info className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-slate-400">
             No período saíram <span className="num font-bold text-slate-200">{kpis.saidasNoPeriodo}</span> máquinas, das quais{" "}
-            <span className="num font-bold text-slate-200">{kpis.semComercial}</span> sem comercial atribuído — saíram sem passar
-            por uma reserva, por isso não entram na conta de ninguém.
+            <span className="num font-bold text-slate-200">{kpis.semComercial}</span> sem comercial atribuído — ninguém lhes tocou, nem por reserva
+            nem por pedido, por isso não entram na conta de ninguém.
           </p>
         </div>
       )}
