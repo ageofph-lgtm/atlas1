@@ -233,7 +233,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         key={c.id}
         ciclo={c}
         maquina={m}
-        canEditMaquina={canEditMaquinaRecord(currentUser, m)}
+        canEditMaquina={canEditMaquinaRecord(currentUser)}
         canAutorizar={canAutorizar && authorizing !== c.id}
         canNotas={userPermissions?.canNotas}
         onAtualizado={loadData}
@@ -244,7 +244,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         canLimparRegistos={currentUser?.perfil === "administrador"}
         destaque={destaque}
         rolarParaVista={rolarParaVista}
-        onEdit={canEditMaquinaRecord(currentUser, m) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
+        onEdit={canEditMaquinaRecord(currentUser) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
         onAutorizar={canAutorizar ? (ciclo) => setTarefasCiclo(ciclo) : null}
         onTogglePrioridade={canAutorizar ? togglePrioridade : null}
         onMarcarPronta={canMarcarPronta ? handleMarcarPronta : null}

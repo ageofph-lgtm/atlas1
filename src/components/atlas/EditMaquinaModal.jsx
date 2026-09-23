@@ -5,6 +5,7 @@ import { Check, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS, ESTADO_CONFIG } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { isCategoriaSemEstado, estadoEfetivo, ESTADOS_OFICINA, podeGerirEstadoOficina } from "@/components/atlas/cicloUtils";
+import { podeEditarCategoria, podeEditarEstado } from "@/components/hooks/usePermissions";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -34,12 +35,13 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
   const [serie, setSerie] = useState("");
 
   const isAdmin = currentUser?.perfil === "administrador";
-  const isGestor = currentUser?.perfil === "gestor_frota";
-  const canEditCategoria = isGestor || isAdmin;
-  // A gestão mexe no estado dentro do circuito da oficina; o administrador em
-  // todos, porque é ele que corrige registos.
-  const podeOficina = isGestor && podeGerirEstadoOficina(ciclo);
-  const canEditEstado = isAdmin || podeOficina;
+  const canEditCategoria = podeEditarCategoria(currentUser);
+  // A gestão e a logística mexem no estado dentro do circuito da oficina; o
+  // administrador em todos, porque é ele que corrige registos.
+  const canEditEstado = podeEditarEstado(currentUser, ciclo, podeGerirEstadoOficina);
+  // Quem pode editar mas está fora do circuito vê o estado e a razão de não lhe
+  // poder mexer — em branco pareceria um campo que se esqueceram de pôr.
+  const explicaEstadoBloqueado = !isAdmin && !canEditEstado;
   const serieChanged = serie.trim().length > 0 && serie.trim() !== (maquina?.serie || "");
   const effectiveConeCor = CATEGORIA_CONE_MAP[categoria] || null;
   const needsCone = !!effectiveConeCor;
@@ -108,7 +110,11 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
         cicloUpdates.categoria = categoria;
         cicloUpdates.cone_cor = effectiveConeCor;
         cicloUpdates.cone_numero = needsCone ? coneNumero : null;
-      } else if (isAdmin && coneNumero !== (ciclo?.cone_numero || "")) {
+      } else if (canEditCategoria && coneNumero !== (ciclo?.cone_numero || "")) {
+        // Antes só o administrador gravava aqui: quem mudasse o número sem
+        // mudar a categoria via o campo aceitar o que escreveu e a alteração
+        // desaparecer sem aviso. Quem troca o cone à máquina é quem anda no
+        // pátio, e a unicidade já está travada na validação acima.
         cicloUpdates.cone_numero = coneNumero || null;
         cicloUpdates.cone_cor = effectiveConeCor;
       }
@@ -342,8 +348,8 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
             </div>
           )}
 
-          {/* A gestão vê o estado mas não lhe pode mexer — vale a pena dizer porquê */}
-          {isGestor && !canEditEstado && !semEstado && (
+          {/* Vê o estado mas não lhe pode mexer — vale a pena dizer porquê */}
+          {explicaEstadoBloqueado && !semEstado && (
             <div className="border-t border-slate-700 pt-4">
               <label className="text-sm font-medium text-slate-300 block mb-1.5">Estado</label>
               <div className="px-3 py-2.5 bg-slate-900/60 border border-slate-800 rounded-lg text-slate-400 text-sm">

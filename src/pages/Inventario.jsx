@@ -393,7 +393,7 @@ export default function Inventario({ currentUser, userPermissions }) {
       key={c.id}
       ciclo={c}
       maquina={getMaquina(c)}
-      canEditMaquina={canEditMaquinaRecord(currentUser, getMaquina(c))}
+      canEditMaquina={canEditMaquinaRecord(currentUser)}
       canReservar={userPermissions?.canReservar}
       canDeleteMaquina={userPermissions?.canDeleteMaquina}
       canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
@@ -408,7 +408,7 @@ export default function Inventario({ currentUser, userPermissions }) {
       onPedidosChanged={recarregarPedidos}
       destaque={destaque}
       rolarParaVista={rolarParaVista}
-      onEdit={canEditMaquinaRecord(currentUser, getMaquina(c)) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
+      onEdit={canEditMaquinaRecord(currentUser) ? (ciclo, maquina) => { setEditMaquina(maquina); setEditCiclo(ciclo); } : null}
       onReservar={userPermissions?.canReservar ? (ciclo) => setReservaCiclo(ciclo) : null}
       onDelete={userPermissions?.canDeleteMaquina ? (maquina) => setDeleteMaquina(maquina) : null}
       onAutorizar={(currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota") ? (ciclo) => setAutorizarCicloState(ciclo) : null}
