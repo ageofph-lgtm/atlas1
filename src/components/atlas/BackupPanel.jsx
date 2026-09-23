@@ -1,28 +1,10 @@
 import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { listarTudo } from "@/components/atlas/carregarTudo";
-import { Download, Upload, Loader2, ShieldCheck } from "lucide-react";
-
-const BACKUP_ENTITIES = ["Maquina", "Ciclo", "EventoCiclo", "Mensagem", "PedidoMaquina", "Pedido", "OrdemServico", "FrotaACP", "Notificacao"];
-const BUILTIN_FIELDS = ["id", "created_date", "updated_date", "created_by_id"];
-
-const NATURAL_KEYS = {
-  Maquina: (r) => r.serie || null,
-  Ciclo: (r) => `${r.maquina_id}|${r.estado}|${r.data_entrada || ""}`,
-  EventoCiclo: (r) => `${r.ciclo_id}|${r.de_estado || ""}|${r.para_estado}|${r.nota || ""}`,
-  Pedido: (r) => `${r.cliente}|${r.estado}|${r.data_necessaria || ""}`,
-  OrdemServico: (r) => `${r.serie}|${r.cliente || ""}`,
-  FrotaACP: (r) => r.serie || null,
-  Notificacao: (r) => `${r.userId}|${r.message}|${r.osId || ""}`,
-  Mensagem: (r) => `${r.destino || r.destino_user_id}|${r.titulo}|${r.ciclo_id || ""}|${r.created_date || ""}`,
-  PedidoMaquina: (r) => `${r.ciclo_id}|${r.texto}|${r.comercial_user_id || ""}`,
-};
-
-const strip = (rec) => {
-  const out = { ...rec };
-  BUILTIN_FIELDS.forEach((f) => delete out[f]);
-  return out;
-};
+import { Download, Upload, Loader2, ShieldCheck, ImageOff } from "lucide-react";
+import {
+  BACKUP_ENTITIES, recolherBackup, novosRegistos, ficheiroValido,
+} from "@/components/atlas/backup";
 
 const chunkCreate = async (name, recs) => {
   const batch = 400;
@@ -40,19 +22,7 @@ export default function BackupPanel() {
     setBusy(true);
     setStatus(null);
     try {
-      const entities = {};
-      // Um backup truncado em silêncio é o pior caso de todos: parece
-      // completo e não é. Lê-se tudo, por páginas.
-      const incompletas = [];
-      for (const name of BACKUP_ENTITIES) {
-        const { registos, truncado } = await listarTudo(base44.entities[name], { maximo: 50000 });
-        entities[name] = registos;
-        if (truncado) incompletas.push(name);
-      }
-      if (incompletas.length > 0) {
-        throw new Error(`Backup incompleto — ${incompletas.join(", ")} passou o limite de leitura. Não é seguro guardar este ficheiro.`);
-      }
-      const payload = { app: "ATLAS", version: 1, exportedAt: new Date().toISOString(), entities };
+      const { payload, total, emFalta } = await recolherBackup(base44);
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -60,10 +30,17 @@ export default function BackupPanel() {
       a.download = `atlas-backup-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      const total = Object.values(entities).reduce((s, r) => s + r.length, 0);
-      setStatus({ type: "ok", msg: `Backup descarregado: ${total} registos.` });
-    } catch (_e) {
-      setStatus({ type: "err", msg: "Erro ao gerar o backup." });
+      setStatus({
+        type: emFalta.length ? "aviso" : "ok",
+        msg: emFalta.length
+          ? `Backup descarregado: ${total} registos. Atenção: ${emFalta.join(", ")} não existe na app e ficou de fora.`
+          : `Backup descarregado: ${total} registos.`,
+      });
+    } catch (e) {
+      // A mensagem verdadeira vai para o ecrã. O "Erro ao gerar o backup"
+      // genérico escondia exatamente o que era preciso saber — incluindo o
+      // aviso de leitura incompleta, que é o mais importante de todos.
+      setStatus({ type: "err", msg: e?.message || "Erro ao gerar o backup." });
     } finally {
       setBusy(false);
     }
@@ -78,24 +55,20 @@ export default function BackupPanel() {
     reader.onload = async (ev) => {
       try {
         const data = JSON.parse(ev.target.result);
-        if (!data?.entities) throw new Error("formato inválido");
+        if (!ficheiroValido(data)) throw new Error("Ficheiro sem dados de backup lá dentro.");
         const summary = {};
         for (const name of BACKUP_ENTITIES) {
+          if (!base44.entities[name]) continue;
           const existing = (await listarTudo(base44.entities[name], { maximo: 50000 })).registos;
-          const existingKeys = new Set(existing.map(NATURAL_KEYS[name]).filter(Boolean));
-          const recs = (data.entities[name] || [])
-            .map(strip)
-            .filter((r) => {
-              const k = NATURAL_KEYS[name](r);
-              return k ? !existingKeys.has(k) : true;
-            });
+          const doFicheiro = data.entities[name] || [];
+          const recs = novosRegistos(doFicheiro, existing, name);
           if (recs.length) await chunkCreate(name, recs);
-          summary[name] = { noFicheiro: (data.entities[name] || []).length, importados: recs.length, ignorados: (data.entities[name] || []).length - recs.length };
+          summary[name] = { importados: recs.length, ignorados: doFicheiro.length - recs.length };
         }
-        const total = Object.values(summary).reduce((s, r) => s + r.importados, 0);
+        const total = Object.values(summary).reduce((s2, r) => s2 + r.importados, 0);
         setStatus({ type: "ok", msg: `Restauro concluído: ${total} registos importados (ignorados os já existentes).` });
-      } catch (_err) {
-        setStatus({ type: "err", msg: "Ficheiro inválido ou erro no restauro." });
+      } catch (err) {
+        setStatus({ type: "err", msg: err?.message || "Ficheiro inválido ou erro no restauro." });
       } finally {
         setBusy(false);
         if (fileRef.current) fileRef.current.value = "";
@@ -111,8 +84,15 @@ export default function BackupPanel() {
         <h3 className="text-sm font-bold text-slate-200">Sistema de Proteção de Dados</h3>
         <span className="ml-auto text-[10px] uppercase tracking-wide text-amber-500/80 border border-amber-500/30 rounded px-1.5 py-0.5">Admin</span>
       </div>
-      <p className="text-xs text-slate-500 mb-4">
-        Exporta todas as máquinas, ciclos, eventos, pedidos e restantes dados para um ficheiro, ou restaura a partir de um backup.
+      <p className="text-xs text-slate-500 mb-3">
+        Exporta as máquinas, ciclos, eventos, mensagens e pedidos para um ficheiro, ou restaura a partir de um backup.
+      </p>
+      {/* Uma limitação que só se descobriria no dia do restauro, com as fotos
+          todas em branco. Mais vale sabê-la antes. */}
+      <p className="flex items-start gap-1.5 text-[11px] text-slate-500 mb-4">
+        <ImageOff className="w-3.5 h-3.5 flex-shrink-0 mt-px" />
+        As fotografias não vão dentro do ficheiro — guarda-se o endereço de cada uma, que só funciona
+        enquanto a app existir. Um restauro noutra app traz os registos, não as imagens.
       </p>
       <div className="flex flex-wrap gap-3">
         <button
@@ -134,7 +114,11 @@ export default function BackupPanel() {
         <input ref={fileRef} type="file" accept="application/json,.json" onChange={handleFile} className="hidden" />
       </div>
       {status && (
-        <div className={`mt-3 text-xs px-3 py-2 rounded border ${status.type === "ok" ? "bg-green-500/10 border-green-500/30 text-green-400" : "bg-red-500/10 border-red-500/30 text-red-400"}`}>
+        <div className={`mt-3 text-xs px-3 py-2 rounded border ${
+          status.type === "ok" ? "bg-green-500/10 border-green-500/30 text-green-400"
+            : status.type === "aviso" ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
+            : "bg-red-500/10 border-red-500/30 text-red-400"
+        }`}>
           {status.msg}
         </div>
       )}
