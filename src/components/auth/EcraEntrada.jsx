@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldX, LogIn, Clock } from "lucide-react";
+import { ShieldX, LogIn, Clock, MailWarning, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeSwitcher from "@/components/atlas/ThemeSwitcher";
 
@@ -26,6 +26,41 @@ export default function EcraEntrada({ estado, email, onEntrar, onSair }) {
     return (
       <Moldura>
         <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto" />
+      </Moldura>
+    );
+  }
+
+  if (estado === "nao_confirmado") {
+    return (
+      <Moldura>
+        <MailWarning className="w-10 h-10 text-amber-400 mx-auto mb-4" />
+        <h1 className="text-lg font-bold text-slate-100 mb-2">Falta confirmar o email</h1>
+        <p className="text-sm text-slate-400 mb-1">
+          Foi enviado um código para <span className="num text-slate-200 break-all">{email}</span>.
+        </p>
+        {/* O email por confirmar é só uma alegação: sem ele, qualquer pessoa
+            podia registar-se com o endereço de outra e ficar com o perfil dela. */}
+        <p className="text-xs text-slate-500 mb-6">
+          Abra esse email e confirme a conta. Só depois disso o ATLAS o deixa entrar.
+        </p>
+        <Button onClick={onSair} variant="outline" className="w-full border-slate-700 text-slate-300">
+          Sair e usar outra conta
+        </Button>
+      </Moldura>
+    );
+  }
+
+  if (estado === "desativado") {
+    return (
+      <Moldura>
+        <UserX className="w-10 h-10 text-red-400 mx-auto mb-4" />
+        <h1 className="text-lg font-bold text-slate-100 mb-2">Conta desativada</h1>
+        <p className="text-sm text-slate-400 mb-6">
+          A conta <span className="num text-slate-200 break-all">{email}</span> está desativada. Fale com quem gere o ATLAS.
+        </p>
+        <Button onClick={onSair} variant="outline" className="w-full border-slate-700 text-slate-300">
+          Sair
+        </Button>
       </Moldura>
     );
   }

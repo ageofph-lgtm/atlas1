@@ -7,7 +7,7 @@ import { User } from "@/entities/all";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import EcraEntrada from "./components/auth/EcraEntrada";
 import TrocarPerfil, { rotuloPerfil } from "./components/auth/TrocarPerfil";
-import { nomeDe, temAcesso, podeTrocarPerfil } from "@/components/atlas/acessos";
+import { nomeDe, podeTrocarPerfil, estadoDeAcesso } from "@/components/atlas/acessos";
 import { abrirSessao, guardarPerfil, limparSessao } from "@/components/atlas/sessao";
 import ThemeSwitcher from "./components/atlas/ThemeSwitcher";
 import CaixaMensagens from "./components/atlas/CaixaMensagens";
@@ -96,13 +96,12 @@ export default function Layout({ children, currentPageName }) {
       // sem sessão na plataforma: o ecrã de entrada trata disso
     }
 
-    const email = userData?.email;
-    if (!email) return setEntrada("entrar");
-
     setUser(userData);
-    if (!temAcesso(email)) return setEntrada("sem_acesso");
+    const acesso = estadoDeAcesso(userData);
+    if (acesso === "sem_sessao") return setEntrada("entrar");
+    if (acesso !== "ok") return setEntrada(acesso);
 
-    const sessao = abrirSessao(email);
+    const sessao = abrirSessao(userData.email);
     if (!sessao.perfil) return setEntrada("sem_acesso");
     // Uma sessão que passou dos 60 dias obriga a entrar outra vez, e o ecrã
     // diz porquê — um fim de sessão calado parece uma avaria.

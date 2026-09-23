@@ -84,3 +84,32 @@ export function perfilEfetivo(email, escolhido) {
 
 /** O nome que aparece no ecrã e fica nos registos, sem depender do fornecedor. */
 export const nomeDe = (email) => acessoDe(email)?.nome || null;
+
+/**
+ * Se esta conta pode entrar, e porquê não quando não pode.
+ *
+ * Tem de ser mais do que "o email está na lista", por causa de como funciona a
+ * autenticação por email e password: **qualquer pessoa pode escrever qualquer
+ * email ao registar-se**. Um email por confirmar é uma alegação, não um facto,
+ * e sem esta verificação bastaria alguém registar-se como
+ * `carlos.goncalves@still.pt` e nunca abrir o email de confirmação para receber
+ * o perfil de comercial.
+ *
+ * Com a app em "Privado" isso já não chega à porta — mas a porta não pode
+ * depender de uma definição do painel para estar fechada.
+ *
+ * `is_verified` ausente **não** bloqueia, de propósito. O tipo do SDK diz que
+ * vem sempre, mas se um dia não vier, exigi-lo poria toda a gente fora ao mesmo
+ * tempo — um estrago maior do que o risco que fecha, já que o "Privado" cobre o
+ * mesmo caso por outro lado. Só um `false` explícito recusa.
+ */
+export function estadoDeAcesso(utilizador) {
+  const email = normalizarEmail(utilizador?.email);
+  if (!email) return "sem_sessao";
+  if (!temAcesso(email)) return "sem_acesso";
+  // Desativar a conta no painel do Base44 é a forma de pôr alguém de fora sem
+  // mexer no código — vale como revogação tal como tirá-lo desta lista.
+  if (utilizador.disabled === true) return "desativado";
+  if (utilizador.is_verified === false) return "nao_confirmado";
+  return "ok";
+}

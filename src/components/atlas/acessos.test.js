@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   ACESSOS, PERFIS, acessoDe, temAcesso, perfisDe, perfilPadrao,
-  podeTrocarPerfil, perfilEfetivo, nomeDe, normalizarEmail,
+  podeTrocarPerfil, perfilEfetivo, nomeDe, normalizarEmail, estadoDeAcesso,
 } from "@/components/atlas/acessos";
 
 describe("quem está na lista", () => {
@@ -125,5 +125,42 @@ describe("a lista em si", () => {
   it("o nome vem da lista, não do fornecedor de identidade", () => {
     expect(nomeDe("luis.sousa@still.pt")).toBe("Luís Sousa");
     expect(nomeDe("intruso@gmail.com")).toBe(null);
+  });
+});
+
+describe("estadoDeAcesso", () => {
+  const na_lista = { email: "carlos.goncalves@still.pt", is_verified: true };
+
+  it("quem está na lista, confirmado e ativo, entra", () => {
+    expect(estadoDeAcesso(na_lista)).toBe("ok");
+  });
+
+  it("sem sessão nenhuma diz que não há sessão, não que não tem acesso", () => {
+    // São coisas diferentes e levam a ecrãs diferentes: um manda entrar, o
+    // outro diz que não vale a pena tentar.
+    expect(estadoDeAcesso(null)).toBe("sem_sessao");
+    expect(estadoDeAcesso({})).toBe("sem_sessao");
+    expect(estadoDeAcesso({ email: "  " })).toBe("sem_sessao");
+  });
+
+  it("um email por confirmar não dá acesso, mesmo estando na lista", () => {
+    // O caso que a autenticação por email e password abre: qualquer pessoa
+    // escreve qualquer endereço ao registar-se. Sem confirmação é uma alegação.
+    expect(estadoDeAcesso({ ...na_lista, is_verified: false })).toBe("nao_confirmado");
+  });
+
+  it("uma conta desativada no painel fica de fora", () => {
+    expect(estadoDeAcesso({ ...na_lista, disabled: true })).toBe("desativado");
+  });
+
+  it("`is_verified` ausente não bloqueia — exigi-lo poria todos fora se o campo mudasse", () => {
+    expect(estadoDeAcesso({ email: "carlos.goncalves@still.pt" })).toBe("ok");
+    expect(estadoDeAcesso({ ...na_lista, is_verified: undefined })).toBe("ok");
+    expect(estadoDeAcesso({ ...na_lista, disabled: null })).toBe("ok");
+  });
+
+  it("fora da lista é fora da lista, confirmado ou não", () => {
+    expect(estadoDeAcesso({ email: "intruso@gmail.com", is_verified: true })).toBe("sem_acesso");
+    expect(estadoDeAcesso({ email: "intruso@gmail.com", is_verified: false })).toBe("sem_acesso");
   });
 });
