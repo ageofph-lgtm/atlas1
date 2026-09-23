@@ -95,7 +95,10 @@ describe("abrirSessao", () => {
     }));
     const r = abrirSessao("carlos.goncalves@still.pt", { agora });
     expect(r.estado.motivo).toBe("expirada");
-    expect(diasDesde(r.desde, agora)).toBe(0);
+    // A data nova vem do relógio real — `abrirSessao` carimba `new Date()` —, por
+    // isso compara-se com o relógio real e não com o `agora` injetado. Compará-la
+    // com o injetado fazia o teste passar de manhã e falhar à tarde.
+    expect(diasDesde(r.desde, Date.now())).toBe(0);
   });
 
   it("um perfil guardado que a lista já não dá é ignorado", () => {
