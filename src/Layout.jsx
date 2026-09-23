@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, Cog, BarChart3, Bell } from "lucide-react";
+import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, BarChart3, Bell } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import { User } from "@/entities/all";
 import { usePermissions } from "@/components/hooks/usePermissions";
-import ProfileSelector from "./components/auth/ProfileSelector";
+import EcraEntrada from "./components/auth/EcraEntrada";
+import TrocarPerfil, { rotuloPerfil } from "./components/auth/TrocarPerfil";
+import { nomeDe, podeTrocarPerfil, estadoDeAcesso } from "@/components/atlas/acessos";
+import { abrirSessao, guardarPerfil, limparSessao } from "@/components/atlas/sessao";
 import ThemeSwitcher from "./components/atlas/ThemeSwitcher";
 import CaixaMensagens from "./components/atlas/CaixaMensagens";
 import AvisoSemRede from "./components/atlas/AvisoSemRede";
@@ -50,65 +54,101 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  // "a_carregar" → "entrar" | "expirada" | "sem_acesso" | "dentro".
+  const [entrada, setEntrada] = useState("a_carregar");
+  const [perfil, setPerfil] = useState(null);
 
-  const permissions = usePermissions(user?.perfil);
+  const permissions = usePermissions(perfil);
+
+  /**
+   * O utilizador como o resto da aplicação o vê.
+   *
+   * O `perfil` e o `full_name` são substituídos pelos da lista antes de
+   * descerem às páginas. É aqui — num sítio só — que se garante que nenhuma
+   * página volta a ler o perfil que estava gravado no registo, que era escrito
+   * pelo próprio cliente e por isso não vale nada como permissão.
+   */
+  const utilizador = useMemo(
+    () => (user && perfil ? { ...user, perfil, full_name: nomeDe(user.email) || user.full_name } : null),
+    [user, perfil],
+  );
+
   const [caixaAberta, setCaixaAberta] = useState(false);
-  const caixa = useMensagens(user);
-  const temCaixa = podeUsarMensagens(user?.perfil);
+  const caixa = useMensagens(utilizador);
+  const temCaixa = podeUsarMensagens(perfil);
 
   useEffect(() => {
     loadUser();
   }, []);
 
+  /**
+   * Quem está a usar o ATLAS, e com que perfil.
+   *
+   * O perfil sai de `acessos.js` a partir do email da conta — nunca do campo
+   * `perfil` gravado no registo. Esse campo era escrito pelo próprio cliente no
+   * ecrã antigo, o que é o mesmo que deixar cada um assinar o seu crachá.
+   */
   const loadUser = async () => {
+    let userData = null;
     try {
-      const userData = await User.me();
-      if (userData && userData.perfil) {
-        setUser(userData);
-        setIsAuthenticated(true);
-      }
-    } catch (error) {
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoadingUser(false);
+      userData = await User.me();
+    } catch (_e) {
+      // sem sessão na plataforma: o ecrã de entrada trata disso
+    }
+
+    setUser(userData);
+    const acesso = estadoDeAcesso(userData);
+    if (acesso === "sem_sessao") return setEntrada("entrar");
+    if (acesso !== "ok") return setEntrada(acesso);
+
+    const sessao = abrirSessao(userData.email);
+    if (!sessao.perfil) return setEntrada("sem_acesso");
+    // Uma sessão que passou dos 60 dias obriga a entrar outra vez, e o ecrã
+    // diz porquê — um fim de sessão calado parece uma avaria.
+    if (sessao.estado?.motivo === "expirada") {
+      await terminar();
+      return setEntrada("expirada");
+    }
+
+    setPerfil(sessao.perfil);
+    setEntrada("dentro");
+  };
+
+  /** Fecha a sessão dos dois lados: a nossa contagem e a da plataforma. */
+  const terminar = async () => {
+    limparSessao();
+    setPerfil(null);
+    try {
+      await base44.auth.logout();
+    } catch (_e) {
+      // já sem sessão, ou sem rede — o estado local já foi limpo
     }
   };
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    const defaultRoute = userData?.perfil === "logistica" ? createPageUrl("Entrada") : createPageUrl("Inventario");
-    navigate(defaultRoute);
-  };
+  const handleEntrar = () => base44.auth.redirectToLogin(window.location.href);
 
   const handleLogout = async () => {
-    try {
-      await User.updateMyUserData({
-        perfil: null,
-        ultimo_acesso: new Date().toISOString(),
-        ativo: false,
-      });
-      setUser(null);
-      setIsAuthenticated(false);
-    } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
-    }
+    await terminar();
+    setUser(null);
+    setEntrada("entrar");
   };
 
-  if (isLoadingUser) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900">
-        <Cog className="w-12 h-12 animate-spin text-amber-500" />
-        <p className="mt-4 text-sm font-semibold text-slate-400">A carregar...</p>
-      </div>
-    );
-  }
+  const handleTrocarPerfil = (novo) => {
+    const aplicado = guardarPerfil(user?.email, novo);
+    if (!aplicado) return;
+    setPerfil(aplicado);
+    navigate(aplicado === "logistica" ? createPageUrl("Entrada") : createPageUrl("Inventario"));
+  };
 
-  if (!isAuthenticated) {
-    return <ProfileSelector onLogin={handleLogin} />;
+  if (entrada !== "dentro") {
+    return (
+      <EcraEntrada
+        estado={entrada}
+        email={user?.email}
+        onEntrar={handleEntrar}
+        onSair={handleLogout}
+      />
+    );
   }
 
   const allowedNavItems = ALL_NAV_ITEMS.filter((item) => permissions[item.permKey]);
@@ -162,16 +202,18 @@ export default function Layout({ children, currentPageName }) {
                 <div className="hidden md:flex items-center gap-3 bg-slate-700/50 px-3 py-1.5 rounded-lg">
                   <div className="bg-amber-500 w-7 h-7 rounded-full flex items-center justify-center">
                     <span className="text-slate-900 font-bold text-xs">
-                      {user.full_name?.charAt(0).toUpperCase() || "U"}
+                      {(nomeDe(user.email) || user.full_name)?.charAt(0).toUpperCase() || "U"}
                     </span>
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-200 truncate max-w-[120px]">
-                      {user.full_name || "Utilizador"}
+                      {nomeDe(user.email) || user.full_name || "Utilizador"}
                     </p>
-                    <p className="text-[10px] text-slate-500 truncate">
-                      {user.perfil?.replace("_", " ").toUpperCase()}
-                    </p>
+                    {podeTrocarPerfil(user.email) ? (
+                      <TrocarPerfil email={user.email} perfil={perfil} onTrocar={handleTrocarPerfil} />
+                    ) : (
+                      <p className="text-[10px] text-slate-500 truncate">{rotuloPerfil(perfil).toUpperCase()}</p>
+                    )}
                   </div>
                   <button onClick={handleLogout} className="text-slate-500 hover:text-red-400 transition-colors p-1">
                     <LogOut className="w-4 h-4" />
@@ -184,16 +226,18 @@ export default function Layout({ children, currentPageName }) {
                 <div className="flex md:hidden items-center gap-2 min-w-0">
                   <div className="bg-amber-500 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-slate-900 font-bold text-xs">
-                      {user.full_name?.charAt(0).toUpperCase() || "U"}
+                      {(nomeDe(user.email) || user.full_name)?.charAt(0).toUpperCase() || "U"}
                     </span>
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-slate-200 truncate max-w-[96px] leading-tight">
-                      {user.full_name || "Utilizador"}
+                      {nomeDe(user.email) || user.full_name || "Utilizador"}
                     </p>
-                    <p className="text-[9px] text-slate-500 truncate leading-tight">
-                      {user.perfil?.replace("_", " ").toUpperCase()}
-                    </p>
+                    {podeTrocarPerfil(user.email) ? (
+                      <TrocarPerfil email={user.email} perfil={perfil} onTrocar={handleTrocarPerfil} />
+                    ) : (
+                      <p className="text-[9px] text-slate-500 truncate leading-tight">{rotuloPerfil(perfil).toUpperCase()}</p>
+                    )}
                   </div>
                   <button
                     onClick={handleLogout}
@@ -267,7 +311,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <main className="px-4 sm:px-6 lg:px-8 pb-8">
-        {React.cloneElement(children, { userPermissions: permissions, currentUser: user })}
+        {React.cloneElement(children, { userPermissions: permissions, currentUser: utilizador })}
       </main>
     </div>
   );
