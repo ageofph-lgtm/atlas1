@@ -4,6 +4,7 @@ import {
   ESTADOS_TERMINAIS,
   MODELO_FAMILIAS,
   MODELO_FAMILIA_OUTRAS,
+  CONE_COLORS,
 } from "@/components/atlas/constants";
 
 export const isCategoriaSemEstado = (categoria) => CATEGORIAS_SEM_ESTADO.includes(categoria);
@@ -192,3 +193,26 @@ export const ESTADOS_OFICINA = ["classificada", "manutencao", "pronta"];
  */
 export const podeGerirEstadoOficina = (ciclo) =>
   !isCategoriaSemEstado(ciclo?.categoria) && ESTADOS_OFICINA.includes(estadoEfetivo(ciclo));
+
+/**
+ * Se este ciclo ainda ocupa o cone que lhe foi dado.
+ *
+ * O cone é um objeto físico: está no chão, ao lado da máquina, no pátio. Quando
+ * a máquina sai — alugada ou vendida — o cone fica cá e vai para outra. Por
+ * isso um ciclo fora do pátio, ou já fechado, não ocupa cone nenhum, mesmo que
+ * o número continue gravado no registo de quem saiu antes de isto existir.
+ *
+ * É esta a função que liberta o número para reutilização e que decide se o cone
+ * aparece no ecrã. Antes a regra estava escrita três vezes — uma em cada
+ * componente que mostra máquinas — e uma quarta vez, com outra lista de
+ * estados, dentro da validação de unicidade.
+ */
+export const cicloOcupaCone = (ciclo) =>
+  !isHistorico(ciclo) && !ESTADOS_FORA_DO_PATIO.includes(estadoEfetivo(ciclo));
+
+/** Se há cone para mostrar: ocupa um, tem cor conhecida e tem número. */
+export const temCone = (ciclo) =>
+  cicloOcupaCone(ciclo) && CONE_COLORS.some((c) => c.value === ciclo?.cone_cor) && !!ciclo?.cone_numero;
+
+/** O que se grava no ciclo quando a máquina sai e o cone fica cá. */
+export const LIBERTAR_CONE = { cone_cor: null, cone_numero: null };

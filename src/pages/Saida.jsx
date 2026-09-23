@@ -14,7 +14,7 @@ import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
-import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS, LIBERTAR_CONE } from "@/components/atlas/cicloUtils";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
 import { notificarSaida, notificarRetorno } from "@/components/atlas/mensagens";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
@@ -112,6 +112,10 @@ export default function Saida({ currentUser }) {
         estado: novoEstado,
         data_saida: now,
         tipo_saida: tipoSaida,
+        // O cone é um objeto físico: fica no pátio e vai para outra máquina.
+        // Sem isto o número continuava preso a quem já não está cá, e a máquina
+        // que saiu aparecia com cone nas listas.
+        ...LIBERTAR_CONE,
         bateria_ns: bateria.ns,
         bateria_foto_url: bateria.foto_url,
         carregador_ns: carregador.ns,

@@ -1,3 +1,4 @@
+import { temCone } from "@/components/atlas/cicloUtils";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Pencil, CalendarClock, Trash2, ChevronDown, ChevronUp, Zap, StickyNote, Check, MessageSquarePlus } from "lucide-react";
@@ -26,7 +27,7 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   const estadoCfg = ESTADO_CONFIG[estado] || ESTADO_CONFIG.entrada;
   const catCfg = CATEGORIA_CONFIG[ciclo.categoria] || CATEGORIA_CONFIG.indefinida;
   const coneColor = CONE_COLORS.find((c) => c.value === ciclo.cone_cor);
-  const hasCone = coneColor && ciclo.cone_numero;
+  const hasCone = temCone(ciclo);
 
   const specs = [];
   if (maquina?.mastro) specs.push(SPEC_LABELS.mastro?.[maquina.mastro] || maquina.mastro);

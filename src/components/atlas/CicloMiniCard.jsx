@@ -1,7 +1,8 @@
+import { temCone } from "@/components/atlas/cicloUtils";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Check, ChevronDown, ChevronUp } from "lucide-react";
-import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS } from "./constants";
+import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "./constants";
 import { estadoEfetivo, isCategoriaSemEstado } from "./cicloUtils";
 import ConeIcon from "./ConeIcon";
 import CicloCardDetails from "./CicloCardDetails";
@@ -17,7 +18,7 @@ export default function CicloMiniCard({ ciclo, maquina, canNotas, onAtualizado, 
   const estado = estadoEfetivo(ciclo);
   const estadoCfg = ESTADO_CONFIG[estado] || ESTADO_CONFIG.entrada;
   const catCfg = CATEGORIA_CONFIG[ciclo.categoria] || CATEGORIA_CONFIG.indefinida;
-  const hasCone = CONE_COLORS.some((c) => c.value === ciclo.cone_cor) && ciclo.cone_numero;
+  const hasCone = temCone(ciclo);
 
   return (
     <div
