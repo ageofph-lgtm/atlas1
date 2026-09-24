@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { executarSyncCone } from '../../shared/syncCone.js';
 
 Deno.serve(async (req) => {
   try {
@@ -77,7 +78,10 @@ Deno.serve(async (req) => {
             prioridade: ciclo.prioridade || false,
             tarefas: tarefas || [],
             isVps: isVps || false,
-            isExpress: isExpress || false
+            isExpress: isExpress || false,
+            cone_cor: ciclo.cone_cor ?? null,
+            cone_numero: ciclo.cone_numero ?? null,
+            atlas_ciclo_id: ciclo.id
           }
         })
       });
@@ -520,6 +524,15 @@ Deno.serve(async (req) => {
         total_remaining: totalRemaining,
         details
       });
+
+    // ── SYNC CONE ─────────────────────────────────────────────
+    } else if (action === 'sync_cone') {
+      if (!ciclo_id) {
+        return Response.json({ error: 'ciclo_id obrigatório' }, { status: 400 });
+      }
+
+      const result = await executarSyncCone({ ciclo_id, base44, watcherUrl, bridgeSecret });
+      return Response.json(result);
 
     } else {
       return Response.json({ error: 'Ação desconhecida: ' + action }, { status: 400 });

@@ -2,6 +2,7 @@ import { base44 } from "@/api/base44Client";
 import { CATEGORIA_CONE_MAP } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { exigirRede } from "@/components/atlas/rede";
+import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 
 /** Dias que a máquina esteve alugada, contados a partir da data de saída. */
 export const diasAlugada = (ciclo, ate = new Date()) =>
@@ -75,6 +76,10 @@ export async function registarRetorno(ciclo, { coneNumero = "", autor, nota, rea
     autor,
     nota: `Regresso ao pátio após ${dias} dias de aluguer`,
   });
+
+  // O cone do ciclo que fecha foi libertado — refletir na O.S. do Watcher.
+  // O ciclo novo ainda não tem O.S.; quando for autorizado leva o cone na criaação.
+  sincronizarConeNoWatcher(ciclo.id);
 
   return { ok: true, dias, novoCicloId: novo.id };
 }

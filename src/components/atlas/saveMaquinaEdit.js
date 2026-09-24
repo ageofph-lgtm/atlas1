@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { notificarMudancaGestao } from "@/components/atlas/mensagens";
+import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 
 /**
  * Gravação partilhada do EditMaquinaModal (inventário + autorização).
@@ -46,6 +47,10 @@ export async function saveMaquinaEdit({ maquina, ciclo, specs, cicloUpdates = {}
         autor,
         nota: "Estado alterado manualmente",
       });
+    }
+    // O cone mudou: refletir na O.S. do Watcher (se houver uma aberta).
+    if (cicloUpdates.cone_cor !== undefined || cicloUpdates.cone_numero !== undefined) {
+      sincronizarConeNoWatcher(ciclo.id);
     }
   }
 

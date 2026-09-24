@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS, LIBERTAR_CONE } from "@/components/atlas/cicloUtils";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
+import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 import { notificarSaida, notificarRetorno } from "@/components/atlas/mensagens";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
@@ -135,6 +136,8 @@ export default function Saida({ currentUser }) {
         nota: `${vendida ? "Venda" : "Saída para aluguer"}${cliente ? ` — ${cliente}` : ""}`,
       });
       await notificarSaida(saidaModal, { autor, tipoSaida, cliente });
+      // O cone ficou no pátio — libertá-lo também na O.S. do Watcher.
+      sincronizarConeNoWatcher(saidaModal.id);
 
       toast({
         title: vendida ? "✓ Venda registada" : "✓ Saída registada",
