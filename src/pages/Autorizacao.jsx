@@ -226,6 +226,16 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     );
   }
 
+  /**
+   * Recarrega sem pôr o ecrã em spinner.
+   *
+   * `loadData()` sem argumento levanta o `isLoading`, o que troca a lista
+   * inteira por um indicador e desmonta os cartões — perdendo o estado de
+   * "aberto" de cada um. Depois de tirar uma fotografia, ou de gravar uma
+   * nota, o cartão fechava-se e era preciso procurar a máquina outra vez.
+   */
+  const recarregarSilencioso = () => loadData(true);
+
   const renderCard = (c, { destaque = false, rolarParaVista = true } = {}) => {
     const m = getMaquina(c);
     return (
@@ -236,7 +246,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         canEditMaquina={canEditMaquinaRecord(currentUser)}
         canAutorizar={canAutorizar && authorizing !== c.id}
         canNotas={userPermissions?.canNotas}
-        onAtualizado={loadData}
+        onAtualizado={recarregarSilencioso}
         currentUser={currentUser}
         canPedidos={userPermissions?.canPedidos}
         canResponderPedidos={userPermissions?.canResponderPedidos}
@@ -330,7 +340,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
                 ciclo={c}
                 maquina={getMaquina(c)}
                 canNotas={userPermissions?.canNotas}
-                onAtualizado={loadData}
+                onAtualizado={recarregarSilencioso}
                 currentUser={currentUser}
                 canPedidos={userPermissions?.canPedidos}
                 canResponderPedidos={userPermissions?.canResponderPedidos}

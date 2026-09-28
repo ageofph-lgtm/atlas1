@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { instalarBase44, registo } from "@/test/base44Duplo";
+import { describe, it, expect, beforeEach } from "vitest";
+import { instalarBase44 } from "@/test/base44Duplo";
 import { coneDoCiclo, deveSincronizarCiclo, sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 
 let base44;

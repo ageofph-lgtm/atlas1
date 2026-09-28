@@ -388,6 +388,16 @@ export default function Inventario({ currentUser, userPermissions }) {
     </>
   );
 
+  /**
+   * Recarrega sem pôr o ecrã em spinner.
+   *
+   * `loadData()` sem argumento levanta o `isLoading`, o que troca a lista
+   * inteira por um indicador e desmonta os cartões — perdendo o estado de
+   * "aberto" de cada um. Depois de tirar uma fotografia, ou de gravar uma
+   * nota, o cartão fechava-se e era preciso procurar a máquina outra vez.
+   */
+  const recarregarSilencioso = () => loadData(true);
+
   const renderCard = (c, { destaque = false, rolarParaVista = true } = {}) => (
     <CicloCard
       key={c.id}
@@ -398,7 +408,7 @@ export default function Inventario({ currentUser, userPermissions }) {
       canDeleteMaquina={userPermissions?.canDeleteMaquina}
       canAutorizar={currentUser?.perfil === "administrador" || currentUser?.perfil === "gestor_frota"}
       canNotas={userPermissions?.canNotas}
-      onAtualizado={loadData}
+      onAtualizado={recarregarSilencioso}
       currentUser={currentUser}
       canPedidos={userPermissions?.canPedidos}
       canResponderPedidos={userPermissions?.canResponderPedidos}

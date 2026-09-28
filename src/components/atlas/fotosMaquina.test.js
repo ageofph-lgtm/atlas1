@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   MAX_FOTOS, fotosDe, podeAdicionar, lugaresLivres, juntarFotos, removerFoto, podeGerirFotos,
+  subirFotos, avisoDeFotos,
 } from "@/components/atlas/fotosMaquina";
 
 const u = (n) => `https://s.co/${n}.jpg`;
@@ -91,5 +92,77 @@ describe("podeGerirFotos", () => {
     for (const p of ["comercial", "gestor_frota", "visitante", null, undefined, ""]) {
       expect(podeGerirFotos(p), String(p)).toBe(false);
     }
+  });
+});
+
+describe("subirFotos", () => {
+  const comprimir = async (f) => ({ ...f, comprimido: true });
+  const upload = async (f) => ({ file_url: `https://s.co/${f.name}` });
+  const f = (nome) => ({ name: nome });
+
+  it("comprime antes de subir — uma foto de telemóvel tem megabytes a mais", async () => {
+    const vistos = [];
+    await subirFotos([f("a.jpg")], { comprimir: async (x) => { vistos.push(x.name); return x; }, upload });
+    expect(vistos).toEqual(["a.jpg"]);
+  });
+
+  it("devolve os endereços pela ordem em que foram escolhidas", async () => {
+    const r = await subirFotos([f("a.jpg"), f("b.jpg")], { comprimir, upload });
+    expect(r.urls).toEqual(["https://s.co/a.jpg", "https://s.co/b.jpg"]);
+    expect(r.recusadas).toBe(0);
+  });
+
+  it("sobe só as que cabem, contando as que a máquina já tem", async () => {
+    // Subir seis para descartar duas gastaria os dados de quem está no pátio.
+    const r = await subirFotos([f("a"), f("b"), f("c")], { jaTem: 2, comprimir, upload });
+    expect(r.urls).toHaveLength(2);
+    expect(r.recusadas).toBe(1);
+  });
+
+  it("com a máquina cheia não sobe nada", async () => {
+    let subiu = 0;
+    await subirFotos([f("a")], { jaTem: MAX_FOTOS, comprimir, upload: async () => { subiu += 1; return {}; } });
+    expect(subiu).toBe(0);
+  });
+
+  it("uma que falhe não trava as outras, e é contada", async () => {
+    const upload2 = async (x) => { if (x.name === "mau") throw new Error("413"); return { file_url: `https://s.co/${x.name}` }; };
+    const r = await subirFotos([f("a"), f("mau"), f("c")], { comprimir, upload: upload2 });
+    expect(r.urls).toEqual(["https://s.co/a", "https://s.co/c"]);
+    expect(r.falhadas).toEqual(["mau"]);
+  });
+
+  it("uma subida sem endereço conta como falha, não como foto", async () => {
+    const r = await subirFotos([f("a")], { comprimir, upload: async () => ({}) });
+    expect(r.urls).toEqual([]);
+    expect(r.falhadas).toEqual(["a"]);
+  });
+
+  it("sem ficheiros não faz nada", async () => {
+    expect(await subirFotos([], { comprimir, upload })).toMatchObject({ urls: [], recusadas: 0 });
+    expect(await subirFotos(undefined, { comprimir, upload })).toMatchObject({ urls: [] });
+  });
+});
+
+describe("avisoDeFotos", () => {
+  it("cala-se quando entrou tudo", () => {
+    expect(avisoDeFotos({ recusadas: 0, falhadas: [] })).toBe(null);
+    expect(avisoDeFotos()).toBe(null);
+  });
+
+  it("diz quantas não couberam, com a concordância certa", () => {
+    expect(avisoDeFotos({ recusadas: 1 })).toContain("1 não coube");
+    expect(avisoDeFotos({ recusadas: 3 })).toContain("3 não couberam");
+  });
+
+  it("diz quantas não subiram", () => {
+    expect(avisoDeFotos({ falhadas: ["a"] })).toContain("1 não subiu");
+    expect(avisoDeFotos({ falhadas: ["a", "b"] })).toContain("2 não subiram");
+  });
+
+  it("junta os dois motivos quando ambos acontecem", () => {
+    const aviso = avisoDeFotos({ recusadas: 1, falhadas: ["a"] });
+    expect(aviso).toMatch(/não coube.*não subiu/);
+    expect(aviso.endsWith(".")).toBe(true);
   });
 });
