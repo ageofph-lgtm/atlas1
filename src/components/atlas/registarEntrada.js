@@ -2,6 +2,7 @@ import { base44 } from "@/api/base44Client";
 import { classificarCiclosAbertos, isCategoriaSemEstado } from "@/components/atlas/cicloUtils";
 import { CATEGORIA_CONE_MAP } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
+import { juntarFotos } from "@/components/atlas/fotosMaquina";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
 import { notificarEntrada } from "@/components/atlas/mensagens";
 import { exigirRede } from "@/components/atlas/rede";
@@ -24,6 +25,7 @@ export async function registarEntrada({
   ano = "",
   fotoUrl = "",
   specs = {},
+  fotos = [],
   categoria,
   estadoInicial = "classificada",
   coneNumero = "",
@@ -95,6 +97,7 @@ export async function registarEntrada({
       h3: specs.h3 || "",
       bateria: specs.bateria || "",
       horimetro: specs.horimetro || "",
+      fotos: fotos || [],
       observacoes: notas || "",
     });
     maquinaId = nova.id;
@@ -114,6 +117,9 @@ export async function registarEntrada({
       // Em branco não apaga o que já lá estava: o horímetro pode ter sido
       // apontado noutra entrada e quem regista agora pode não o ter lido.
       horimetro: specs.horimetro || existingMaquina.horimetro || "",
+      // As fotos de uma reentrada juntam-se às que a máquina já tinha, dentro
+      // do limite — as antigas mostram como ela estava da última vez.
+      fotos: juntarFotos(existingMaquina, fotos || []).fotos,
       observacoes: notas,
     });
   }

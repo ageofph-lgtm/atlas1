@@ -1,25 +1,26 @@
 import React, { useState, useRef } from "react";
 import { Camera, Loader2, X, Images } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { comprimirFoto } from "@/components/atlas/imageUtils";
-import { exigirRede } from "@/components/atlas/rede";
-import { fotosDe, juntarFotos, removerFoto, podeAdicionar, lugaresLivres, MAX_FOTOS } from "@/components/atlas/fotosMaquina";
+import { subirFotos, avisoDeFotos, MAX_FOTOS } from "@/components/atlas/fotosMaquina";
 import FotoModal from "@/components/atlas/FotoModal";
 
 /**
- * As fotografias do estado da máquina, guardadas no cartão.
+ * As fotografias do estado da máquina.
  *
- * Quem as tira é quem anda no pátio — a logística — e o administrador. Toda a
- * gente as vê: é para isso que existem, para não ser preciso ir lá fora saber
- * como está a máquina.
+ * Trabalha sobre uma lista e um `onGuardar`, sem saber de onde vem nem para
+ * onde vai. É o que lhe permite servir os três momentos em que se fotografa uma
+ * máquina: no cartão (grava já na máquina), no registo de entrada (a máquina
+ * ainda não existe, as fotos ficam à espera de ser criadas com ela) e na saída.
+ *
+ * Antes só existia no cartão, e para fotografar uma máquina era preciso ir ao
+ * inventário procurá-la — mesmo tendo-a à frente no momento em que chega ou sai.
  */
-export default function FotosMaquina({ maquina, podeGerir, onAtualizado }) {
+export default function FotosMaquina({ fotos = [], onGuardar, podeGerir = true, titulo = "", subirFicheiro }) {
   const [aGravar, setAGravar] = useState(false);
   const [erro, setErro] = useState("");
   const [aVer, setAVer] = useState(null);
   const inputRef = useRef(null);
 
-  const fotos = fotosDe(maquina);
   if (!fotos.length && !podeGerir) return null;
 
   const escolher = async (e) => {
@@ -30,23 +31,13 @@ export default function FotosMaquina({ maquina, podeGerir, onAtualizado }) {
     setErro("");
     setAGravar(true);
     try {
-      exigirRede("Guardar fotografias");
-      // Só se sobem as que cabem: subir seis para descartar duas seria gastar
-      // os dados de quem está no pátio com o telemóvel.
-      const cabem = ficheiros.slice(0, lugaresLivres(maquina));
-      const excedente = ficheiros.length - cabem.length;
-
-      const urls = [];
-      for (const ficheiro of cabem) {
-        const comprimido = await comprimirFoto(ficheiro);
-        const { file_url } = await base44.integrations.Core.UploadPublicFile({ file: comprimido });
-        if (file_url) urls.push(file_url);
-      }
-
-      const { fotos: novas } = juntarFotos(maquina, urls);
-      await base44.entities.Maquina.update(maquina.id, { fotos: novas });
-      if (excedente > 0) setErro(`Só cabem ${MAX_FOTOS} fotografias — ${excedente} não ${excedente === 1 ? "foi guardada" : "foram guardadas"}.`);
-      onAtualizado?.();
+      const r = await subirFotos(ficheiros, {
+        jaTem: fotos.length,
+        comprimir: comprimirFoto,
+        upload: subirFicheiro,
+      });
+      if (r.urls.length) await onGuardar([...fotos, ...r.urls]);
+      setErro(avisoDeFotos(r) || "");
     } catch (err) {
       setErro(err?.message || "Não foi possível guardar as fotografias.");
     }
@@ -57,22 +48,23 @@ export default function FotosMaquina({ maquina, podeGerir, onAtualizado }) {
     setErro("");
     setAGravar(true);
     try {
-      exigirRede("Apagar a fotografia");
-      await base44.entities.Maquina.update(maquina.id, { fotos: removerFoto(maquina, url) });
-      onAtualizado?.();
+      await onGuardar(fotos.filter((u) => u !== url));
     } catch (err) {
       setErro(err?.message || "Não foi possível apagar a fotografia.");
     }
     setAGravar(false);
   };
 
+  const cheio = fotos.length >= MAX_FOTOS;
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
         <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">Fotografias da máquina</h4>
         <span className="num text-[10px] text-slate-600">{fotos.length}/{MAX_FOTOS}</span>
-        {podeGerir && podeAdicionar(maquina) && (
+        {podeGerir && !cheio && (
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
             disabled={aGravar}
             className="ml-auto text-[10px] text-amber-400/80 hover:text-amber-400 flex items-center gap-1 disabled:opacity-50"
@@ -90,8 +82,9 @@ export default function FotosMaquina({ maquina, podeGerir, onAtualizado }) {
       ) : (
         <div className="grid grid-cols-4 gap-1.5">
           {fotos.map((url) => (
-            <div key={url} className="relative group">
+            <div key={url} className="relative">
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); setAVer(url); }}
                 className="block w-full aspect-square rounded overflow-hidden border border-slate-700 hover:border-amber-500 transition-colors"
               >
@@ -99,6 +92,7 @@ export default function FotosMaquina({ maquina, podeGerir, onAtualizado }) {
               </button>
               {podeGerir && (
                 <button
+                  type="button"
                   onClick={(e) => { e.stopPropagation(); apagar(url); }}
                   disabled={aGravar}
                   aria-label="Apagar esta fotografia"
@@ -113,7 +107,7 @@ export default function FotosMaquina({ maquina, podeGerir, onAtualizado }) {
         </div>
       )}
 
-      {erro && <p className="text-[11px] text-red-400 mt-1.5">{erro}</p>}
+      {erro && <p className="text-[11px] text-amber-400 mt-1.5">{erro}</p>}
 
       <input
         ref={inputRef}
@@ -124,7 +118,7 @@ export default function FotosMaquina({ maquina, podeGerir, onAtualizado }) {
         onChange={escolher}
         className="hidden"
       />
-      <FotoModal open={!!aVer} url={aVer} titulo={`Máquina ${maquina?.serie || ""}`} onClose={() => setAVer(null)} />
+      <FotoModal open={!!aVer} url={aVer} titulo={titulo} onClose={() => setAVer(null)} />
     </div>
   );
 }

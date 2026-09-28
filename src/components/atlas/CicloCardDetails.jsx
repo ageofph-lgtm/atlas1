@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { SPEC_LABELS } from "./constants";
 import MaquinaNotas from "./MaquinaNotas";
-import FotosMaquina from "./FotosMaquina";
+import FotosDaMaquina from "./FotosDaMaquina";
 import { podeGerirFotos } from "./fotosMaquina";
 import PedidosMaquina from "./PedidosMaquina";
 import FotoModal from "./FotoModal";
@@ -91,7 +91,7 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onAtualizad
 
       {/* Fotografias do estado da máquina no pátio. Tira-as quem lá anda;
           vê-as toda a gente, que é para isso que existem. */}
-      <FotosMaquina
+      <FotosDaMaquina
         maquina={maquina}
         podeGerir={podeGerirFotos(currentUser?.perfil)}
         onAtualizado={onAtualizado}

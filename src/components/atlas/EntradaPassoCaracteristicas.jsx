@@ -2,11 +2,13 @@ import React from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { SPEC_OPTIONS } from "@/components/atlas/constants";
 import OptionButton from "@/components/atlas/OptionButton";
+import FotosMaquina from "@/components/atlas/FotosMaquina";
+import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
 
 /**
  * Passo 2 — as características. Numa máquina já conhecida vêm preenchidas.
  */
-export default function EntradaPassoCaracteristicas({ NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
+export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
   return (
     <div className="space-y-5">
       <div>
@@ -48,6 +50,7 @@ export default function EntradaPassoCaracteristicas({ NOTA_LABELS, handleAcessor
           className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
         />
       </div>
+
 
       <div>
         <h3 className="text-sm font-medium text-slate-300 mb-2">Vias do Mastro</h3>
@@ -95,6 +98,18 @@ export default function EntradaPassoCaracteristicas({ NOTA_LABELS, handleAcessor
             );
           })}
         </div>
+      </div>
+
+      {/* A máquina está à frente de quem regista: é agora que se fotografa, e
+          não depois, à procura dela no inventário. Ainda não tem id, por isso
+          as fotos ficam em memória e são gravadas com ela. */}
+      <div className="border-t border-slate-700 pt-4">
+        <FotosMaquina
+          fotos={fotos}
+          onGuardar={setFotos}
+          titulo="Máquina a registar"
+          subirFicheiro={subirParaOArmazenamento}
+        />
       </div>
 
       <div>

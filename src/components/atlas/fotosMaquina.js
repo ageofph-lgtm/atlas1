@@ -41,3 +41,41 @@ export const removerFoto = (maquina, url) => fotosDe(maquina).filter((u) => u !=
 
 /** Quem pode mexer nas fotografias do pátio. */
 export const podeGerirFotos = (perfil) => perfil === "logistica" || perfil === "administrador";
+
+/**
+ * Comprime e sobe as fotografias que cabem, e diz o que ficou de fora.
+ *
+ * Separado do componente porque é usado em três sítios — o cartão da máquina, o
+ * registo de entrada e a saída — e porque a parte que interessa testar (quantas
+ * cabem, o que acontece quando uma falha) não precisa de browser nenhum.
+ *
+ * Sobe só as que cabem: subir seis para descartar duas gastaria os dados de
+ * quem está no pátio com o telemóvel.
+ */
+export async function subirFotos(ficheiros, { jaTem = 0, comprimir, upload } = {}) {
+  const cabem = Math.max(0, MAX_FOTOS - jaTem);
+  const aSubir = [...(ficheiros || [])].slice(0, cabem);
+  const recusadas = Math.max(0, (ficheiros?.length || 0) - aSubir.length);
+
+  const urls = [];
+  const falhadas = [];
+  for (const ficheiro of aSubir) {
+    try {
+      const { file_url } = await upload(await comprimir(ficheiro));
+      if (file_url) urls.push(file_url);
+      else falhadas.push(ficheiro?.name || "?");
+    } catch (_e) {
+      falhadas.push(ficheiro?.name || "?");
+    }
+  }
+  return { urls, recusadas, falhadas };
+}
+
+/** A frase que explica o que não entrou. `null` quando entrou tudo. */
+export function avisoDeFotos({ recusadas = 0, falhadas = [] } = {}) {
+  const partes = [];
+  if (recusadas > 0) partes.push(`só cabem ${MAX_FOTOS} fotografias — ${recusadas} ${recusadas === 1 ? "não coube" : "não couberam"}`);
+  if (falhadas.length > 0) partes.push(`${falhadas.length} ${falhadas.length === 1 ? "não subiu" : "não subiram"}`);
+  if (!partes.length) return null;
+  return partes.join("; ").replace(/^./, (c) => c.toUpperCase()) + ".";
+}

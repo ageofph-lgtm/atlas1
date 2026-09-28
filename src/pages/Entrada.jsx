@@ -29,6 +29,8 @@ export default function Entrada({ currentUser }) {
   const [reentradaConfirmada, setReentradaConfirmada] = useState(false);
   const [searching, setSearching] = useState(false);
   const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
+  // As fotos vivem aqui até a máquina existir: só então têm onde ser gravadas.
+  const [fotos, setFotos] = useState([]);
   const [categoria, setCategoria] = useState("");
   const [estadoInicial, setEstadoInicial] = useState("classificada");
   const [coneNumero, setConeNumero] = useState("");
@@ -48,6 +50,8 @@ export default function Entrada({ currentUser }) {
     if (r.modelo) setModelo(r.modelo);
     if (r.ano) setAno(r.ano);
     if (r.specs) setSpecs(r.specs);
+    // As fotos já subiram para o armazenamento — perder o rascunho não as deve perder.
+    if (Array.isArray(r.fotos)) setFotos(r.fotos);
     if (r.categoria) setCategoria(r.categoria);
     if (r.estadoInicial) setEstadoInicial(r.estadoInicial);
     if (r.coneNumero) setConeNumero(r.coneNumero);
@@ -59,8 +63,8 @@ export default function Entrada({ currentUser }) {
   useEffect(() => {
     // Só vale a pena guardar a partir do momento em que há série.
     if (!serie) return;
-    guardarRascunho("entrada", { serie, modelo, ano, specs, categoria, estadoInicial, coneNumero, notas, step });
-  }, [serie, modelo, ano, specs, categoria, estadoInicial, coneNumero, notas, step]);
+    guardarRascunho("entrada", { serie, modelo, ano, specs, fotos, categoria, estadoInicial, coneNumero, notas, step });
+  }, [serie, modelo, ano, specs, fotos, categoria, estadoInicial, coneNumero, notas, step]);
 
   const NOTA_LABELS = ["Duplicada", "Não funciona", "Garfos 2400", "Mau estado"];
   const toggleNotaLabel = (label) => {
@@ -176,7 +180,8 @@ export default function Entrada({ currentUser }) {
     setCicloNoPatio(null);
     setCicloFora(null);
     setReentradaConfirmada(false);
-    setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
+    setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
+    setFotos([]);
     setCategoria("");
     setEstadoInicial("classificada");
     setConeNumero("");
@@ -204,7 +209,7 @@ export default function Entrada({ currentUser }) {
     setIsSubmitting(true);
     try {
       const r = await registarEntrada({
-        serie, modelo, ano, fotoUrl, specs, categoria,
+        serie, modelo, ano, fotoUrl, specs, fotos, categoria,
         estadoInicial, coneNumero, notas,
         existingMaquina, reentradaConfirmada, autor,
       });
@@ -267,6 +272,8 @@ export default function Entrada({ currentUser }) {
 
       {step === 2 && (
         <EntradaPassoCaracteristicas
+            fotos={fotos}
+            setFotos={setFotos}
           specs={specs} setSpecs={setSpecs}
           handleSpecSelect={handleSpecSelect} handleAcessorioToggle={handleAcessorioToggle}
           notas={notas} setNotas={setNotas}

@@ -20,6 +20,8 @@ import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 import { notificarSaida, notificarRetorno } from "@/components/atlas/mensagens";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
+import FotosDaMaquina from "@/components/atlas/FotosDaMaquina";
+import { podeGerirFotos } from "@/components/atlas/fotosMaquina";
 
 export default function Saida({ currentUser }) {
   const { toast } = useToast();
@@ -77,6 +79,16 @@ export default function Saida({ currentUser }) {
   }, [maquinas]);
 
   const getMaquina = (c) => maquinaMap[c.maquina_id] || (c.serie && maquinaMap["serie:" + c.serie]) || null;
+
+  /**
+   * Recarrega sem pôr o ecrã em spinner.
+   *
+   * `loadData()` sem argumento levanta o `isLoading`, o que troca a lista
+   * inteira por um indicador e desmonta o que estiver aberto por cima. Depois
+   * de tirar uma fotografia isso fechava o modal e obrigava a procurar a
+   * máquina outra vez para tirar a seguinte.
+   */
+  const recarregarSilencioso = () => loadData(true);
 
   // A página é de acção rápida, não de catálogo: só listamos cards quando o
   // utilizador procura alguma coisa, para a lista toda não poluir o ecrã.
@@ -290,7 +302,7 @@ export default function Saida({ currentUser }) {
                     </div>
                   )}
                   <div className="mb-2">
-                    <MaquinaNotas maquina={m} canNotas={currentUser?.perfil !== "visitante"} onSaved={loadData} />
+                    <MaquinaNotas maquina={m} canNotas={currentUser?.perfil !== "visitante"} onSaved={recarregarSilencioso} />
                   </div>
                   <button
                     onClick={() => openSaidaModal(c)}
@@ -340,7 +352,7 @@ export default function Saida({ currentUser }) {
                     )}
                   </div>
                   <div className="mb-2">
-                    <MaquinaNotas maquina={m} canNotas={currentUser?.perfil !== "visitante"} onSaved={loadData} />
+                    <MaquinaNotas maquina={m} canNotas={currentUser?.perfil !== "visitante"} onSaved={recarregarSilencioso} />
                   </div>
                   <button
                     onClick={() => openRetornoModal(c)}
@@ -519,6 +531,17 @@ export default function Saida({ currentUser }) {
               <p className="text-[10px] text-slate-600 mt-1.5">
                 Fica guardado no card da máquina. As fotos só abrem quando alguém as clica.
               </p>
+            </div>
+
+            {/* O estado em que a máquina sai fica registado enquanto ela ainda
+                está à frente de quem a entrega. Depois de sair já não se
+                fotografa. */}
+            <div className="border-t border-slate-700 pt-3">
+              <FotosDaMaquina
+                maquina={saidaModal ? getMaquina(saidaModal) : null}
+                podeGerir={podeGerirFotos(currentUser?.perfil)}
+                onAtualizado={recarregarSilencioso}
+              />
             </div>
           </div>
           <DialogFooter>
