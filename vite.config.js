@@ -21,7 +21,11 @@ export default defineConfig({
     // não há é uma fila de escrita, que precisaria de regras de conflito que
     // este sistema ainda não tem.
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt', não 'autoUpdate': o service worker novo FICA À ESPERA em vez
+      // de se ativar sozinho. É isso que impede a versão nova de apagar a cache
+      // debaixo de um separador que está aberto a meio de um registo. A troca
+      // acontece quando a pessoa carrega no botão do aviso, e só então.
+      registerType: 'prompt',
       manifest: {
         name: 'ATLAS',
         short_name: 'ATLAS',

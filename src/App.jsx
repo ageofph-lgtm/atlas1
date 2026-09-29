@@ -8,6 +8,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import FalhaAoArrancar from '@/components/FalhaAoArrancar';
+import AvisoAtualizacao from '@/components/AvisoAtualizacao';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -75,6 +76,10 @@ function App() {
 
   return (
     <AuthProvider>
+      {/* Fora do <Routes> e fora do arranque: o aviso tem de aparecer mesmo no
+          ecrã de entrada ou no de falha, que são precisamente os sítios onde
+          uma versão presa se nota. */}
+      <AvisoAtualizacao />
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <NavigationTracker />
