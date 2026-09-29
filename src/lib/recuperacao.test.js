@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
-  CHAVE_TENTATIVA, podeTentarRecuperar, marcarTentativa, limparTentativa,
+  CHAVE_TENTATIVA, JANELA_RECUPERACAO, podeTentarRecuperar, marcarTentativa, limparTentativa,
   limparAplicacaoEmCache, recuperarERecarregar, eErroDeVersaoPresa,
 } from "@/lib/recuperacao";
 
@@ -30,6 +30,18 @@ describe("a marca de tentativa", () => {
   it("depois de marcada, não tenta outra vez", () => {
     marcarTentativa(arm);
     expect(podeTentarRecuperar(arm)).toBe(false);
+  });
+
+  it("passada a janela, volta a poder tentar", () => {
+    const t0 = 1_000_000;
+    marcarTentativa(arm, t0);
+    expect(podeTentarRecuperar(arm, t0 + JANELA_RECUPERACAO - 1)).toBe(false);
+    expect(podeTentarRecuperar(arm, t0 + JANELA_RECUPERACAO)).toBe(true);
+  });
+
+  it("uma marca ilegível não tranca para sempre", () => {
+    arm.setItem(CHAVE_TENTATIVA, "isto não é um número");
+    expect(podeTentarRecuperar(arm)).toBe(true);
   });
 
   it("limpar a marca volta a permitir", () => {
@@ -171,5 +183,40 @@ describe("eErroDeVersaoPresa", () => {
     for (const e of [null, undefined, "", "   ", {}, 0]) {
       expect(eErroDeVersaoPresa(e), JSON.stringify(e)).toBe(false);
     }
+  });
+});
+
+describe("o ciclo de recargas é impossível", () => {
+  it("uma falha que se repete só recarrega uma vez", async () => {
+    // Foi este o defeito medido em browser: a marca era limpa a cada arranque,
+    // por isso falha → recarrega → arranca → limpa → falha, 88 vezes seguidas.
+    const arm = memoria();
+    let recargas = 0;
+    const tentar = (agora) => recuperarERecarregar({
+      serviceWorker: { getRegistrations: async () => [] },
+      caches: { keys: async () => [], delete: async () => true },
+      armazenamento: arm,
+      recarregar: () => { recargas += 1; },
+      agora,
+    });
+
+    // Dez arranques seguidos, todos com a mesma falha, em poucos segundos.
+    for (let i = 0; i < 10; i += 1) await tentar(1_000_000 + i * 1000);
+    expect(recargas).toBe(1);
+  });
+
+  it("mas uma falha nova, muito depois, ainda se recupera", async () => {
+    const arm = memoria();
+    let recargas = 0;
+    const tentar = (agora) => recuperarERecarregar({
+      serviceWorker: { getRegistrations: async () => [] },
+      caches: { keys: async () => [], delete: async () => true },
+      armazenamento: arm,
+      recarregar: () => { recargas += 1; },
+      agora,
+    });
+    await tentar(1_000_000);
+    await tentar(1_000_000 + JANELA_RECUPERACAO);
+    expect(recargas).toBe(2);
   });
 });

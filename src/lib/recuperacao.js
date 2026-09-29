@@ -20,6 +20,19 @@
 export const CHAVE_TENTATIVA = "atlas:recuperacao";
 
 /**
+ * Quanto tempo tem de passar até se poder tentar recuperar outra vez.
+ *
+ * A primeira versão guardava só um "já tentei" e limpava-o no arranque
+ * seguinte, o que não travava nada: falha → recarrega → arranca → limpa a marca
+ * → falha → recarrega, sem fim. Foi medido em browser, 88 recargas.
+ *
+ * Com uma hora de intervalo, um problema passageiro recupera-se à primeira e um
+ * problema persistente para na primeira tentativa — a pessoa fica com o ecrã de
+ * falha, que explica e tem botões, em vez de um separador a piscar.
+ */
+export const JANELA_RECUPERACAO = 60 * 60 * 1000;
+
+/**
  * Se vale a pena tentar recuperar agora.
  *
  * Só uma vez por separador. Uma segunda tentativa seguida significaria que
@@ -27,13 +40,15 @@ export const CHAVE_TENTATIVA = "atlas:recuperacao";
  * infinito, que é pior do que o ecrã preso: pelo menos o ecrã preso deixa ler
  * uma mensagem.
  */
-export function podeTentarRecuperar(armazenamento) {
+export function podeTentarRecuperar(armazenamento, agora = Date.now()) {
   // Sem armazenamento nenhum não se tenta. O `?.` sozinho não chegava: devolvia
-  // `undefined`, que é diferente de "1" e portanto dizia que sim — justamente o
-  // lado que abre a porta ao ciclo de recargas.
+  // `undefined`, que é diferente de uma marca válida e portanto dizia que sim —
+  // justamente o lado que abre a porta ao ciclo de recargas.
   if (!armazenamento?.getItem) return false;
   try {
-    return armazenamento.getItem(CHAVE_TENTATIVA) !== "1";
+    const marca = Number(armazenamento.getItem(CHAVE_TENTATIVA));
+    if (!Number.isFinite(marca) || marca <= 0) return true;
+    return agora - marca >= JANELA_RECUPERACAO;
   } catch (_e) {
     // Sem armazenamento não há como saber se já se tentou. Não tentar é o lado
     // seguro: um ciclo de recargas é pior do que um ecrã parado.
@@ -41,15 +56,22 @@ export function podeTentarRecuperar(armazenamento) {
   }
 }
 
-export function marcarTentativa(armazenamento) {
+export function marcarTentativa(armazenamento, agora = Date.now()) {
   try {
-    armazenamento?.setItem(CHAVE_TENTATIVA, "1");
+    armazenamento?.setItem(CHAVE_TENTATIVA, String(agora));
   } catch (_e) {
     // se não se consegue marcar, o `podeTentarRecuperar` já devolveu false
   }
 }
 
-/** Apaga a marca — chamado quando a aplicação arranca bem. */
+/**
+ * Apaga a marca.
+ *
+ * NÃO se chama no arranque: era isso que anulava o travão. O código do arranque
+ * corre antes de a aplicação desenhar seja o que for, por isso "arrancou" ali
+ * não quer dizer nada — e limpar a marca aí transformava a proteção numa
+ * decoração.
+ */
 export function limparTentativa(armazenamento) {
   try {
     armazenamento?.removeItem(CHAVE_TENTATIVA);
@@ -98,9 +120,9 @@ export async function limparAplicacaoEmCache({ serviceWorker, caches } = {}) {
  * Devolve `false` quando já se tinha tentado — quem chama usa isso para mostrar
  * uma mensagem em vez de insistir.
  */
-export async function recuperarERecarregar({ serviceWorker, caches, armazenamento, recarregar } = {}) {
-  if (!podeTentarRecuperar(armazenamento)) return false;
-  marcarTentativa(armazenamento);
+export async function recuperarERecarregar({ serviceWorker, caches, armazenamento, recarregar, agora = Date.now() } = {}) {
+  if (!podeTentarRecuperar(armazenamento, agora)) return false;
+  marcarTentativa(armazenamento, agora);
   await limparAplicacaoEmCache({ serviceWorker, caches });
   recarregar?.();
   return true;
