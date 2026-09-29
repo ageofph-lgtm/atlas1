@@ -33,6 +33,7 @@ export default function Entrada({ currentUser }) {
   const [fotos, setFotos] = useState([]);
   const [categoria, setCategoria] = useState("");
   const [estadoInicial, setEstadoInicial] = useState("classificada");
+  const [coneCor, setConeCor] = useState("");
   const [coneNumero, setConeNumero] = useState("");
   const [coneError, setConeError] = useState("");
   const [notas, setNotas] = useState("");
@@ -54,6 +55,7 @@ export default function Entrada({ currentUser }) {
     if (Array.isArray(r.fotos)) setFotos(r.fotos);
     if (r.categoria) setCategoria(r.categoria);
     if (r.estadoInicial) setEstadoInicial(r.estadoInicial);
+    if (r.coneCor) setConeCor(r.coneCor);
     if (r.coneNumero) setConeNumero(r.coneNumero);
     if (r.notas) setNotas(r.notas);
     if (r.step) setStep(r.step);
@@ -63,8 +65,8 @@ export default function Entrada({ currentUser }) {
   useEffect(() => {
     // Só vale a pena guardar a partir do momento em que há série.
     if (!serie) return;
-    guardarRascunho("entrada", { serie, modelo, ano, specs, fotos, categoria, estadoInicial, coneNumero, notas, step });
-  }, [serie, modelo, ano, specs, fotos, categoria, estadoInicial, coneNumero, notas, step]);
+    guardarRascunho("entrada", { serie, modelo, ano, specs, fotos, categoria, estadoInicial, coneCor, coneNumero, notas, step });
+  }, [serie, modelo, ano, specs, fotos, categoria, estadoInicial, coneCor, coneNumero, notas, step]);
 
   const NOTA_LABELS = ["Duplicada", "Não funciona", "Garfos 2400", "Mau estado"];
   const toggleNotaLabel = (label) => {
@@ -149,14 +151,20 @@ export default function Entrada({ currentUser }) {
   // Sucata e indefinida não seguem o fluxo de preparação — ficam em "indefinido".
   const semEstado = isCategoriaSemEstado(categoria);
   const estadoFinal = semEstado ? "indefinido" : estadoInicial;
-  const coneCor = CATEGORIA_CONE_MAP[categoria] || null;
   const needsCone = !!coneCor;
   const canSubmit = categoria && (!needsCone || (coneNumero && !coneError));
+
+  // Ao mudar de categoria, a cor do cone volta à da categoria — só o UTS a
+  // deixa escolher, e mesmo esse começa com vermelho (o recomendado).
+  const handleSetCategoria = (cat) => {
+    setCategoria(cat);
+    setConeCor(CATEGORIA_CONE_MAP[cat] || "");
+  };
 
   const validateCone = async () => {
     if (!needsCone || !coneNumero) { setConeError(""); return; }
     try {
-      const result = await validateConeNumber(categoria, coneNumero);
+      const result = await validateConeNumber(categoria, coneNumero, undefined, coneCor);
       setConeError(result.free ? "" : `Cone ${coneNumero} ${coneCor} já está em uso — NS ${result.conflito.serie}`);
     } catch (_e) {
       // Sem rede não se consegue saber se o cone está livre. Não se inventa uma
@@ -184,6 +192,7 @@ export default function Entrada({ currentUser }) {
     setFotos([]);
     setCategoria("");
     setEstadoInicial("classificada");
+    setConeCor("");
     setConeNumero("");
     setConeError("");
     setNotas("");
@@ -210,7 +219,7 @@ export default function Entrada({ currentUser }) {
     try {
       const r = await registarEntrada({
         serie, modelo, ano, fotoUrl, specs, fotos, categoria,
-        estadoInicial, coneNumero, notas,
+        estadoInicial, coneCor, coneNumero, notas,
         existingMaquina, reentradaConfirmada, autor,
       });
 
@@ -285,10 +294,11 @@ export default function Entrada({ currentUser }) {
       {step === 3 && (
         <EntradaPassoClassificacao
           serie={serie} modelo={modelo}
-          categoria={categoria} setCategoria={setCategoria}
+          categoria={categoria} setCategoria={handleSetCategoria}
           estadoInicial={estadoInicial} setEstadoInicial={setEstadoInicial}
           canChooseEstado={canChooseEstado} semEstado={semEstado}
-          coneCor={coneCor} needsCone={needsCone}
+          coneCor={coneCor} setConeCor={setConeCor}
+          needsCone={needsCone}
           coneNumero={coneNumero} setConeNumero={setConeNumero}
           coneError={coneError} setConeError={setConeError} validateCone={validateCone}
           reentradaConfirmada={reentradaConfirmada}

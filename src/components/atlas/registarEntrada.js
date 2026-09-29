@@ -28,6 +28,7 @@ export async function registarEntrada({
   fotos = [],
   categoria,
   estadoInicial = "classificada",
+  coneCor: coneCorParam,
   coneNumero = "",
   notas = "",
   existingMaquina = null,
@@ -37,7 +38,9 @@ export async function registarEntrada({
   exigirRede("Registar a entrada");
   const semEstado = isCategoriaSemEstado(categoria);
   const estadoFinal = semEstado ? "indefinido" : estadoInicial;
-  const coneCor = CATEGORIA_CONE_MAP[categoria] || null;
+  // A cor do cone vem do formulário quando este a deixa escolher (UTS pode
+  // levar amarelo); caso contrário é a cor por omissão da categoria.
+  const coneCor = coneCorParam || CATEGORIA_CONE_MAP[categoria] || null;
   const needsCone = !!coneCor;
 
   // Trava: uma série não pode ter dois ciclos abertos ao mesmo tempo. Ter
@@ -55,7 +58,7 @@ export async function registarEntrada({
 
   // Trava: o cone (cor + nº) tem de ser único entre as máquinas no pátio.
   if (needsCone && coneNumero) {
-    const result = await validateConeNumber(categoria, coneNumero);
+    const result = await validateConeNumber(categoria, coneNumero, undefined, coneCor);
     if (!result.free) {
       return {
         ok: false,

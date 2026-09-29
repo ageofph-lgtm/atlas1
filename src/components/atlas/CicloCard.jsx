@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Pencil, CalendarClock, Trash2, ChevronDown, ChevronUp, Zap, StickyNote, Check, MessageSquarePlus } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
-import { estadoEfetivo, isCategoriaSemEstado } from "./cicloUtils";
+import { estadoEfetivo, isCategoriaSemEstado, mostrarBadgeUts } from "./cicloUtils";
 import ConeIcon from "./ConeIcon";
+import UtsBadge from "./UtsBadge";
 import CicloCardDetails from "./CicloCardDetails";
 import MaquinaNotas from "./MaquinaNotas";
 
@@ -108,6 +109,7 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
           <span className="num text-2xl font-black tracking-wider text-slate-100 leading-none">
             {ciclo.cone_numero}
           </span>
+          {mostrarBadgeUts(ciclo) && <UtsBadge />}
           <span className="text-[10px] text-slate-500 uppercase ml-auto tracking-wide">{ciclo.cone_cor}</span>
         </div>
       ) : (

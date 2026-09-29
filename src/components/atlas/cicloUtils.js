@@ -210,6 +210,17 @@ export const podeGerirEstadoOficina = (ciclo) =>
 export const cicloOcupaCone = (ciclo) =>
   !isHistorico(ciclo) && !ESTADOS_FORA_DO_PATIO.includes(estadoEfetivo(ciclo));
 
+/**
+ * Se uma UTS precisa do badge "UTS" junto ao cone.
+ *
+ * UTS com cone vermelho não precisa — é a distinção visual natural. UTS com
+ * cone amarelo (falta de vermelhos físicos) confunde-se com STR, e o badge é
+ * a única forma de as separar à vista. A regra auto-resolve quando os cones
+ * vermelhos chegarem: troca-se o cone, o campo fica 'vermelho', o badge some.
+ */
+export const mostrarBadgeUts = (ciclo) =>
+  ciclo?.categoria === "uts" && !!ciclo?.cone_cor && ciclo.cone_cor !== "vermelho";
+
 /** Se há cone para mostrar: ocupa um, tem cor conhecida e tem número. */
 export const temCone = (ciclo) =>
   cicloOcupaCone(ciclo) && CONE_COLORS.some((c) => c.value === ciclo?.cone_cor) && !!ciclo?.cone_numero;

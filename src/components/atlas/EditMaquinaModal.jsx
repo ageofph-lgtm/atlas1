@@ -30,6 +30,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
   const [clienteSaida, setClienteSaida] = useState("");
   const [diasAlugada, setDiasAlugada] = useState("");
   const [coneNumero, setConeNumero] = useState("");
+  const [coneCor, setConeCor] = useState("");
   const [coneError, setConeError] = useState("");
   const [saving, setSaving] = useState(false);
   const [serie, setSerie] = useState("");
@@ -43,7 +44,11 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
   // poder mexer — em branco pareceria um campo que se esqueceram de pôr.
   const explicaEstadoBloqueado = !isAdmin && !canEditEstado;
   const serieChanged = serie.trim().length > 0 && serie.trim() !== (maquina?.serie || "");
-  const effectiveConeCor = CATEGORIA_CONE_MAP[categoria] || null;
+  // A cor do cone pode ser escolhida no UTS (vermelho por omissão, amarelo
+  // quando faltam vermelhos físicos). As restantes categorias ficam com a cor
+  // fixa. O que estiver gravado no ciclo tem prioridade sobre o mapa.
+  const coneCorEditavel = categoria === "uts";
+  const effectiveConeCor = coneCor || CATEGORIA_CONE_MAP[categoria] || null;
   const needsCone = !!effectiveConeCor;
   // Sucata/indefinida não têm estado de fluxo — ficam sempre em "indefinido".
   const semEstado = isCategoriaSemEstado(categoria);
@@ -66,6 +71,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
       setClienteSaida(ciclo?.reserva_cliente || "");
       setDiasAlugada(ciclo?.dias_alugada ?? "");
       setConeNumero(ciclo?.cone_numero || "");
+      setConeCor(ciclo?.cone_cor || CATEGORIA_CONE_MAP[ciclo?.categoria] || "");
       setSerie(maquina?.serie || "");
       setConeError("");
     }
@@ -84,7 +90,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
 
   const validateCone = async () => {
     if (!needsCone || !coneNumero) { setConeError(""); return; }
-    const result = await validateConeNumber(categoria, coneNumero, ciclo?.id);
+    const result = await validateConeNumber(categoria, coneNumero, ciclo?.id, effectiveConeCor);
     if (!result.free) {
       setConeError(`Cone ${coneNumero} ${effectiveConeCor} já está em uso — NS ${result.conflito.serie}`);
     } else {
@@ -98,7 +104,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
     try {
       // Trava: o cone (cor + nº) tem de ser único entre as máquinas no pátio.
       if (needsCone && coneNumero) {
-        const result = await validateConeNumber(categoria, coneNumero, ciclo?.id);
+        const result = await validateConeNumber(categoria, coneNumero, ciclo?.id, effectiveConeCor);
         if (!result.free) {
           setConeError(`Cone ${coneNumero} ${effectiveConeCor} já está em uso — NS ${result.conflito.serie}`);
           setSaving(false);
@@ -110,11 +116,13 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
         cicloUpdates.categoria = categoria;
         cicloUpdates.cone_cor = effectiveConeCor;
         cicloUpdates.cone_numero = needsCone ? coneNumero : null;
-      } else if (canEditCategoria && coneNumero !== (ciclo?.cone_numero || "")) {
+      } else if (canEditCategoria && (coneNumero !== (ciclo?.cone_numero || "") || effectiveConeCor !== (ciclo?.cone_cor || ""))) {
         // Antes só o administrador gravava aqui: quem mudasse o número sem
         // mudar a categoria via o campo aceitar o que escreveu e a alteração
         // desaparecer sem aviso. Quem troca o cone à máquina é quem anda no
-        // pátio, e a unicidade já está travada na validação acima.
+        // pátio, e a unicidade já está travada na validação acima. A cor do
+        // cone também se pode mudar sozinha — o UTS pode trocar de vermelho
+        // para amarelo sem que o número mude.
         cicloUpdates.cone_numero = coneNumero || null;
         cicloUpdates.cone_cor = effectiveConeCor;
       }
@@ -181,7 +189,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
                   <button
                     key={key}
                     type="button"
-                    onClick={() => { setCategoria(key); setConeError(""); }}
+                    onClick={() => { setCategoria(key); setConeCor(CATEGORIA_CONE_MAP[key] || ""); setConeError(""); }}
                     className={`py-2 rounded-lg border-2 font-bold text-xs transition-all ${
                       categoria === key
                         ? `${cfg.bg} ${cfg.text} ${cfg.border}`
@@ -197,13 +205,36 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
 
           {needsCone && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-400">CONE:</span>
-                <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-700/50 text-slate-200 text-sm font-bold uppercase">
-                  <span className={`w-3 h-3 rounded-full ${CONE_COLORS.find((c) => c.value === effectiveConeCor)?.bg}`} />
-                  {effectiveConeCor}
-                </span>
-              </div>
+              {coneCorEditavel ? (
+                <div>
+                  <label className="text-xs font-medium text-slate-400 mb-1.5 block">Cor do cone <span className="text-amber-400">· vermelho é o recomendado</span></label>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {CONE_COLORS.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => { setConeCor(c.value); setConeError(""); }}
+                        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 text-xs font-bold uppercase transition-all ${
+                          effectiveConeCor === c.value
+                            ? "border-amber-500 bg-amber-500/10 text-slate-100"
+                            : "border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600"
+                        }`}
+                      >
+                        <span className={`w-3 h-3 rounded-full ${c.bg} ${c.value === "branco" ? "ring-1 ring-slate-500" : ""}`} />
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-400">CONE:</span>
+                  <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-700/50 text-slate-200 text-sm font-bold uppercase">
+                    <span className={`w-3 h-3 rounded-full ${CONE_COLORS.find((c) => c.value === effectiveConeCor)?.bg}`} />
+                    {effectiveConeCor}
+                  </span>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-medium text-slate-400 mb-1.5 block">Nº do cone (número físico)</label>
                 <input

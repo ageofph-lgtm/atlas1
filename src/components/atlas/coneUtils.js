@@ -9,8 +9,8 @@ import { cicloOcupaCone } from "@/components/atlas/cicloUtils";
  * com o resto: incluía `retorno`, que está fora do pátio. Agora a pergunta é
  * feita uma vez só, em `cicloOcupaCone`.
  */
-export async function validateConeNumber(categoria, numero, excludeCicloId) {
-  const coneCor = CATEGORIA_CONE_MAP[categoria];
+export async function validateConeNumber(categoria, numero, excludeCicloId, coneCorOverride) {
+  const coneCor = coneCorOverride || CATEGORIA_CONE_MAP[categoria];
   if (!coneCor || !numero) return { free: true };
 
   const results = await base44.entities.Ciclo.filter({ cone_cor: coneCor });

@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "./constants";
-import { estadoEfetivo, isCategoriaSemEstado } from "./cicloUtils";
+import { estadoEfetivo, isCategoriaSemEstado, mostrarBadgeUts } from "./cicloUtils";
 import ConeIcon from "./ConeIcon";
+import UtsBadge from "./UtsBadge";
 import CicloCardDetails from "./CicloCardDetails";
 
 /**
@@ -33,6 +34,7 @@ export default function CicloMiniCard({ ciclo, maquina, canNotas, onAtualizado, 
             <span className="num text-xl font-black tracking-wider text-slate-100 leading-none">
               {ciclo.cone_numero}
             </span>
+            {mostrarBadgeUts(ciclo) && <UtsBadge />}
           </div>
         ) : (
           <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-700/30 text-slate-500 border border-slate-600/30 uppercase tracking-wide flex-shrink-0">

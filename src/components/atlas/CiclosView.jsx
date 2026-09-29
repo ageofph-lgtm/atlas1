@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "@/components/atlas/constants";
-import { estadoEfetivo, temCone } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, temCone, mostrarBadgeUts } from "@/components/atlas/cicloUtils";
 import { GRELHA, CONE_TAMANHO, NS_CLASSE, CONE_NUM_CLASSE } from "@/components/atlas/viewPrefs";
 import ConeIcon from "@/components/atlas/ConeIcon";
+import UtsBadge from "@/components/atlas/UtsBadge";
 import { COLUNAS_ORDENAVEIS, ordenarCiclos, proximaOrdenacao } from "@/components/atlas/ordenarCiclos";
 
 const Estado = ({ ciclo, mini = false }) => {
@@ -104,9 +105,10 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
               className={`glass cat-${c.categoria} border border-slate-700 rounded-lg p-2 flex flex-col items-center gap-1 hover:border-amber-500 transition-colors`}
             >
               {temCone(c) ? (
-                <div className="flex flex-col items-center leading-none">
+                <div className="flex flex-col items-center leading-none gap-0.5">
                   <ConeIcon color={c.cone_cor} size={coneSize} />
                   <span className={`num font-black text-slate-200 ${CONE_NUM_CLASSE[tamanho]}`}>{c.cone_numero}</span>
+                  {mostrarBadgeUts(c) && <UtsBadge />}
                 </div>
               ) : (
                 <div style={{ height: coneSize }} className="flex items-center text-[9px] text-slate-600 uppercase">sem cone</div>
@@ -145,6 +147,7 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                     <>
                       <ConeIcon color={c.cone_cor} size={coneSize} />
                       <span className="num text-[10px] font-black text-slate-300 leading-none">{c.cone_numero}</span>
+                      {mostrarBadgeUts(c) && <UtsBadge />}
                     </>
                   ) : (
                     <span className="text-[9px] text-slate-600 uppercase">s/cone</span>
@@ -201,6 +204,7 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                 ) : (
                   <span className="w-14 flex-shrink-0 text-[9px] text-slate-600 uppercase">s/cone</span>
                 )}
+                {mostrarBadgeUts(c) && <UtsBadge className="flex-shrink-0" />}
                 <span className="num text-sm font-bold text-slate-100 break-all">{c.serie}</span>
                 {c.prioridade && <Prioridade />}
                 <span className="text-xs text-slate-500 truncate hidden sm:inline">{m?.modelo || "—"}</span>
@@ -270,6 +274,7 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                       <span className="flex items-center gap-1">
                         <ConeIcon color={c.cone_cor} size={16} />
                         <span className="num font-bold text-slate-300">{c.cone_numero}</span>
+                        {mostrarBadgeUts(c) && <UtsBadge />}
                       </span>
                     ) : (
                       <span className="text-slate-600 text-xs">—</span>

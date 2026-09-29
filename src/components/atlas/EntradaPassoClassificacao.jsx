@@ -5,7 +5,11 @@ import { CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
 /**
  * Passo 3 — categoria, cone e estado inicial. É o passo que grava.
  */
-export default function EntradaPassoClassificacao({ canChooseEstado, canSubmit, categoria, coneCor, coneError, coneNumero, estadoInicial, handleSubmit, isSubmitting, modelo, needsCone, reentradaConfirmada, semEstado, serie, setCategoria, setConeError, setConeNumero, setEstadoInicial, setStep, validateCone }) {
+export default function EntradaPassoClassificacao({ canChooseEstado, canSubmit, categoria, coneCor, coneError, coneNumero, estadoInicial, handleSubmit, isSubmitting, modelo, needsCone, reentradaConfirmada, semEstado, serie, setCategoria, setConeCor, setConeError, setConeNumero, setEstadoInicial, setStep, validateCone }) {
+  // Só o UTS deixa escolher a cor do cone: vermelho é o recomendado, mas a
+  // falta de cones vermelhos físicos obriga a usar amarelo. As restantes
+  // categorias têm a cor fixa pela categoria.
+  const coneCorEditavel = categoria === "uts";
   return (
     <div className="space-y-5">
       <div>
@@ -34,13 +38,36 @@ export default function EntradaPassoClassificacao({ canChooseEstado, canSubmit, 
 
       {needsCone ? (
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-slate-400">CONE:</span>
-            <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-700/50 text-slate-200 text-sm font-bold uppercase">
-              <span className={`w-3 h-3 rounded-full ${CONE_COLORS.find((c) => c.value === coneCor)?.bg}`} />
-              {coneCor}
-            </span>
-          </div>
+          {coneCorEditavel ? (
+            <div>
+              <label className="text-xs font-medium text-slate-400 mb-1.5 block">Cor do cone <span className="text-amber-400">· vermelho é o recomendado</span></label>
+              <div className="flex gap-2 flex-wrap">
+                {CONE_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => { setConeCor(c.value); setConeError(""); }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-xs font-bold uppercase transition-all ${
+                      coneCor === c.value
+                        ? "border-amber-500 bg-amber-500/10 text-slate-100"
+                        : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <span className={`w-3 h-3 rounded-full ${c.bg} ${c.value === "branco" ? "ring-1 ring-slate-500" : ""}`} />
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-slate-400">CONE:</span>
+              <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-700/50 text-slate-200 text-sm font-bold uppercase">
+                <span className={`w-3 h-3 rounded-full ${CONE_COLORS.find((c) => c.value === coneCor)?.bg}`} />
+                {coneCor}
+              </span>
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium text-slate-400 mb-1.5 block">Nº do cone (digite o número físico)</label>
             <input
