@@ -94,7 +94,12 @@ export default function Layout({ children, currentPageName }) {
   const loadUser = async () => {
     let userData = null;
     try {
-      userData = await User.me();
+      // Com limite de tempo: sem ele, um pedido pendurado deixava este ecrã no
+      // círculo a rodar para sempre, sem erro nem forma de sair.
+      userData = await Promise.race([
+        User.me(),
+        new Promise((_, rejeitar) => setTimeout(() => rejeitar(new Error("sem resposta")), 20000)),
+      ]);
     } catch (_e) {
       // sem sessão na plataforma: o ecrã de entrada trata disso
     }

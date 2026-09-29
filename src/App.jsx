@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import FalhaAoArrancar from '@/components/FalhaAoArrancar';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -17,7 +18,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, checkAppState } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -32,11 +33,17 @@ const AuthenticatedApp = () => {
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
+    }
+    if (authError.type === 'auth_required') {
       // Redirect to login automatically
       navigateToLogin();
       return null;
     }
+    // Qualquer outra falha — sem rede, servidor calado, pedido que não voltou —
+    // passa a ter ecrã próprio. Antes caía neste `if` sem corresponder a
+    // nenhum ramo e seguia para as rotas como se nada fosse, com a aplicação a
+    // desenhar por cima de um arranque que falhou.
+    return <FalhaAoArrancar mensagem={authError.message} onTentarDeNovo={checkAppState} />;
   }
 
   // Render the main app

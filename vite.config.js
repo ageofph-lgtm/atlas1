@@ -32,11 +32,37 @@ export default defineConfig({
         start_url: '/',
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,svg,woff2}'],
+        // O `index.html` NÃO é pré-carregado, e é essa a correção central.
+        //
+        // Quando estava, o service worker servia-o de cache a cada navegação.
+        // Ao publicar uma versão nova, o browser recebia o HTML antigo — que
+        // aponta para `index-<hash>.js` que já não existe no servidor nem na
+        // cache, porque o service worker novo já a tinha limpado. A página não
+        // desenhava nada e ficava no círculo a rodar para sempre.
+        //
+        // Passa a ir sempre à rede buscar o HTML, com a cópia em cache só como
+        // recurso para quando não há rede. É o que mantém a promessa de abrir
+        // sem net sem voltar a servir uma versão morta.
+        navigateFallback: null,
         // As chamadas ao Base44 nunca são servidas de cache: dados do pátio
         // fora de prazo são piores do que dados em falta.
         navigateFallbackDenylist: [/^\/api/],
-        runtimeCaching: [],
+        cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'atlas-shell',
+              // Cinco segundos: passado isso assume-se que não há rede e
+              // serve-se a cópia guardada, em vez de deixar o ecrã em branco.
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 1 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ]
