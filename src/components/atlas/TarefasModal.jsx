@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X, CheckSquare, Square, Loader2, Zap, MessageSquarePlus } from "lucide-react";
+import { Plus, X, CheckSquare, Square, Loader2, Zap, MessageSquarePlus, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { textoTarefaDoPedido, PEDIDO_ESTADOS_POR_FAZER } from "@/components/atlas/pedidosOS";
 
@@ -11,6 +11,11 @@ const PREDEFINED_TAREFAS = [
   { key: "revisao", label: "Revisão 3000h" },
   { key: "vps", label: "VPS" },
   { key: "express", label: "EXPRESS" },
+  // Recon Bronze/Prata são mutuamente exclusivas entre si — o sinal que vai
+  // para o Watcher é o campo `recondicao`, não o texto da tarefa (o Watcher
+  // usa recondicao para a cor/etiqueta RECON e para o tempo estimado).
+  { key: "reconBronze", label: "Recon Bronze", recon: true },
+  { key: "reconPrata", label: "Recon Prata", recon: true },
 ];
 
 /**
@@ -70,7 +75,13 @@ export default function TarefasModal({ open, ciclo, ciclos, onClose, onConfirm, 
 
   const togglePedido = (id) => setPedidosSel((s) => ({ ...s, [id]: !s[id] }));
 
-  const togglePredefined = (key) => setSelected((s) => ({ ...s, [key]: !s[key] }));
+  // Recon Bronze e Prata são mutuamente exclusivas: ligar uma desliga a outra.
+  // As restantes opções combinam normalmente entre si e com qualquer recon.
+  const togglePredefined = (key) => setSelected((s) => {
+    if (key === "reconBronze") return { ...s, reconBronze: !s.reconBronze, reconPrata: false };
+    if (key === "reconPrata") return { ...s, reconPrata: !s.reconPrata, reconBronze: false };
+    return { ...s, [key]: !s[key] };
+  });
 
   const addCustomTask = () => {
     const text = customInput.trim();
@@ -87,12 +98,19 @@ export default function TarefasModal({ open, ciclo, ciclos, onClose, onConfirm, 
     if (selected.revisao) tarefas.push({ texto: "Revisão 3000h", concluida: false });
     if (selected.vps) tarefas.push({ texto: "VPS", concluida: false });
     if (selected.express) tarefas.push({ texto: "EXPRESS", concluida: false });
+    // Recon Bronze/Prata NÃO entram como texto de tarefa — o sinal é o campo
+    // `recondicao`, que o Watcher usa para a cor/etiqueta RECON e para o tempo.
+    const recondicao = selected.reconBronze
+      ? { ferro: false, bronze: true, prata: false, ouro: false }
+      : selected.reconPrata
+        ? { ferro: false, bronze: false, prata: true, ouro: false }
+        : null;
     // Os pedidos do comercial entram na O.S. como tarefas, com o nome de quem
     // pediu — na oficina, saber a quem perguntar vale mais do que a descrição.
     const migrados = pedidos.filter((p) => pedidosSel[p.id]);
     migrados.forEach((p) => tarefas.push({ texto: textoTarefaDoPedido(p), concluida: false }));
     customTasks.forEach((t) => tarefas.push({ texto: t, concluida: false }));
-    onConfirm({ tarefas, isVps: !!selected.vps, isExpress: !!selected.express, pedidosMigrados: migrados, alvos });
+    onConfirm({ tarefas, isVps: !!selected.vps, isExpress: !!selected.express, recondicao, pedidosMigrados: migrados, alvos });
   };
 
   return (
@@ -127,7 +145,10 @@ export default function TarefasModal({ open, ciclo, ciclos, onClose, onConfirm, 
                 {selected[t.key]
                   ? <CheckSquare className="w-5 h-5 text-amber-400 flex-shrink-0" />
                   : <Square className="w-5 h-5 text-slate-600 flex-shrink-0" />}
-                <span className="text-sm font-medium">{t.label}</span>
+                <span className="text-sm font-medium flex items-center gap-1.5">
+                  {t.recon && <RefreshCw className={`w-3.5 h-3.5 ${selected[t.key] ? "text-amber-400" : "text-amber-400/60"}`} />}
+                  {t.label}
+                </span>
               </button>
             ))}
           </div>

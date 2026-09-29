@@ -178,7 +178,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     }
   };
 
-  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, pedidosMigrados = [], alvos = [] }) => {
+  const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, recondicao = null, pedidosMigrados = [], alvos = [] }) => {
     const lista = alvos.length ? alvos : tarefasCiclo ? [tarefasCiclo] : [];
     if (!lista.length) return;
 
@@ -197,7 +197,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     const resultado = await executarEmLote(lista, {
       aplicavel: (c) => (podeAutorizar(c) ? true : "não estava classificada nem em manutenção"),
       executar: async (c) => {
-        const data = await authorizeCiclo(c.id, autor, { tarefas, isVps, isExpress });
+        const data = await authorizeCiclo(c.id, autor, { tarefas, isVps, isExpress, recondicao });
         await marcarPedidosNaOS(pedidosPorCiclo.get(c.id) || [], { autor, osId: data.watcher_os_id });
       },
       onProgresso: ({ feito, total }) => setProgressoLote({ feito, total }),

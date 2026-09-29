@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
  * with tarefas / isVps / isExpress so the machine lands in Watcher
  * a-fazer with tasks pre-selected.
  */
-export async function authorizeCiclo(ciclo_id, autor, { tarefas = [], isVps = false, isExpress = false } = {}) {
+export async function authorizeCiclo(ciclo_id, autor, { tarefas = [], isVps = false, isExpress = false, recondicao = null } = {}) {
   const res = await base44.functions.invoke("atlasToWatcher", {
     action: "authorize",
     ciclo_id,
@@ -13,6 +13,7 @@ export async function authorizeCiclo(ciclo_id, autor, { tarefas = [], isVps = fa
     tarefas,
     isVps,
     isExpress,
+    recondicao,
   });
   const data = res?.data !== undefined ? res.data : res;
   if (data.error) throw new Error(data.error);

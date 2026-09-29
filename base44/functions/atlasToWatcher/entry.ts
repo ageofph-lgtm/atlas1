@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Body inválido' }, { status: 400 });
     }
 
-    const { action, ciclo_id, autor, tarefas, isVps, isExpress, batch } = body;
+    const { action, ciclo_id, autor, tarefas, isVps, isExpress, recondicao, batch } = body;
 
     const bridgeSecret = Deno.env.get("ATLAS_BRIDGE_SECRET");
     const watcherUrl = Deno.env.get("WATCHER_ATLAS_URL");
@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
             tarefas: tarefas || [],
             isVps: isVps || false,
             isExpress: isExpress || false,
+            recondicao: recondicao ?? null,
             cone_cor: ciclo.cone_cor ?? null,
             cone_numero: ciclo.cone_numero ?? null,
             atlas_ciclo_id: ciclo.id
