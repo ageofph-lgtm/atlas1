@@ -30,7 +30,12 @@ export const AuthProvider = ({ children }) => {
           'X-App-Id': appParams.appId
         },
         token: appParams.token, // Include token if available
-        interceptResponses: true
+        interceptResponses: true,
+        // Sem isto um pedido que fica pendurado nunca resolve nem falha, e a
+        // aplicação fica no círculo a rodar para sempre — sem erro, sem
+        // mensagem, sem saída. Passados 20 segundos assume-se que não chega
+        // resposta e mostra-se o ecrã de falha, que pelo menos se percebe.
+        timeout: 20000
       });
       
       try {
@@ -87,11 +92,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /** Rejeita se a promessa não resolver a tempo, para nada ficar pendurado. */
+  const comLimite = (promessa, ms = 20000) => Promise.race([
+    promessa,
+    new Promise((_, rejeitar) => setTimeout(() => {
+      const e = new Error('O servidor não respondeu a tempo.');
+      e.timeout = true;
+      rejeitar(e);
+    }, ms))
+  ]);
+
   const checkUserAuth = async () => {
     try {
       // Now check if the user is authenticated
       setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
+      const currentUser = await comLimite(base44.auth.me());
       setUser(currentUser);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
