@@ -40,6 +40,11 @@
     "respondido_por": {
       "type": "string",
       "description": "Quem respondeu"
+    },
+    "ocorrido_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando o pedido foi feito, se foi registado depois (importação). Vazio = created_date."
     }
   },
   "required": [

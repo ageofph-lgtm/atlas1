@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { X, Inbox, CheckCheck, Loader2, ArrowRightLeft, LogIn, LogOut, CalendarClock, MessageSquarePlus, Bell, ChevronRight } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
+import { momentoDe } from "@/components/atlas/momento";
 
 const ICONE = {
   entrada: LogIn,
@@ -156,7 +157,7 @@ export default function CaixaMensagens({ open, onClose, mensagens, porLer, isLoa
                       <p className={`text-sm truncate ${porLerEsta ? "font-bold text-slate-100" : "font-medium text-slate-300"}`}>
                         {m.titulo}
                       </p>
-                      <span className="text-[10px] text-slate-500 ml-auto flex-shrink-0">{quando(m.created_date)}</span>
+                      <span className="text-[10px] text-slate-500 ml-auto flex-shrink-0">{quando(momentoDe(m))}</span>
                     </div>
                     {m.corpo && <p className="text-xs text-slate-400 mt-0.5 break-words">{m.corpo}</p>}
                     <div className="flex items-center gap-1.5 mt-1">

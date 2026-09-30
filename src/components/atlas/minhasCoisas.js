@@ -1,4 +1,5 @@
 import { estadoEfetivo, isVenda, isAluguer, isHistorico } from "@/components/atlas/cicloUtils";
+import { momentoDe, maisRecentePrimeiro } from "@/components/atlas/momento";
 
 /**
  * O que é de cada comercial: as suas reservas, os seus pedidos e as suas contas.
@@ -64,7 +65,7 @@ const ordenarPorData = (a, b) => {
 export const meusPedidos = (pedidos = [], pessoa) =>
   pedidos
     .filter((p) => eMeuPedido(p, pessoa))
-    .sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
+    .sort(maisRecentePrimeiro);
 
 /** Quantos pedidos em cada estado, para o resumo no topo. */
 export function contarPorEstado(pedidos = []) {
@@ -168,10 +169,10 @@ export const inicioDoPeriodo = (dias, agora = Date.now()) =>
 export function estadoEfetivoPedido(pedido, ciclo) {
   const estado = pedido?.estado || "aberto";
   if (estado === "concluido" || estado === "cancelado") return estado;
-  if (!ciclo?.data_pronta || !pedido?.created_date) return estado;
+  if (!ciclo?.data_pronta || !momentoDe(pedido)) return estado;
 
   const pronta = new Date(ciclo.data_pronta).getTime();
-  const feito = new Date(pedido.created_date).getTime();
+  const feito = new Date(momentoDe(pedido)).getTime();
   if (!Number.isFinite(pronta) || !Number.isFinite(feito)) return estado;
 
   return pronta > feito ? "concluido" : estado;

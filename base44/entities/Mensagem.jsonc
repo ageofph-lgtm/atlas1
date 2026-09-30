@@ -50,6 +50,11 @@
         "type": "string"
       },
       "description": "IDs dos utilizadores que já leram — o estado de leitura é por pessoa, não por mensagem"
+    },
+    "ocorrido_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando o acontecimento se deu, se a mensagem foi registada depois (importação). Vazio = created_date."
     }
   },
   "required": [

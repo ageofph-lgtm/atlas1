@@ -7,7 +7,8 @@ const STORAGE_KEY = "atlas-theme";
 export function useTheme() {
   const [theme, setThemeState] = useState(() => {
     if (typeof window === "undefined") return DEFAULT_THEME;
-    const stored = localStorage.getItem(STORAGE_KEY);
+    let stored = null;
+    try { stored = localStorage.getItem(STORAGE_KEY); } catch (_e) {}
     return THEMES.includes(stored) ? stored : DEFAULT_THEME;
   });
 

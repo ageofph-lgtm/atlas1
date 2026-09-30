@@ -5,6 +5,7 @@ import { RefreshCw, Handshake, Truck, Tag, MessageSquare, Info, Package } from "
 import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { ESTADO_CONFIG } from "@/components/atlas/constants";
+import { momentoDe } from "@/components/atlas/momento";
 import {
   minhasReservas, meusPedidos, contarPorEstado, kpisComercial,
   PERIODOS, inicioDoPeriodo, pedidosComEstado,
@@ -198,7 +199,7 @@ export default function MinhaArea({ currentUser }) {
                     <span className="num text-sm font-bold text-slate-100">{p.serie}</span>
                     <span className="text-xs text-slate-400 flex-1 min-w-0">{p.texto}</span>
                     <span className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-[11px] text-slate-600">{data(p.created_date)}</span>
+                      <span className="text-[11px] text-slate-600">{data(momentoDe(p))}</span>
                       {/* O estado da máquina ao lado do estado do pedido: é a
                           máquina que manda, e assim vê-se logo qual é qual. */}
                       {maq && (

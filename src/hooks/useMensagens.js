@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { audienciasDoPerfil } from "@/components/atlas/mensagens";
+import { maisRecentePrimeiro } from "@/components/atlas/momento";
 
 const POLL_INTERVAL = 60000;
 const LIMITE = 200;
@@ -36,7 +37,7 @@ export function useMensagens(currentUser) {
       // Uma mensagem pode chegar por mais do que uma via (um admin lê duas
       // audiências); o Map deixa-a aparecer só uma vez.
       const unicas = [...new Map(listas.flat().map((m) => [m.id, m])).values()];
-      unicas.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      unicas.sort(maisRecentePrimeiro);
       setMensagens(unicas.slice(0, LIMITE));
     } catch (_e) {
       // caixa indisponível — não vale a pena partir o ecrã por causa disso
