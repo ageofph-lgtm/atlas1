@@ -21,6 +21,7 @@ import DeleteMaquinaModal from "@/components/atlas/DeleteMaquinaModal";
 import TarefasModal from "@/components/atlas/TarefasModal";
 import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
+import { maisRecentePrimeiro } from "@/components/atlas/momento";
 import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { INVENTARIO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
@@ -164,7 +165,7 @@ export default function Inventario({ currentUser, userPermissions }) {
       if (!p.ciclo_id) return;
       (map[p.ciclo_id] = map[p.ciclo_id] || []).push(p);
     });
-    Object.values(map).forEach((l) => l.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+    Object.values(map).forEach((l) => l.sort(maisRecentePrimeiro));
     return map;
   }, [pedidos]);
 

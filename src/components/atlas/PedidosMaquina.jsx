@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { MessageSquarePlus, Loader2, Check, X, Plus, CheckCircle2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { notificarPedido, notificarRespostaPedido } from "@/components/atlas/mensagens";
+import { momentoDe, maisRecentePrimeiro } from "@/components/atlas/momento";
 
 const ESTADO_PEDIDO = {
   aberto: { label: "ABERTO", cls: "bg-amber-500/15 text-amber-300 border-amber-500/40" },
@@ -37,7 +38,7 @@ export default function PedidosMaquina({ ciclo, currentUser, canPedir, canRespon
     if (!ciclo?.id) return;
     try {
       const lista = await base44.entities.PedidoMaquina.filter({ ciclo_id: ciclo.id });
-      setPedidosLocais([...lista].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+      setPedidosLocais([...lista].sort(maisRecentePrimeiro));
     } catch (_e) {
       setPedidosLocais([]);
     }
@@ -129,7 +130,7 @@ export default function PedidosMaquina({ ciclo, currentUser, canPedir, canRespon
                 </div>
                 <p className="text-[10px] text-slate-600 mt-1">
                   {p.comercial || "—"}
-                  {p.created_date && ` · ${format(new Date(p.created_date), "dd/MM HH:mm")}`}
+                  {momentoDe(p) && ` · ${format(new Date(momentoDe(p)), "dd/MM HH:mm")}`}
                 </p>
                 {p.resposta && (
                   <p className="text-[11px] text-slate-400 mt-1 border-l-2 border-slate-700 pl-2">

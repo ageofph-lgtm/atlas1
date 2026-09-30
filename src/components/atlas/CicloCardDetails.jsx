@@ -9,6 +9,7 @@ import FotosDaMaquina from "./FotosDaMaquina";
 import { podeGerirFotos } from "./fotosMaquina";
 import PedidosMaquina from "./PedidosMaquina";
 import FotoModal from "./FotoModal";
+import { momentoDe, maisRecentePrimeiro } from "@/components/atlas/momento";
 
 const fmt = (d) => (d ? format(new Date(d), "dd/MM HH:mm") : null);
 
@@ -49,7 +50,7 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onAtualizad
     base44.entities.EventoCiclo.filter({ ciclo_id: ciclo.id })
       .then((data) => {
         if (cancelled) return;
-        const sorted = [...data].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        const sorted = [...data].sort(maisRecentePrimeiro);
         setEventos(sorted);
       })
       .catch(() => { if (!cancelled) setEventos([]); })
@@ -233,7 +234,7 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onAtualizad
                   </p>
                   {ev.nota && <p className="text-slate-500 mt-0.5">{ev.nota}</p>}
                   <p className="text-slate-600 mt-0.5">
-                    {ev.autor || "—"} · {ev.created_date ? format(new Date(ev.created_date), "dd/MM HH:mm") : "—"}
+                    {ev.autor || "—"} · {momentoDe(ev) ? format(new Date(momentoDe(ev)), "dd/MM HH:mm") : "—"}
                   </p>
                 </div>
               </div>

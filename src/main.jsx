@@ -4,7 +4,7 @@ import App from '@/App.jsx'
 import '@/index.css'
 import { registerSW } from 'virtual:pwa-register'
 import { recuperarERecarregar, eErroDeVersaoPresa } from '@/lib/recuperacao'
-import { anunciarVersaoNova, INTERVALO_VERIFICACAO } from '@/lib/atualizacao'
+import { anunciarVersaoNova, criarTrocaDeVersao, INTERVALO_VERIFICACAO } from '@/lib/atualizacao'
 
 /**
  * Rede de segurança contra uma versão presa em cache.
@@ -48,21 +48,33 @@ window.addEventListener('unhandledrejection', (e) => tratarErro(e?.reason))
  * quando a página carrega: sem ela, quem deixa o ATLAS aberto o dia todo nunca
  * saberia que há uma.
  */
-registerSW({
+const contentorSW = typeof navigator !== 'undefined' ? navigator.serviceWorker : undefined
+
+// Declarado antes para a troca o poder chamar; o `registerSW` devolve-o abaixo.
+let pedirTrocaAoWorker = null
+
+const troca = criarTrocaDeVersao({
+  obterAEspera: async () => (await contentorSW?.getRegistration?.())?.waiting,
+  pedirTroca: () => pedirTrocaAoWorker?.(),
+  recarregar: () => window.location.reload(),
+  contentor: contentorSW,
+})
+
+pedirTrocaAoWorker = registerSW({
   onNeedRefresh() {
-    // Recarregar, e mais nada.
-    //
-    // O caminho "certo" seria `updateSW(true)`, que manda o worker à espera
-    // assumir o lugar e recarrega sozinho. Medido em browser, não serve: na
-    // altura em que se carrega no botão o worker novo já se ativou por si, não
-    // há nada para saltar, e o `updateSW` devolve sem recarregar — o botão não
-    // fazia nada. Combinar os dois é pior: dá um ciclo de recargas, 94 numa
-    // medição.
-    //
-    // Como o `index.html` vem sempre da rede, a recarga sozinha traz a versão
-    // nova. É simples, foi medida, e não tem como entrar em ciclo.
-    anunciarVersaoNova(() => window.location.reload())
+    // O botão só recarregava, porque numa medição o worker novo já se tinha
+    // ativado sozinho e o `updateSW` não fazia nada. Medido depois com um
+    // separador só, o worker novo ficava à espera para sempre: a barra voltava
+    // a cada arranque e, sem rede, a página ficava em branco. A troca cobre os
+    // dois casos — sem worker à espera recarrega logo; com ele, pede-lhe que
+    // salte a espera e recarrega UMA vez quando ele assume. A guarda é o que
+    // impede o ciclo de 94 recargas.
+    anunciarVersaoNova(() => { troca.trocar() })
   },
+  // O registo também avisa quando o worker novo assume — em todos os
+  // separadores. Só recarrega o que pediu a troca, e pela mesma guarda, para
+  // não haver duas recargas por uma troca nem apagar registos noutro separador.
+  onNeedReload: troca.recarregarSePedida,
   onRegisteredSW(_url, registo) {
     if (!registo) return
     setInterval(() => { registo.update().catch(() => {}) }, INTERVALO_VERIFICACAO)
