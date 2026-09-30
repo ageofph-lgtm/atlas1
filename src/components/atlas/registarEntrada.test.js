@@ -250,6 +250,25 @@ describe("H1 pela tabela de mastros", () => {
     expect(maquina).toMatchObject({ h3: "4920", h1: "2160", h1_origem: "tabela" });
   });
 
+  it("EXV telescópico com elevação livre de 150 mm grava a opção e o H1 dessa versão", async () => {
+    await registarEntrada({
+      ...base, modelo: "EXV 14",
+      specs: { mastro: "telescopico", elevacao_livre_150: true, h3: "2844", acessorios: [] },
+    });
+    const maquina = registo.criados.find((c) => c.entidade === "Maquina").dados;
+    expect(maquina).toMatchObject({ h1: "1990", h1_origem: "tabela", elevacao_livre_150: true });
+  });
+
+  it("numa reentrada, a elevação livre que a máquina já tinha não se perde", async () => {
+    await registarEntrada({
+      ...base,
+      existingMaquina: { id: "m2", serie: "NS-NOVA", modelo: "EXV 14", mastro: "telescopico", h3: "2844", elevacao_livre_150: true },
+      modelo: "", specs: { mastro: "", elevacao_livre_150: false, h3: "", acessorios: [] },
+    });
+    const u = registo.atualizados.find((x) => x.id === "m2").dados;
+    expect(u).toMatchObject({ h1: "1990", elevacao_livre_150: true });
+  });
+
   it("modelo sem tabela grava o H1 em branco", async () => {
     await registarEntrada({ ...base, modelo: "OPX 20", specs: { mastro: "triplex", h3: "4000", acessorios: [] } });
     const maquina = registo.criados.find((c) => c.entidade === "Maquina").dados;

@@ -14,7 +14,7 @@ import { classificarCiclosAbertos } from "@/components/atlas/cicloUtils";
 export async function procurarMaquina(serie) {
   const vazio = {
     maquina: null,
-    specs: { mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" },
+    specs: { mastro: "", elevacao_livre_150: false, vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" },
     passagens: 0,
     ultimaSaida: null,
     cicloNoPatio: null,
@@ -36,6 +36,7 @@ export async function procurarMaquina(serie) {
     maquina: m,
     specs: {
       mastro: m.mastro || "",
+      elevacao_livre_150: !!m.elevacao_livre_150,
       vias_mastro: m.vias_mastro || "",
       joystick: m.joystick || "",
       tipo_pneu: m.tipo_pneu || "",

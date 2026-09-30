@@ -22,6 +22,10 @@
       "type": "string",
       "description": "Tipo de mastro (triplex, telescopico, niho, simplex)"
     },
+    "elevacao_livre_150": {
+      "type": "boolean",
+      "description": "Mastro com elevação livre de 150 mm (versão dos EXV telescópicos). Muda o H1; só se grava quando a tabela de mastros tem essa versão para o modelo e mastro."
+    },
     "vias_mastro": {
       "type": "string",
       "description": "Número de vias do mastro (3, 4, 5)"

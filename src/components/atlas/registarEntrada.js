@@ -99,7 +99,7 @@ export async function registarEntrada({
       tipo_pneu: specs.tipo_pneu || "",
       acessorios: specs.acessorios || [],
       h3: specs.h3 || "",
-      ...calcularH1({ modelo, mastro: specs.mastro, h3: specs.h3 }),
+      ...calcularH1({ modelo, mastro: specs.mastro, h3: specs.h3, elevacaoLivre150: specs.elevacao_livre_150 }),
       bateria: specs.bateria || "",
       horimetro: specs.horimetro || "",
       fotos: fotos || [],
@@ -123,7 +123,10 @@ export async function registarEntrada({
       h3: h3Final,
       // O H1 sai do que fica gravado, não do que veio no formulário: numa
       // reentrada o H3 pode vir em branco e manter-se o de antes.
-      ...calcularH1({ modelo: modeloFinal, mastro: mastroFinal, h3: h3Final }),
+      ...calcularH1({
+        modelo: modeloFinal, mastro: mastroFinal, h3: h3Final,
+        elevacaoLivre150: specs.elevacao_livre_150 || existingMaquina.elevacao_livre_150,
+      }),
       bateria: specs.bateria || existingMaquina.bateria || "",
       // Em branco não apaga o que já lá estava: o horímetro pode ter sido
       // apontado noutra entrada e quem regista agora pode não o ter lido.

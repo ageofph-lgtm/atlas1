@@ -78,7 +78,7 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onAtualizad
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
           <SpecRow label="Modelo" value={maquina?.modelo} />
           <SpecRow label="Ano" value={maquina?.ano} />
-          <SpecRow label="Mastro" value={maquina?.mastro ? `${SPEC_LABELS.mastro?.[maquina.mastro] || maquina.mastro}${maquina.vias_mastro ? ` ${maquina.vias_mastro}V` : ""}` : null} />
+          <SpecRow label="Mastro" value={maquina?.mastro ? `${SPEC_LABELS.mastro?.[maquina.mastro] || maquina.mastro}${maquina.vias_mastro ? ` ${maquina.vias_mastro}V` : ""}${maquina.elevacao_livre_150 ? " · EL 150" : ""}` : null} />
           <SpecRow label="Bateria" value={maquina?.bateria ? (SPEC_LABELS.bateria?.[maquina.bateria] || maquina.bateria) : null} />
           {/* H3 e H1 lado a lado: um é o mastro aberto, o outro recolhido. */}
           <SpecRow label="H3" value={maquina?.h3 ? `${maquina.h3}mm` : null} />

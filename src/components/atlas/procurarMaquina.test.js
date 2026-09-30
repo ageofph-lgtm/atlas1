@@ -77,7 +77,7 @@ describe("série conhecida", () => {
   it("uma máquina sem características não traz lixo", async () => {
     base44.entities.Maquina.linhas.push({ id: "m1", serie: "NS-1" });
     const r = await procurarMaquina("NS-1");
-    expect(r.specs).toEqual({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
+    expect(r.specs).toEqual({ mastro: "", elevacao_livre_150: false, vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "" });
     expect(r.notas).toBe("");
   });
 });

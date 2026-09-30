@@ -21,7 +21,7 @@ export async function saveMaquinaEdit({ maquina, ciclo, specs, cicloUpdates = {}
     acessorios: specs.acessorios || [],
     h3: specs.h3 || "",
     // Mudou o mastro ou o H3: o H1 acompanha.
-    ...calcularH1({ modelo: maquina.modelo, mastro: specs.mastro, h3: specs.h3 }),
+    ...calcularH1({ modelo: maquina.modelo, mastro: specs.mastro, h3: specs.h3, elevacaoLivre150: specs.elevacao_livre_150 }),
     bateria: specs.bateria || "",
     horimetro: specs.horimetro || "",
   };

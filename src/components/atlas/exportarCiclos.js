@@ -1,13 +1,14 @@
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "@/components/atlas/constants";
 import { estadoEfetivo } from "@/components/atlas/cicloUtils";
+import { h1DaMaquina } from "@/components/atlas/tabelaMastros";
 
 /**
  * Exportação das máquinas para Excel.
  *
  * As colunas são o que se vê no programa — série, modelo, estado, cliente,
- * datas — mais as quatro especificações que decidem se uma máquina serve um
- * cliente: H3, horímetro, bateria e joystick. São as que se perguntam ao
- * telefone antes de prometer uma máquina.
+ * datas — mais as especificações que decidem se uma máquina serve um cliente:
+ * H3 e H1 (a altura aberta e a recolhida), horímetro, bateria e joystick. São
+ * as que se perguntam ao telefone antes de prometer uma máquina.
  *
  * Continuam de fora o mastro, as vias, os pneus e os acessórios: quem abre a
  * folha quer saber o que está no pátio, não a ficha técnica completa de cada
@@ -28,6 +29,9 @@ const numero = (valor) => {
   return Number.isFinite(n) ? n : null;
 };
 
+/** Formato de célula do Excel: mostra "≈ 2110" sem deixar de ser o número 2110. */
+export const FORMATO_ESTIMADO = '"≈ "0';
+
 export const COLUNAS = [
   { label: "Cone (cor)", largura: 12, valor: (c) => rotuloConeCor(c) },
   { label: "Cone nº", largura: 9, valor: (c) => numero(c.cone_numero) },
@@ -36,6 +40,13 @@ export const COLUNAS = [
   // Número, não texto: quem filtra por altura quer "maior que 4000", e com
   // texto o Excel ordenaria 10000 antes de 4455.
   { label: "H3 (mm)", largura: 10, valor: (c, m) => numero(m?.h3) },
+  // O H1 da tabela de mastros. Um estimado continua a ser número, para se
+  // poder filtrar, mas aparece com "≈" pelo formato da célula.
+  {
+    label: "H1 (mm)", largura: 10,
+    valor: (c, m) => h1DaMaquina(m)?.h1 ?? null,
+    formato: (c, m) => (h1DaMaquina(m)?.origem === "estimado" ? FORMATO_ESTIMADO : null),
+  },
   { label: "Horímetro (h)", largura: 13, valor: (c, m) => numero(m?.horimetro) },
   { label: "Bateria", largura: 11, valor: (c, m) => (m?.bateria ? SPEC_LABELS.bateria?.[m.bateria] || m.bateria : "") },
   { label: "Joystick", largura: 12, valor: (c, m) => (m?.joystick ? SPEC_LABELS.joystick?.[m.joystick] || m.joystick : "") },
@@ -60,6 +71,33 @@ export const construirLinhas = (ciclos, getMaquina = () => null) =>
     return linha;
   });
 
+/**
+ * A folha pronta: linhas, formatos por célula, larguras, cabeçalho fixo e
+ * filtro. Recebe o SheetJS para os testes lerem exatamente o que se escreve.
+ */
+export function construirFolha(XLSX, ciclos, getMaquina = () => null) {
+  const linhas = construirLinhas(ciclos, getMaquina);
+  const folha = XLSX.utils.json_to_sheet(linhas, {
+    header: COLUNAS.map((c) => c.label),
+    cellDates: true,
+  });
+
+  ciclos.forEach((c, i) => {
+    const m = getMaquina(c);
+    COLUNAS.forEach((col, j) => {
+      const formato = col.formato?.(c, m);
+      const celula = folha[XLSX.utils.encode_cell({ r: i + 1, c: j })];
+      if (formato && celula) celula.z = formato;
+    });
+  });
+
+  folha["!cols"] = COLUNAS.map((c) => ({ wch: c.largura }));
+  // Cabeçalho sempre à vista e com filtro, que é como se usa uma folha destas.
+  folha["!freeze"] = { xSplit: 0, ySplit: 1 };
+  folha["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: COLUNAS.length - 1, r: linhas.length } }) };
+  return folha;
+}
+
 export const nomeFicheiro = (pagina, hoje = new Date()) =>
   `atlas-${pagina}-${hoje.toISOString().slice(0, 10)}.xlsx`;
 
@@ -74,20 +112,11 @@ export async function exportarCiclos(ciclos, { getMaquina, pagina = "inventario"
   if (!ciclos?.length) return { ok: false, erro: "Não há nada para exportar." };
 
   const XLSX = await import("xlsx");
-  const linhas = construirLinhas(ciclos, getMaquina);
-  const folha = XLSX.utils.json_to_sheet(linhas, {
-    header: COLUNAS.map((c) => c.label),
-    cellDates: true,
-  });
-
-  folha["!cols"] = COLUNAS.map((c) => ({ wch: c.largura }));
-  // Cabeçalho sempre à vista e com filtro, que é como se usa uma folha destas.
-  folha["!freeze"] = { xSplit: 0, ySplit: 1 };
-  folha["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: COLUNAS.length - 1, r: linhas.length } }) };
+  const folha = construirFolha(XLSX, ciclos, getMaquina);
 
   const livro = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(livro, folha, "Máquinas");
   XLSX.writeFile(livro, nomeFicheiro(pagina), { compression: true });
 
-  return { ok: true, linhas: linhas.length };
+  return { ok: true, linhas: ciclos.length };
 }

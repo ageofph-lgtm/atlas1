@@ -15,9 +15,10 @@ const nomeDoMastro = (tipo) => SPEC_OPTIONS.mastro.find((o) => o.value === tipo)
  * Um H3 que não está na ficha avisa em vez de calar: ou é um mastro especial,
  * ou a placa foi mal lida — e é na hora do registo que se consegue confirmar.
  */
-export default function H1DoMastro({ modelo, mastro, h3, listaId }) {
+export default function H1DoMastro({ modelo, mastro, h3, elevacaoLivre150 = false, listaId }) {
   const sugestoes = h3Disponiveis(modelo, mastro);
-  const r = resolverH1({ modelo, mastro, h3 });
+  const r = resolverH1({ modelo, mastro, h3, elevacaoLivre150 });
+  const comEl150 = r.elevacaoLivre150 ? ", com elevação livre de 150 mm" : "";
 
   let valor = <span className="text-slate-600">—</span>;
   let nota = <span className="text-slate-500">Preenche-se sozinho com o modelo, o mastro e o H3.</span>;
@@ -25,7 +26,7 @@ export default function H1DoMastro({ modelo, mastro, h3, listaId }) {
     valor = <span className="num font-bold text-green-400">{r.h1}</span>;
     nota = (
       <span className="text-slate-500">
-        Da ficha {r.fonte}.
+        Da ficha {r.fonte}{comEl150}.
         {r.igoIndisponivel && <span className="text-amber-400"> Sem iGo nesta altura.</span>}
       </span>
     );
@@ -33,7 +34,7 @@ export default function H1DoMastro({ modelo, mastro, h3, listaId }) {
     valor = <span className="num font-bold text-amber-400">≈ {r.h1}</span>;
     nota = (
       <span className="text-amber-400">
-        Estimado: este H3 não está na ficha (fica entre {r.entre[0]} e {r.entre[1]}). Confirme a leitura da placa.
+        Estimado{comEl150}: este H3 não está na ficha (fica entre {r.entre[0]} e {r.entre[1]}). Confirme a leitura da placa.
       </span>
     );
   } else if (r.origem === "fora_da_tabela") {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  resolverH1, h3Disponiveis, montarTabela, calcularH1, h1DaMaquina, formatarH1,
+  resolverH1, h3Disponiveis, montarTabela, calcularH1, h1DaMaquina, formatarH1, temElevacaoLivre150,
   TABELA_MASTROS, PROBLEMAS_DA_TABELA,
 } from "@/components/atlas/tabelaMastros";
 
@@ -87,6 +87,35 @@ describe("resolverH1 — lote 2 (RX 60-35/50, EXV, EXV-SF)", () => {
   });
 });
 
+describe("elevação livre de 150 mm", () => {
+  it("nos EXV telescópicos, a opção dá o H1 dessa versão (EXV 14, 2844: 1915 → 1990)", () => {
+    expect(resolverH1({ modelo: "EXV 14", mastro: "telescopico", h3: 2844 }).h1).toBe(1915);
+    expect(resolverH1({ modelo: "EXV 14", mastro: "telescopico", h3: 2844, elevacaoLivre150: true }))
+      .toMatchObject({ h1: 1990, origem: "tabela", elevacaoLivre150: true });
+  });
+
+  it("também no estimado, entre as linhas dessa versão", () => {
+    // 2594 fica a meio de 2344 e 2844: normal (1665+1915)/2, com EL150 (1740+1990)/2.
+    expect(resolverH1({ modelo: "EXV 14", mastro: "telescopico", h3: 2594 }).h1).toBe(1790);
+    expect(resolverH1({ modelo: "EXV 14", mastro: "telescopico", h3: 2594, elevacaoLivre150: true }).h1).toBe(1865);
+  });
+
+  it("onde a ficha não tem essa versão, a opção não se aplica e fica o H1 normal", () => {
+    expect(resolverH1({ modelo: "RX 20-16", mastro: "telescopico", h3: 3180, elevacaoLivre150: true }))
+      .toMatchObject({ h1: 2160, elevacaoLivre150: false });
+  });
+
+  it("só se pergunta onde existe", () => {
+    expect(temElevacaoLivre150("EXV 14", "telescopico")).toBe(true);
+    expect(temElevacaoLivre150("EXV 10C", "duplex")).toBe(true);
+    expect(temElevacaoLivre150("EXV-SF 20i", "telescopico")).toBe(true);
+    expect(temElevacaoLivre150("EXV 14", "triplex")).toBe(false);
+    expect(temElevacaoLivre150("RX 20-16", "telescopico")).toBe(false);
+    expect(temElevacaoLivre150("OPX 20", "telescopico")).toBe(false);
+    expect(temElevacaoLivre150("EXV 14", "")).toBe(false);
+  });
+});
+
 describe("h3Disponiveis", () => {
   it("lista os h3 da ficha para sugerir no formulário", () => {
     expect(h3Disponiveis("RX 20-14C", "niho")).toEqual([2860, 2960, 3160, 3360, 3560, 3960]);
@@ -121,6 +150,14 @@ describe("as fichas carregadas", () => {
       linhas.filter((l) => !(l.h1 < l.h3 && l.h3 < l.h4)).map((l) => `${modelo} ${tipo} h3 ${l.h3}`)
     );
     expect(erradas).toEqual([]);
+  });
+
+  it("a elevação livre de 150 mm vem em todas as linhas da tabela ou em nenhuma", () => {
+    // Com uma linha em falta, a opção deixava de aparecer para esse modelo.
+    const partidas = todas
+      .filter(({ linhas }) => linhas.some((l) => l.h1El150 !== null) && !linhas.every((l) => l.h1El150 !== null))
+      .map(({ modelo, tipo }) => `${modelo} ${tipo}`);
+    expect(partidas).toEqual([]);
   });
 
   it("num mesmo modelo e tipo, um mastro mais alto não fica mais baixo recolhido", () => {
@@ -168,16 +205,33 @@ describe("montarTabela — juntar lotes", () => {
 
 describe("calcularH1 — o que se grava", () => {
   it("valor da ficha", () => {
-    expect(calcularH1({ modelo: "RX 20-16", mastro: "triplex", h3: "4920" })).toEqual({ h1: "2160", h1_origem: "tabela" });
+    expect(calcularH1({ modelo: "RX 20-16", mastro: "triplex", h3: "4920" }))
+      .toEqual({ h1: "2160", h1_origem: "tabela", elevacao_livre_150: false });
   });
 
   it("valor estimado fica marcado", () => {
-    expect(calcularH1({ modelo: "RX 20-16", mastro: "telescopico", h3: "3080" })).toEqual({ h1: "2110", h1_origem: "estimado" });
+    expect(calcularH1({ modelo: "RX 20-16", mastro: "telescopico", h3: "3080" }))
+      .toEqual({ h1: "2110", h1_origem: "estimado", elevacao_livre_150: false });
   });
 
   it("sem resposta da tabela grava em branco — um H1 antigo deixaria de ser desta máquina", () => {
-    expect(calcularH1({ modelo: "OPX 20", mastro: "triplex", h3: "4000" })).toEqual({ h1: "", h1_origem: "" });
-    expect(calcularH1({ modelo: "RX 20-16", mastro: "", h3: "" })).toEqual({ h1: "", h1_origem: "" });
+    expect(calcularH1({ modelo: "OPX 20", mastro: "triplex", h3: "4000" })).toMatchObject({ h1: "", h1_origem: "" });
+    expect(calcularH1({ modelo: "RX 20-16", mastro: "", h3: "" })).toMatchObject({ h1: "", h1_origem: "" });
+  });
+
+  it("grava a elevação livre de 150 mm com o H1 dessa versão", () => {
+    expect(calcularH1({ modelo: "EXV 14", mastro: "telescopico", h3: "2844", elevacaoLivre150: true }))
+      .toEqual({ h1: "1990", h1_origem: "tabela", elevacao_livre_150: true });
+  });
+
+  it("a elevação livre cai quando deixa de se aplicar (mastro trocado para triplex)", () => {
+    expect(calcularH1({ modelo: "EXV 14", mastro: "triplex", h3: "4386", elevacaoLivre150: true }))
+      .toMatchObject({ elevacao_livre_150: false });
+  });
+
+  it("guarda a elevação livre mesmo sem H3 ainda, porque é uma característica da máquina", () => {
+    expect(calcularH1({ modelo: "EXV 14", mastro: "telescopico", h3: "", elevacaoLivre150: true }))
+      .toEqual({ h1: "", h1_origem: "", elevacao_livre_150: true });
   });
 });
 
@@ -189,6 +243,8 @@ describe("h1DaMaquina — o que se mostra", () => {
 
   it("máquina registada antes das tabelas: calcula na hora", () => {
     expect(h1DaMaquina({ modelo: "RX 20-16", mastro: "triplex", h3: "4920" })).toEqual({ h1: 2160, origem: "tabela" });
+    expect(h1DaMaquina({ modelo: "EXV 14", mastro: "telescopico", h3: "2844", elevacao_livre_150: true }))
+      .toEqual({ h1: 1990, origem: "tabela" });
   });
 
   it("sem H1 possível, nada", () => {

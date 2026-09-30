@@ -5,6 +5,7 @@ import OptionButton from "@/components/atlas/OptionButton";
 import FotosMaquina from "@/components/atlas/FotosMaquina";
 import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
 import H1DoMastro from "@/components/atlas/H1DoMastro";
+import ElevacaoLivre150 from "@/components/atlas/ElevacaoLivre150";
 
 /**
  * Passo 2 — as características. Numa máquina já conhecida vêm preenchidas.
@@ -24,6 +25,10 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABE
             <OptionButton key={o.value} option={o} isSelected={specs.mastro === o.value} onClick={(v) => handleSpecSelect("mastro", v)} />
           ))}
         </div>
+        <ElevacaoLivre150
+          modelo={modelo} mastro={specs.mastro} valor={specs.elevacao_livre_150}
+          onChange={(v) => setSpecs((prev) => ({ ...prev, elevacao_livre_150: v }))}
+        />
       </div>
 
       <div>
@@ -39,7 +44,7 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABE
         />
       </div>
 
-      <H1DoMastro modelo={modelo} mastro={specs.mastro} h3={specs.h3} listaId="h3-da-ficha-entrada" />
+      <H1DoMastro modelo={modelo} mastro={specs.mastro} h3={specs.h3} elevacaoLivre150={specs.elevacao_livre_150} listaId="h3-da-ficha-entrada" />
 
       {/* Opcional: nem sempre se consegue ler, e quem regista no pátio não pode
           ficar bloqueado por causa disso. Entra depois pela edição da máquina. */}

@@ -54,7 +54,11 @@ export function montarTabela(lotes) {
         tiposDesconhecidos.add(l.tipo_mastro);
         continue;
       }
-      const linha = { h3: l.h3, h1: l.h1, h2: l.h2, h4: l.h4, fonte: l.fonte, igoIndisponivel: !!l.nao_disponivel_igo };
+      const linha = {
+        h3: l.h3, h1: l.h1, h2: l.h2, h4: l.h4, fonte: l.fonte, igoIndisponivel: !!l.nao_disponivel_igo,
+        // H1 com a opção de elevação livre de 150 mm (só alguns EXV telescópicos).
+        h1El150: l.h1_elev_livre_150 ?? null,
+      };
       for (const modelo of l.modelos_aplicaveis || []) {
         const chave = normalizarModelo(modelo);
         const entrada = (tabela[chave] ||= { modelo, tipos: {} });
@@ -62,7 +66,7 @@ export function montarTabela(lotes) {
         const mesma = linhas.find((x) => x.h3 === linha.h3);
         if (!mesma) {
           linhas.push(linha);
-        } else if (mesma.h1 !== linha.h1 || mesma.h2 !== linha.h2 || mesma.h4 !== linha.h4) {
+        } else if (mesma.h1 !== linha.h1 || mesma.h2 !== linha.h2 || mesma.h4 !== linha.h4 || mesma.h1El150 !== linha.h1El150) {
           conflitos.push({ modelo, tipo, h3: linha.h3, fica: mesma, ignorada: linha });
         }
       }
@@ -78,6 +82,8 @@ export function montarTabela(lotes) {
 const procurarModelo = (modelo, tabela) =>
   tabela[normalizarModelo(modelo)] ?? tabela[normalizarModelo(semSufixos(modelo))];
 
+const linhasDe = (modelo, mastro, tabela) => procurarModelo(modelo, tabela)?.tipos?.[tipoDe(mastro)];
+
 const MONTADA = montarTabela(LOTES);
 export const TABELA_MASTROS = MONTADA.tabela;
 export const PROBLEMAS_DA_TABELA = { conflitos: MONTADA.conflitos, tiposDesconhecidos: MONTADA.tiposDesconhecidos };
@@ -90,12 +96,16 @@ export const PROBLEMAS_DA_TABELA = { conflitos: MONTADA.conflitos, tiposDesconhe
  * de tipos diferentes a 20 mm uns dos outros. Por isso não há tolerância na
  * procura: ou o H3 existe na ficha, ou é estimado e fica marcado como tal.
  *
+ * Com `elevacaoLivre150`, usa-se o H1 da versão com elevação livre de 150 mm,
+ * quando a ficha a tem para este modelo e mastro; quando não tem, a opção não
+ * se aplica e fica o H1 normal (`elevacaoLivre150: false` no resultado).
+ *
  * Devolve sempre um objeto com `origem`:
  *  - "tabela":   o H3 existe na ficha; H1/H2/H4 são os valores oficiais
  *  - "estimado": o H3 fica entre dois valores da ficha; H1 interpolado
  *  - "modelo_desconhecido" | "tipo_indisponivel" | "fora_da_tabela" | "dados_em_falta": h1 = null
  */
-export function resolverH1({ modelo, mastro, h3 }, tabela = TABELA_MASTROS) {
+export function resolverH1({ modelo, mastro, h3, elevacaoLivre150 = false }, tabela = TABELA_MASTROS) {
   const valorH3 = Number(String(h3 ?? "").replace(/[^\d]/g, ""));
   const tipo = tipoDe(mastro);
   if (!modelo || !tipo || !valorH3) return { h1: null, origem: "dados_em_falta" };
@@ -108,10 +118,13 @@ export function resolverH1({ modelo, mastro, h3 }, tabela = TABELA_MASTROS) {
     return { h1: null, origem: "tipo_indisponivel", tiposDisponiveis: Object.keys(entrada.tipos) };
   }
 
+  const el150 = !!elevacaoLivre150 && linhas.every((l) => l.h1El150 !== null);
+  const h1De = (l) => (el150 ? l.h1El150 : l.h1);
+
   const exata = linhas.find((l) => l.h3 === valorH3);
   if (exata) {
-    const { h1, h2, h4, fonte, igoIndisponivel } = exata;
-    return { h1, h2, h4, origem: "tabela", fonte, igoIndisponivel };
+    const { h2, h4, fonte, igoIndisponivel } = exata;
+    return { h1: h1De(exata), h2, h4, origem: "tabela", fonte, igoIndisponivel, elevacaoLivre150: el150 };
   }
 
   const i = linhas.findIndex((l) => l.h3 > valorH3);
@@ -121,27 +134,41 @@ export function resolverH1({ modelo, mastro, h3 }, tabela = TABELA_MASTROS) {
     return { h1: null, origem: "fora_da_tabela", intervalo: [linhas[0].h3, linhas[linhas.length - 1].h3] };
   }
   const [a, b] = [linhas[i - 1], linhas[i]];
-  const h1 = Math.round(a.h1 + ((valorH3 - a.h3) * (b.h1 - a.h1)) / (b.h3 - a.h3));
-  return { h1, origem: "estimado", entre: [a.h3, b.h3], fonte: a.fonte };
+  const h1 = Math.round(h1De(a) + ((valorH3 - a.h3) * (h1De(b) - h1De(a))) / (b.h3 - a.h3));
+  return { h1, origem: "estimado", entre: [a.h3, b.h3], fonte: a.fonte, elevacaoLivre150: el150 };
 }
 
 /** H3 válidos para o modelo/tipo — para sugerir no formulário. */
 export function h3Disponiveis(modelo, mastro, tabela = TABELA_MASTROS) {
-  const linhas = procurarModelo(modelo, tabela)?.tipos?.[tipoDe(mastro)];
+  const linhas = linhasDe(modelo, mastro, tabela);
   return linhas ? linhas.map((l) => l.h3) : [];
+}
+
+/**
+ * Se a ficha tem a versão com elevação livre de 150 mm para este modelo e
+ * mastro — é aí, e só aí, que o registo pergunta por ela.
+ */
+export function temElevacaoLivre150(modelo, mastro, tabela = TABELA_MASTROS) {
+  const linhas = linhasDe(modelo, mastro, tabela);
+  return !!linhas?.length && linhas.every((l) => l.h1El150 !== null);
 }
 
 /**
  * O que se grava na Maquina.
  *
- * O H1 é sempre recalculado a partir de modelo + mastro + H3 e nunca se
- * escreve à mão: se o H3 mudar e deixar de dar H1, o antigo apaga-se, porque
- * já não seria o desta máquina.
+ * O H1 é sempre recalculado a partir de modelo + mastro + H3 (e da elevação
+ * livre de 150 mm, quando a ficha a tem) e nunca se escreve à mão: se o H3
+ * mudar e deixar de dar H1, o antigo apaga-se, porque já não seria o desta
+ * máquina.
+ *
+ * A elevação livre só se grava quando se aplica ao modelo e mastro: marcada
+ * num EXV telescópico e depois trocado o mastro para triplex, cai.
  */
-export function calcularH1({ modelo, mastro, h3 }) {
-  const r = resolverH1({ modelo, mastro, h3 });
-  if (r.h1 === null) return { h1: "", h1_origem: "" };
-  return { h1: String(r.h1), h1_origem: r.origem };
+export function calcularH1({ modelo, mastro, h3, elevacaoLivre150 = false }) {
+  const elevacao_livre_150 = !!elevacaoLivre150 && temElevacaoLivre150(modelo, mastro);
+  const r = resolverH1({ modelo, mastro, h3, elevacaoLivre150: elevacao_livre_150 });
+  if (r.h1 === null) return { h1: "", h1_origem: "", elevacao_livre_150 };
+  return { h1: String(r.h1), h1_origem: r.origem, elevacao_livre_150 };
 }
 
 /**
@@ -151,7 +178,9 @@ export function calcularH1({ modelo, mastro, h3 }) {
 export function h1DaMaquina(maquina) {
   if (!maquina) return null;
   if (maquina.h1) return { h1: Number(maquina.h1), origem: maquina.h1_origem || "tabela" };
-  const r = resolverH1(maquina);
+  const r = resolverH1({
+    modelo: maquina.modelo, mastro: maquina.mastro, h3: maquina.h3, elevacaoLivre150: maquina.elevacao_livre_150,
+  });
   return r.h1 === null ? null : { h1: r.h1, origem: r.origem };
 }
 
