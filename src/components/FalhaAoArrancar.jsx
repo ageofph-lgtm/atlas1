@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { WifiOff, RotateCcw, Eraser } from "lucide-react";
 import { limparAplicacaoEmCache } from "@/lib/recuperacao";
+import { enderecoSemCache } from "@/lib/versao";
 
 /**
  * O que se vê quando a aplicação não consegue arrancar.
@@ -24,7 +25,8 @@ export default function FalhaAoArrancar({ mensagem, onTentarDeNovo }) {
       serviceWorker: typeof navigator !== "undefined" ? navigator.serviceWorker : undefined,
       caches: typeof window !== "undefined" ? window.caches : undefined,
     });
-    window.location.reload();
+    // Por um endereço novo, para não voltar a vir o index.html guardado.
+    window.location.replace(enderecoSemCache(window.location.href));
   };
 
   return (
