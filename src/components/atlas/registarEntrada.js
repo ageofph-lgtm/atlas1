@@ -6,6 +6,7 @@ import { juntarFotos } from "@/components/atlas/fotosMaquina";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
 import { notificarEntrada } from "@/components/atlas/mensagens";
 import { exigirRede } from "@/components/atlas/rede";
+import { calcularH1 } from "@/components/atlas/tabelaMastros";
 
 /**
  * Registo de entrada de uma máquina no pátio.
@@ -98,6 +99,7 @@ export async function registarEntrada({
       tipo_pneu: specs.tipo_pneu || "",
       acessorios: specs.acessorios || [],
       h3: specs.h3 || "",
+      ...calcularH1({ modelo, mastro: specs.mastro, h3: specs.h3 }),
       bateria: specs.bateria || "",
       horimetro: specs.horimetro || "",
       fotos: fotos || [],
@@ -106,16 +108,22 @@ export async function registarEntrada({
     maquinaId = nova.id;
   } else {
     // Máquina conhecida: o que vier em branco não apaga o que já lá estava.
+    const modeloFinal = modelo || existingMaquina.modelo;
+    const mastroFinal = specs.mastro || existingMaquina.mastro;
+    const h3Final = specs.h3 || existingMaquina.h3 || "";
     await base44.entities.Maquina.update(maquinaId, {
-      modelo: modelo || existingMaquina.modelo,
+      modelo: modeloFinal,
       ano: ano || existingMaquina.ano,
       foto_url: fotoUrl || existingMaquina.foto_url,
-      mastro: specs.mastro || existingMaquina.mastro,
+      mastro: mastroFinal,
       vias_mastro: specs.vias_mastro || existingMaquina.vias_mastro,
       joystick: specs.joystick || existingMaquina.joystick,
       tipo_pneu: specs.tipo_pneu || existingMaquina.tipo_pneu,
       acessorios: specs.acessorios?.length ? specs.acessorios : existingMaquina.acessorios,
-      h3: specs.h3 || existingMaquina.h3 || "",
+      h3: h3Final,
+      // O H1 sai do que fica gravado, não do que veio no formulário: numa
+      // reentrada o H3 pode vir em branco e manter-se o de antes.
+      ...calcularH1({ modelo: modeloFinal, mastro: mastroFinal, h3: h3Final }),
       bateria: specs.bateria || existingMaquina.bateria || "",
       // Em branco não apaga o que já lá estava: o horímetro pode ter sido
       // apontado noutra entrada e quem regista agora pode não o ter lido.

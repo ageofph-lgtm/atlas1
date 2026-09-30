@@ -38,6 +38,14 @@
       "type": "string",
       "description": "Altura máxima do mastro em mm (H3)"
     },
+    "h1": {
+      "type": "string",
+      "description": "Altura do mastro recolhido em mm (H1). Calculada pela tabela de mastros a partir de modelo + mastro + H3; não se escreve à mão."
+    },
+    "h1_origem": {
+      "type": "string",
+      "description": "De onde veio o H1: 'tabela' (valor da ficha) ou 'estimado' (H3 entre dois valores da ficha, interpolado). Vazio = sem H1."
+    },
     "bateria": {
       "type": "string",
       "enum": [

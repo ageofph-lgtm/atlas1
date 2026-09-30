@@ -6,6 +6,7 @@ import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS, ESTADO
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { isCategoriaSemEstado, estadoEfetivo, ESTADOS_OFICINA, podeGerirEstadoOficina } from "@/components/atlas/cicloUtils";
 import { podeEditarCategoria, podeEditarEstado } from "@/components/hooks/usePermissions";
+import H1DoMastro from "@/components/atlas/H1DoMastro";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -268,8 +269,10 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
               value={specs.h3}
               onChange={(e) => setSpecs((prev) => ({ ...prev, h3: e.target.value }))}
               placeholder="ex. 4455"
+              list="h3-da-ficha-edicao"
               className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
             />
+            <H1DoMastro modelo={maquina?.modelo} mastro={specs.mastro} h3={specs.h3} listaId="h3-da-ficha-edicao" />
           </div>
 
           {/* Pode entrar aqui em qualquer altura: as máquinas já registadas não

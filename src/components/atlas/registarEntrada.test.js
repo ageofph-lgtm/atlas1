@@ -231,4 +231,28 @@ describe("máquina já conhecida", () => {
     expect(u.mastro).toBe("triplex");
     expect(u.acessorios).toEqual(["sideshift"]);
   });
+  it("o H1 sai do que fica gravado: H3 em branco na reentrada mantém o de antes e dá H1", async () => {
+    await registarEntrada({
+      ...base, existingMaquina: { ...existente, modelo: "RX 20-16", mastro: "triplex", h3: "4920" },
+      modelo: "", specs: { mastro: "", h3: "", acessorios: [] },
+    });
+
+    const u = registo.atualizados.find((x) => x.id === "m1").dados;
+    expect(u.h3).toBe("4920");
+    expect(u).toMatchObject({ h1: "2160", h1_origem: "tabela" });
+  });
+});
+
+describe("H1 pela tabela de mastros", () => {
+  it("máquina nova com modelo, mastro e H3 da ficha grava o H1", async () => {
+    await registarEntrada({ ...base, modelo: "RX 20-16", specs: { mastro: "triplex", h3: "4920", acessorios: [] } });
+    const maquina = registo.criados.find((c) => c.entidade === "Maquina").dados;
+    expect(maquina).toMatchObject({ h3: "4920", h1: "2160", h1_origem: "tabela" });
+  });
+
+  it("modelo sem tabela grava o H1 em branco", async () => {
+    await registarEntrada({ ...base, modelo: "EXV 14", specs: { mastro: "triplex", h3: "4000", acessorios: [] } });
+    const maquina = registo.criados.find((c) => c.entidade === "Maquina").dados;
+    expect(maquina).toMatchObject({ h1: "", h1_origem: "" });
+  });
 });

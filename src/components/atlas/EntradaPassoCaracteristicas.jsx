@@ -4,11 +4,12 @@ import { SPEC_OPTIONS } from "@/components/atlas/constants";
 import OptionButton from "@/components/atlas/OptionButton";
 import FotosMaquina from "@/components/atlas/FotosMaquina";
 import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
+import H1DoMastro from "@/components/atlas/H1DoMastro";
 
 /**
  * Passo 2 — as características. Numa máquina já conhecida vêm preenchidas.
  */
-export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
+export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, modelo, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
   return (
     <div className="space-y-5">
       <div>
@@ -33,8 +34,10 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABE
           value={specs.h3}
           onChange={(e) => setSpecs((prev) => ({ ...prev, h3: e.target.value }))}
           placeholder="ex. 4455"
+          list="h3-da-ficha-entrada"
           className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
         />
+        <H1DoMastro modelo={modelo} mastro={specs.mastro} h3={specs.h3} listaId="h3-da-ficha-entrada" />
       </div>
 
       {/* Opcional: nem sempre se consegue ler, e quem regista no pátio não pode

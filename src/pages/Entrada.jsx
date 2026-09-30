@@ -283,7 +283,7 @@ export default function Entrada({ currentUser }) {
         <EntradaPassoCaracteristicas
             fotos={fotos}
             setFotos={setFotos}
-          specs={specs} setSpecs={setSpecs}
+          specs={specs} setSpecs={setSpecs} modelo={modelo}
           handleSpecSelect={handleSpecSelect} handleAcessorioToggle={handleAcessorioToggle}
           notas={notas} setNotas={setNotas}
           NOTA_LABELS={NOTA_LABELS} toggleNotaLabel={toggleNotaLabel}
