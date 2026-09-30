@@ -79,9 +79,10 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onAtualizad
           <SpecRow label="Modelo" value={maquina?.modelo} />
           <SpecRow label="Ano" value={maquina?.ano} />
           <SpecRow label="Mastro" value={maquina?.mastro ? `${SPEC_LABELS.mastro?.[maquina.mastro] || maquina.mastro}${maquina.vias_mastro ? ` ${maquina.vias_mastro}V` : ""}` : null} />
+          <SpecRow label="Bateria" value={maquina?.bateria ? (SPEC_LABELS.bateria?.[maquina.bateria] || maquina.bateria) : null} />
+          {/* H3 e H1 lado a lado: um é o mastro aberto, o outro recolhido. */}
           <SpecRow label="H3" value={maquina?.h3 ? `${maquina.h3}mm` : null} />
           <SpecRow label="H1" value={formatarH1(h1DaMaquina(maquina))} />
-          <SpecRow label="Bateria" value={maquina?.bateria ? (SPEC_LABELS.bateria?.[maquina.bateria] || maquina.bateria) : null} />
           <SpecRow label="Joystick" value={maquina?.joystick ? (SPEC_LABELS.joystick?.[maquina.joystick] || maquina.joystick) : null} />
           <SpecRow label="Pneus" value={maquina?.tipo_pneu ? (SPEC_LABELS.tipo_pneu?.[maquina.tipo_pneu] || maquina.tipo_pneu) : null} />
           <SpecRow label="Horímetro" value={maquina?.horimetro ? `${maquina.horimetro} h` : null} />

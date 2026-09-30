@@ -19,7 +19,7 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABE
 
       <div>
         <h3 className="text-sm font-medium text-slate-300 mb-2">Mastro</h3>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {SPEC_OPTIONS.mastro.map((o) => (
             <OptionButton key={o.value} option={o} isSelected={specs.mastro === o.value} onClick={(v) => handleSpecSelect("mastro", v)} />
           ))}
@@ -37,8 +37,9 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABE
           list="h3-da-ficha-entrada"
           className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
         />
-        <H1DoMastro modelo={modelo} mastro={specs.mastro} h3={specs.h3} listaId="h3-da-ficha-entrada" />
       </div>
+
+      <H1DoMastro modelo={modelo} mastro={specs.mastro} h3={specs.h3} listaId="h3-da-ficha-entrada" />
 
       {/* Opcional: nem sempre se consegue ler, e quem regista no pátio não pode
           ficar bloqueado por causa disso. Entra depois pela edição da máquina. */}

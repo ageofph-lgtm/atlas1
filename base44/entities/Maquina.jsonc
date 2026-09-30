@@ -20,7 +20,7 @@
     },
     "mastro": {
       "type": "string",
-      "description": "Tipo de mastro (triplex, telescopico, niho)"
+      "description": "Tipo de mastro (triplex, telescopico, niho, simplex)"
     },
     "vias_mastro": {
       "type": "string",

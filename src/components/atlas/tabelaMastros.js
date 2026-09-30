@@ -6,22 +6,32 @@
  * e as fichas técnicas STILL (VDI 2198, página "Tabela de mastros") dão os
  * pares. Com elas, quem regista no pátio fica com o H1 sem ir ao sistema.
  *
- * As fichas estão transcritas em JSON, por lotes, na pasta `mastros/`. Um lote
- * novo é mais um ficheiro `tabela_mastros_*.json` nessa pasta: entra sozinho,
- * sem mexer neste código. Os testes verificam que os lotes não se contradizem.
+ * As fichas estão transcritas em JSON na pasta `mastros/`. Lê-se todo o `.json`
+ * que lá estiver: a tabela completa atualizada substitui o ficheiro, e um lote
+ * à parte entra como mais um ficheiro — sem mexer neste código. Os testes
+ * verificam que os ficheiros não se contradizem.
  */
 
 const LOTES = Object.values(
-  import.meta.glob("./mastros/tabela_mastros_*.json", { eager: true, import: "default" })
+  import.meta.glob("./mastros/*.json", { eager: true, import: "default" })
 );
 
 /** "RX 20-16P", "rx20-16p" e "RX 20 16 P" são o mesmo modelo. */
 export const normalizarModelo = (modelo) => String(modelo || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 
+// A designação comercial traz sufixos que não mudam o mastro ("RX 60-35 (Plus)/600|Li-Ion",
+// "EXV 14/Li-Ion"). Tiram-se antes de procurar, para a placa bater com a ficha.
+const semSufixos = (modelo) =>
+  String(modelo || "").toUpperCase().replace(/\(?\s*PLUS\s*\)?/g, "").replace(/[|/]?\s*LI-?\s*ION/g, "");
+
 // Os nomes das fichas e os da aplicação. A STILL chama NiHo ao mastro HiLo.
-// "duplex" fica de fora de propósito: tanto o telescópico como o HiLo são
-// mastros de 2 estágios, por isso "duplex" não diz qual das duas tabelas usar.
-const TIPOS_ALIAS = { hilo: "niho", niho: "niho", triplex: "triplex", telescopico: "telescopico", "telescópico": "telescopico" };
+// "duplex" = telescópico (2 estágios sem elevação livre), na linguagem da
+// oficina. Um HiLo também tem 2 estágios, mas distingue-se pelo cilindro
+// central de elevação livre e regista-se como "niho".
+const TIPOS_ALIAS = {
+  hilo: "niho", niho: "niho", triplex: "triplex", simplex: "simplex",
+  telescopico: "telescopico", "telescópico": "telescopico", duplex: "telescopico",
+};
 const tipoDe = (mastro) => TIPOS_ALIAS[String(mastro || "").trim().toLowerCase()];
 
 /**
@@ -65,6 +75,9 @@ export function montarTabela(lotes) {
   return { tabela, conflitos, tiposDesconhecidos: [...tiposDesconhecidos] };
 }
 
+const procurarModelo = (modelo, tabela) =>
+  tabela[normalizarModelo(modelo)] ?? tabela[normalizarModelo(semSufixos(modelo))];
+
 const MONTADA = montarTabela(LOTES);
 export const TABELA_MASTROS = MONTADA.tabela;
 export const PROBLEMAS_DA_TABELA = { conflitos: MONTADA.conflitos, tiposDesconhecidos: MONTADA.tiposDesconhecidos };
@@ -87,7 +100,7 @@ export function resolverH1({ modelo, mastro, h3 }, tabela = TABELA_MASTROS) {
   const tipo = tipoDe(mastro);
   if (!modelo || !tipo || !valorH3) return { h1: null, origem: "dados_em_falta" };
 
-  const entrada = tabela[normalizarModelo(modelo)];
+  const entrada = procurarModelo(modelo, tabela);
   if (!entrada) return { h1: null, origem: "modelo_desconhecido" };
 
   const linhas = entrada.tipos[tipo];
@@ -114,7 +127,7 @@ export function resolverH1({ modelo, mastro, h3 }, tabela = TABELA_MASTROS) {
 
 /** H3 válidos para o modelo/tipo — para sugerir no formulário. */
 export function h3Disponiveis(modelo, mastro, tabela = TABELA_MASTROS) {
-  const linhas = tabela[normalizarModelo(modelo)]?.tipos?.[tipoDe(mastro)];
+  const linhas = procurarModelo(modelo, tabela)?.tipos?.[tipoDe(mastro)];
   return linhas ? linhas.map((l) => l.h3) : [];
 }
 

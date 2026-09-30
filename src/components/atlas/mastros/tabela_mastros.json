@@ -1,11 +1,46 @@
 {
- "versao": "lote1",
+ "versao": "lotes 1-2",
  "fichas": [
+  "EXV PRT p.6-8",
+  "EXV-SF PRT p.2-3",
   "FM-X PRT 12/25 p.9",
   "RX 20 PRT 07/26 p.8-9",
-  "RX 60-25/35 PRT 07/26 p.6"
+  "RX 60-25/35 PRT 07/26 p.6",
+  "RX 60-35/50 PRT p.7"
  ],
  "modelos": [
+  "EXV 10C",
+  "EXV 10iC",
+  "EXV 12C",
+  "EXV 12C D",
+  "EXV 12iC",
+  "EXV 12iC D",
+  "EXV 14",
+  "EXV 14 D",
+  "EXV 14C",
+  "EXV 14C D",
+  "EXV 14i",
+  "EXV 14iC",
+  "EXV 14iC D",
+  "EXV 16",
+  "EXV 16 D",
+  "EXV 16C",
+  "EXV 16C D",
+  "EXV 16i",
+  "EXV 16iC",
+  "EXV 16iC D",
+  "EXV 20",
+  "EXV 20 D",
+  "EXV 20i",
+  "EXV-SF 14",
+  "EXV-SF 14 D",
+  "EXV-SF 14i",
+  "EXV-SF 16",
+  "EXV-SF 16 D",
+  "EXV-SF 16i",
+  "EXV-SF 20",
+  "EXV-SF 20 D",
+  "EXV-SF 20i",
   "FM-X 10",
   "FM-X 10 N",
   "FM-X 12",
@@ -45,7 +80,14 @@
   "RX 60-30",
   "RX 60-30L",
   "RX 60-30L/600",
-  "RX 60-35L"
+  "RX 60-35/600",
+  "RX 60-35L",
+  "RX 60-40",
+  "RX 60-40/600",
+  "RX 60-45",
+  "RX 60-45/600",
+  "RX 60-50",
+  "RX 60-50/600"
  ],
  "linhas": [
   {
@@ -4495,6 +4537,2849 @@
    "nao_disponivel_igo": false,
    "fonte": "RX 20 PRT 07/26 p.8-9",
    "nota": null
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2980,
+   "h1": 2300,
+   "h2": 160,
+   "h4": 3762,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 3987
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3180,
+   "h1": 2400,
+   "h2": 160,
+   "h4": 3962,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4187
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3480,
+   "h1": 2550,
+   "h2": 160,
+   "h4": 4262,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4487
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3680,
+   "h1": 2650,
+   "h2": 160,
+   "h4": 4462,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4687
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4080,
+   "h1": 2850,
+   "h2": 160,
+   "h4": 4862,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5087
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4480,
+   "h1": 3050,
+   "h2": 160,
+   "h4": 5262,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5487
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4880,
+   "h1": 3250,
+   "h2": 160,
+   "h4": 5662,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5887
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4030,
+   "h1": 2150,
+   "h2": 1390,
+   "h4": 4835,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1238,
+   "h4_6rolos": 4987
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4330,
+   "h1": 2250,
+   "h2": 1490,
+   "h4": 5135,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1338,
+   "h4_6rolos": 5287
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4630,
+   "h1": 2350,
+   "h2": 1590,
+   "h4": 5435,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1438,
+   "h4_6rolos": 5587
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5080,
+   "h1": 2500,
+   "h2": 1740,
+   "h4": 5885,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1588,
+   "h4_6rolos": 6037
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5380,
+   "h1": 2600,
+   "h2": 1840,
+   "h4": 6185,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1688,
+   "h4_6rolos": 6337
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5980,
+   "h1": 2800,
+   "h2": 2040,
+   "h4": 6785,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1888,
+   "h4_6rolos": 6937
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 6580,
+   "h1": 3000,
+   "h2": 2240,
+   "h4": 7385,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 2088,
+   "h4_6rolos": 7537
+  },
+  {
+   "familia": "RX 60-35/600",
+   "modelos_aplicaveis": [
+    "RX 60-35/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 7180,
+   "h1": 3200,
+   "h2": 2440,
+   "h4": 7985,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 2288,
+   "h4_6rolos": 8137
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2980,
+   "h1": 2300,
+   "h2": 160,
+   "h4": 3762,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 3987
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3180,
+   "h1": 2400,
+   "h2": 160,
+   "h4": 3962,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4187
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3480,
+   "h1": 2550,
+   "h2": 160,
+   "h4": 4262,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4487
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3680,
+   "h1": 2650,
+   "h2": 160,
+   "h4": 4462,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4687
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4080,
+   "h1": 2850,
+   "h2": 160,
+   "h4": 4862,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5087
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4480,
+   "h1": 3050,
+   "h2": 160,
+   "h4": 5262,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5487
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4880,
+   "h1": 3250,
+   "h2": 160,
+   "h4": 5662,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5887
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4030,
+   "h1": 2150,
+   "h2": 1390,
+   "h4": 4835,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1238,
+   "h4_6rolos": 4987
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4330,
+   "h1": 2250,
+   "h2": 1490,
+   "h4": 5135,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1338,
+   "h4_6rolos": 5287
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4630,
+   "h1": 2350,
+   "h2": 1590,
+   "h4": 5435,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1438,
+   "h4_6rolos": 5587
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5080,
+   "h1": 2500,
+   "h2": 1740,
+   "h4": 5885,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1588,
+   "h4_6rolos": 6037
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5380,
+   "h1": 2600,
+   "h2": 1840,
+   "h4": 6185,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1688,
+   "h4_6rolos": 6337
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5980,
+   "h1": 2800,
+   "h2": 2040,
+   "h4": 6785,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1888,
+   "h4_6rolos": 6937
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 6580,
+   "h1": 3000,
+   "h2": 2240,
+   "h4": 7385,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 2088,
+   "h4_6rolos": 7537
+  },
+  {
+   "familia": "RX 60-40",
+   "modelos_aplicaveis": [
+    "RX 60-40"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 7180,
+   "h1": 3200,
+   "h2": 2440,
+   "h4": 7985,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 2288,
+   "h4_6rolos": 8137
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2980,
+   "h1": 2300,
+   "h2": 160,
+   "h4": 3762,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 3987
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3180,
+   "h1": 2400,
+   "h2": 160,
+   "h4": 3962,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4187
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3480,
+   "h1": 2550,
+   "h2": 160,
+   "h4": 4262,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4487
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3680,
+   "h1": 2650,
+   "h2": 160,
+   "h4": 4462,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 4687
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4080,
+   "h1": 2850,
+   "h2": 160,
+   "h4": 4862,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5087
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4480,
+   "h1": 3050,
+   "h2": 160,
+   "h4": 5262,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5487
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4880,
+   "h1": 3250,
+   "h2": 160,
+   "h4": 5662,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 160,
+   "h4_6rolos": 5887
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4030,
+   "h1": 2150,
+   "h2": 1390,
+   "h4": 4835,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1238,
+   "h4_6rolos": 4987
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4330,
+   "h1": 2250,
+   "h2": 1490,
+   "h4": 5135,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1338,
+   "h4_6rolos": 5287
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4630,
+   "h1": 2350,
+   "h2": 1590,
+   "h4": 5435,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1438,
+   "h4_6rolos": 5587
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5080,
+   "h1": 2500,
+   "h2": 1740,
+   "h4": 5885,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1588,
+   "h4_6rolos": 6037
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5380,
+   "h1": 2600,
+   "h2": 1840,
+   "h4": 6185,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1688,
+   "h4_6rolos": 6337
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5980,
+   "h1": 2800,
+   "h2": 2040,
+   "h4": 6785,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 1888,
+   "h4_6rolos": 6937
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 6580,
+   "h1": 3000,
+   "h2": 2240,
+   "h4": 7385,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 2088,
+   "h4_6rolos": 7537
+  },
+  {
+   "familia": "RX 60-40/600 - 45 - 45/600 - 50",
+   "modelos_aplicaveis": [
+    "RX 60-40/600",
+    "RX 60-45",
+    "RX 60-45/600",
+    "RX 60-50"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 7180,
+   "h1": 3200,
+   "h2": 2440,
+   "h4": 7985,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "h2/h4 com porta-garfos de 4 rolos; valores com 6 rolos em h2_6rolos/h4_6rolos.",
+   "h2_6rolos": 2288,
+   "h4_6rolos": 8137
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2780,
+   "h1": 2300,
+   "h2": 160,
+   "h4": 3887,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2980,
+   "h1": 2400,
+   "h2": 160,
+   "h4": 4087,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3280,
+   "h1": 2550,
+   "h2": 160,
+   "h4": 4387,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3480,
+   "h1": 2650,
+   "h2": 160,
+   "h4": 4587,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3880,
+   "h1": 2850,
+   "h2": 160,
+   "h4": 4987,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4280,
+   "h1": 3050,
+   "h2": 160,
+   "h4": 5387,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4680,
+   "h1": 3250,
+   "h2": 160,
+   "h4": 5787,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 3730,
+   "h1": 2150,
+   "h2": 1138,
+   "h4": 4787,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4030,
+   "h1": 2250,
+   "h2": 1238,
+   "h4": 5087,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4330,
+   "h1": 2350,
+   "h2": 1338,
+   "h4": 5387,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4780,
+   "h1": 2500,
+   "h2": 1488,
+   "h4": 5837,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5080,
+   "h1": 2600,
+   "h2": 1588,
+   "h4": 6137,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5680,
+   "h1": 2800,
+   "h2": 1788,
+   "h4": 6737,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 6280,
+   "h1": 3000,
+   "h2": 1988,
+   "h4": 7337,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "RX 60-50/600",
+   "modelos_aplicaveis": [
+    "RX 60-50/600"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 6880,
+   "h1": 3200,
+   "h2": 2188,
+   "h4": 7937,
+   "nao_disponivel_igo": false,
+   "fonte": "RX 60-35/50 PRT p.7",
+   "nota": "Só porta-garfos de 6 rolos."
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Simplex",
+   "h3": 662,
+   "h1": 1140,
+   "h2": 662,
+   "h4": 1140,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Simplex: h4 impresso 1940 para h1 2390 (h4 < h1), tal como na ficha.",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Simplex",
+   "h3": 1462,
+   "h1": 1940,
+   "h2": 1462,
+   "h4": 1940,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Simplex: h4 impresso 1940 para h1 2390 (h4 < h1), tal como na ficha.",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Simplex",
+   "h3": 1912,
+   "h1": 2390,
+   "h2": 1912,
+   "h4": 1940,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Simplex: h4 impresso 1940 para h1 2390 (h4 < h1), tal como na ficha.",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2024,
+   "h1": 1490,
+   "h2": 150,
+   "h4": 2502,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Inclui o 'telescópico compacto' (4 primeiras alturas, mesmos valores).",
+   "h1_elev_livre_150": 1565
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2424,
+   "h1": 1690,
+   "h2": 150,
+   "h4": 2902,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Inclui o 'telescópico compacto' (4 primeiras alturas, mesmos valores).",
+   "h1_elev_livre_150": 1765
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2924,
+   "h1": 1940,
+   "h2": 150,
+   "h4": 3402,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Inclui o 'telescópico compacto' (4 primeiras alturas, mesmos valores).",
+   "h1_elev_livre_150": 2015
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3324,
+   "h1": 2140,
+   "h2": 150,
+   "h4": 3827,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Inclui o 'telescópico compacto' (4 primeiras alturas, mesmos valores).",
+   "h1_elev_livre_150": 2215
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3824,
+   "h1": 2390,
+   "h2": 150,
+   "h4": 4302,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Inclui o 'telescópico compacto' (4 primeiras alturas, mesmos valores).",
+   "h1_elev_livre_150": 2465
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4224,
+   "h1": 2590,
+   "h2": 150,
+   "h4": 4702,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Inclui o 'telescópico compacto' (4 primeiras alturas, mesmos valores).",
+   "h1_elev_livre_150": 2665
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2024,
+   "h1": 1490,
+   "h2": 1012,
+   "h4": 2502,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2424,
+   "h1": 1690,
+   "h2": 1212,
+   "h4": 2902,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2924,
+   "h1": 1940,
+   "h2": 1462,
+   "h4": 3402,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3324,
+   "h1": 2140,
+   "h2": 1662,
+   "h4": 3827,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3824,
+   "h1": 2390,
+   "h2": 1912,
+   "h4": 4302,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 4224,
+   "h1": 2590,
+   "h2": 2112,
+   "h4": 4702,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h4 3827 (h3 3324) quebra o padrão h4 = h3 + 478 da tabela (esperado 3802); valor mantido como impresso. h1 não é afetado. Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 3636,
+   "h1": 1690,
+   "h2": 1208,
+   "h4": 4118,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4386,
+   "h1": 1940,
+   "h2": 1458,
+   "h4": 4868,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 10(i)C - 12(i)C",
+   "modelos_aplicaveis": [
+    "EXV 10C",
+    "EXV 10iC",
+    "EXV 12C",
+    "EXV 12iC",
+    "EXV 12C D",
+    "EXV 12iC D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4686,
+   "h1": 2040,
+   "h2": 1558,
+   "h4": 5168,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 1844,
+   "h1": 1415,
+   "h2": 150,
+   "h4": 2364,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 1490
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2344,
+   "h1": 1665,
+   "h2": 150,
+   "h4": 2864,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 1740
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2844,
+   "h1": 1915,
+   "h2": 150,
+   "h4": 3364,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 1990
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3244,
+   "h1": 2115,
+   "h2": 150,
+   "h4": 3764,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2190
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3744,
+   "h1": 2365,
+   "h2": 150,
+   "h4": 4264,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2440
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4144,
+   "h1": 2565,
+   "h2": 150,
+   "h4": 4664,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2640
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4644,
+   "h1": 2815,
+   "h2": 150,
+   "h4": 5164,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2890
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 1844,
+   "h1": 1415,
+   "h2": 895,
+   "h4": 2364,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2344,
+   "h1": 1665,
+   "h2": 1145,
+   "h4": 2864,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2844,
+   "h1": 1915,
+   "h2": 1395,
+   "h4": 3364,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3244,
+   "h1": 2115,
+   "h2": 1595,
+   "h4": 3764,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3744,
+   "h1": 2365,
+   "h2": 1845,
+   "h4": 4264,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 4144,
+   "h1": 2565,
+   "h2": 2045,
+   "h4": 4664,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 3516,
+   "h1": 1665,
+   "h2": 1145,
+   "h4": 4036,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4266,
+   "h1": 1915,
+   "h2": 1395,
+   "h4": 4786,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4716,
+   "h1": 2065,
+   "h2": 1545,
+   "h4": 5236,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5316,
+   "h1": 2265,
+   "h2": 1745,
+   "h4": 5836,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14(i)C - 16(i)C",
+   "modelos_aplicaveis": [
+    "EXV 14C",
+    "EXV 14iC",
+    "EXV 16C",
+    "EXV 16iC",
+    "EXV 14C D",
+    "EXV 14iC D",
+    "EXV 16C D",
+    "EXV 16iC D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5466,
+   "h1": 2315,
+   "h2": 1795,
+   "h4": 5986,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "Versão D incluída pelo rótulo/ficha; na D só algumas alturas são compatíveis (nota 1 da ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 1844,
+   "h1": 1415,
+   "h2": 150,
+   "h4": 2364,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 1490
+  },
+  {
+   "familia": "EXV 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2344,
+   "h1": 1665,
+   "h2": 150,
+   "h4": 2864,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 1740
+  },
+  {
+   "familia": "EXV 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2844,
+   "h1": 1915,
+   "h2": 150,
+   "h4": 3364,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 1990
+  },
+  {
+   "familia": "EXV 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3244,
+   "h1": 2115,
+   "h2": 150,
+   "h4": 3764,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2190
+  },
+  {
+   "familia": "EXV 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3744,
+   "h1": 2365,
+   "h2": 150,
+   "h4": 4264,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2440
+  },
+  {
+   "familia": "EXV 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4144,
+   "h1": 2565,
+   "h2": 150,
+   "h4": 4664,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2640
+  },
+  {
+   "familia": "EXV 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4644,
+   "h1": 2815,
+   "h2": 150,
+   "h4": 5164,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2890
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 1844,
+   "h1": 1415,
+   "h2": 895,
+   "h4": 2364,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2344,
+   "h1": 1665,
+   "h2": 1145,
+   "h4": 2864,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2844,
+   "h1": 1915,
+   "h2": 1395,
+   "h4": 3364,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3244,
+   "h1": 2115,
+   "h2": 1595,
+   "h4": 3764,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3744,
+   "h1": 2365,
+   "h2": 1845,
+   "h4": 4264,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 4144,
+   "h1": 2565,
+   "h2": 2045,
+   "h4": 4664,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 3516,
+   "h1": 1665,
+   "h2": 1145,
+   "h4": 4036,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h3 6066 não disponível para transporte em plataforma dupla (D).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4266,
+   "h1": 1915,
+   "h2": 1395,
+   "h4": 4786,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h3 6066 não disponível para transporte em plataforma dupla (D).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4716,
+   "h1": 2065,
+   "h2": 1545,
+   "h4": 5236,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h3 6066 não disponível para transporte em plataforma dupla (D).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5016,
+   "h1": 2165,
+   "h2": 1645,
+   "h4": 5536,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h3 6066 não disponível para transporte em plataforma dupla (D).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5316,
+   "h1": 2265,
+   "h2": 1745,
+   "h4": 5836,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h3 6066 não disponível para transporte em plataforma dupla (D).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5466,
+   "h1": 2315,
+   "h2": 1795,
+   "h4": 5986,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h3 6066 não disponível para transporte em plataforma dupla (D).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 14/14i/16/16i/14-16 D",
+   "modelos_aplicaveis": [
+    "EXV 14",
+    "EXV 14i",
+    "EXV 16",
+    "EXV 16i",
+    "EXV 14 D",
+    "EXV 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 6066,
+   "h1": 2515,
+   "h2": 1995,
+   "h4": 6586,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": "h3 6066 não disponível para transporte em plataforma dupla (D).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2684,
+   "h1": 1915,
+   "h2": 150,
+   "h4": 3284,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 1990
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3084,
+   "h1": 2115,
+   "h2": 150,
+   "h4": 3684,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2190
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3584,
+   "h1": 2365,
+   "h2": 150,
+   "h4": 4184,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": 2440
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2684,
+   "h1": 1915,
+   "h2": 1315,
+   "h4": 3284,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3084,
+   "h1": 2115,
+   "h2": 1515,
+   "h4": 3684,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3584,
+   "h1": 2365,
+   "h2": 1765,
+   "h4": 4184,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 3276,
+   "h1": 1665,
+   "h2": 1065,
+   "h4": 3876,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4026,
+   "h1": 1915,
+   "h2": 1315,
+   "h4": 4626,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV 20/20i/20 D",
+   "modelos_aplicaveis": [
+    "EXV 20",
+    "EXV 20i",
+    "EXV 20 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4476,
+   "h1": 2065,
+   "h2": 1465,
+   "h4": 5076,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV PRT p.6-8",
+   "nota": null,
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 1844,
+   "h1": 1415,
+   "h2": 150,
+   "h4": 2930,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 1490
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2344,
+   "h1": 1665,
+   "h2": 150,
+   "h4": 3430,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 1740
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2844,
+   "h1": 1915,
+   "h2": 150,
+   "h4": 3930,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 1990
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3244,
+   "h1": 2115,
+   "h2": 150,
+   "h4": 4330,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 2190
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3744,
+   "h1": 2365,
+   "h2": 150,
+   "h4": 4830,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 2440
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4144,
+   "h1": 2565,
+   "h2": 150,
+   "h4": 5230,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 2640
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 4644,
+   "h1": 2815,
+   "h2": 150,
+   "h4": 5730,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 2890
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 1844,
+   "h1": 1415,
+   "h2": 329,
+   "h4": 2930,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2344,
+   "h1": 1665,
+   "h2": 579,
+   "h4": 3430,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2844,
+   "h1": 1915,
+   "h2": 829,
+   "h4": 3930,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3244,
+   "h1": 2115,
+   "h2": 1029,
+   "h4": 4330,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3744,
+   "h1": 2365,
+   "h2": 1279,
+   "h4": 4830,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 4144,
+   "h1": 2565,
+   "h2": 1479,
+   "h4": 5230,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 3516,
+   "h1": 1665,
+   "h2": 579,
+   "h4": 4602,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4266,
+   "h1": 1915,
+   "h2": 829,
+   "h4": 5352,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4716,
+   "h1": 2065,
+   "h2": 979,
+   "h4": 5802,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5016,
+   "h1": 2165,
+   "h2": 1079,
+   "h4": 6102,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5316,
+   "h1": 2265,
+   "h2": 1179,
+   "h4": 6402,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5466,
+   "h1": 2315,
+   "h2": 1229,
+   "h4": 6552,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 5616,
+   "h1": 2365,
+   "h2": 1279,
+   "h4": 6702,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 14/14i/16/16i",
+   "modelos_aplicaveis": [
+    "EXV-SF 14",
+    "EXV-SF 14i",
+    "EXV-SF 16",
+    "EXV-SF 16i",
+    "EXV-SF 14 D",
+    "EXV-SF 16 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 6066,
+   "h1": 2515,
+   "h2": 1429,
+   "h4": 7152,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 2684,
+   "h1": 1915,
+   "h2": 150,
+   "h4": 3850,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 1990
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3084,
+   "h1": 2115,
+   "h2": 150,
+   "h4": 4250,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 2190
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "Telescópico",
+   "h3": 3584,
+   "h1": 2365,
+   "h2": 150,
+   "h4": 4750,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": 2440
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 2684,
+   "h1": 1915,
+   "h2": 749,
+   "h4": 3850,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3084,
+   "h1": 2115,
+   "h2": 949,
+   "h4": 4250,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "HiLo",
+   "h3": 3584,
+   "h1": 2365,
+   "h2": 1199,
+   "h4": 4750,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 3276,
+   "h1": 1665,
+   "h2": 499,
+   "h4": 4442,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4026,
+   "h1": 1915,
+   "h2": 749,
+   "h4": 5192,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
+  },
+  {
+   "familia": "EXV-SF 20/20i",
+   "modelos_aplicaveis": [
+    "EXV-SF 20",
+    "EXV-SF 20i",
+    "EXV-SF 20 D"
+   ],
+   "tipo_mastro": "Triplex",
+   "h3": 4476,
+   "h1": 2065,
+   "h2": 899,
+   "h4": 5642,
+   "nao_disponivel_igo": false,
+   "fonte": "EXV-SF PRT p.2-3",
+   "nota": "Rótulo da tabela não lista a versão D; D incluída por inferência (mesmo mastro, mesma ficha).",
+   "h1_elev_livre_150": null
   }
  ]
 }

@@ -254,7 +254,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
 
           <div>
             <h3 className="text-sm font-medium text-slate-300 mb-2">Mastro</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {SPEC_OPTIONS.mastro.map((o) => (
                 <OptionButton key={o.value} option={o} isSelected={specs.mastro === o.value} onClick={(v) => handleSpecSelect("mastro", v)} />
               ))}
@@ -272,8 +272,9 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
               list="h3-da-ficha-edicao"
               className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
             />
-            <H1DoMastro modelo={maquina?.modelo} mastro={specs.mastro} h3={specs.h3} listaId="h3-da-ficha-edicao" />
           </div>
+
+          <H1DoMastro modelo={maquina?.modelo} mastro={specs.mastro} h3={specs.h3} listaId="h3-da-ficha-edicao" />
 
           {/* Pode entrar aqui em qualquer altura: as máquinas já registadas não
               o têm, e obrigar a repetir o registo para o acrescentar não faria

@@ -50,9 +50,40 @@ describe("resolverH1", () => {
   });
 
   it("modelo fora das fichas carregadas e dados em falta", () => {
-    expect(resolverH1({ modelo: "EXV 14", mastro: "triplex", h3: 4000 }).origem).toBe("modelo_desconhecido");
-    expect(resolverH1({ modelo: "RX 20-16", mastro: "duplex", h3: 4000 }).origem).toBe("dados_em_falta");
+    expect(resolverH1({ modelo: "OPX 20", mastro: "triplex", h3: 4000 }).origem).toBe("modelo_desconhecido");
+    expect(resolverH1({ modelo: "RX 20-16", mastro: "outro", h3: 4000 }).origem).toBe("dados_em_falta");
     expect(resolverH1({ modelo: "RX 20-16", mastro: "triplex", h3: "" }).origem).toBe("dados_em_falta");
+  });
+});
+
+describe("resolverH1 — lote 2 (RX 60-35/50, EXV, EXV-SF)", () => {
+  it("duplex é lido como telescópico", () => {
+    expect(resolverH1({ modelo: "RX 20-16", mastro: "duplex", h3: 3180 }))
+      .toMatchObject({ h1: 2160, origem: "tabela" });
+  });
+
+  it("aceita a designação comercial com Plus e Li-Ion", () => {
+    expect(resolverH1({ modelo: "RX 60-35 (Plus)/600|Li-Ion", mastro: "triplex", h3: 5380 }).h1).toBe(2600);
+    expect(resolverH1({ modelo: "EXV 14/Li-Ion", mastro: "niho", h3: 2844 }).h1).toBe(1915);
+  });
+
+  it("RX 60-50/600 tem h3 próprios para o mesmo h1 (telescópico 2780 → 2300)", () => {
+    expect(resolverH1({ modelo: "RX 60-50/600", mastro: "telescopico", h3: 2780 }).h1).toBe(2300);
+    expect(resolverH1({ modelo: "RX 60-50", mastro: "telescopico", h3: 2780 }).origem).toBe("fora_da_tabela");
+  });
+
+  it("EXV com (i) e versão D escritos como na ficha", () => {
+    expect(resolverH1({ modelo: "EXV 12(i)C D", mastro: "triplex", h3: 4386 }).h1).toBe(1940);
+    expect(resolverH1({ modelo: "EXV 16 D", mastro: "triplex", h3: 6066 }).h1).toBe(2515);
+  });
+
+  it("EXV 10C simplex existe; EXV 14 não tem simplex", () => {
+    expect(resolverH1({ modelo: "EXV 10C", mastro: "simplex", h3: 1462 }).h1).toBe(1940);
+    expect(resolverH1({ modelo: "EXV 14", mastro: "simplex", h3: 1462 }).origem).toBe("tipo_indisponivel");
+  });
+
+  it("EXV-SF 20 triplex 4026 → 1915", () => {
+    expect(resolverH1({ modelo: "EXV-SF 20i", mastro: "triplex", h3: 4026 }).h1).toBe(1915);
   });
 });
 
@@ -62,7 +93,7 @@ describe("h3Disponiveis", () => {
   });
 
   it("sem modelo conhecido ou sem mastro, não sugere nada", () => {
-    expect(h3Disponiveis("EXV 14", "triplex")).toEqual([]);
+    expect(h3Disponiveis("OPX 20", "triplex")).toEqual([]);
     expect(h3Disponiveis("RX 20-16", "")).toEqual([]);
   });
 });
@@ -72,8 +103,8 @@ describe("as fichas carregadas", () => {
     Object.entries(e.tipos).map(([tipo, linhas]) => ({ modelo: e.modelo, tipo, linhas }))
   );
 
-  it("o lote 1 está lá: 40 modelos", () => {
-    expect(Object.keys(TABELA_MASTROS)).toHaveLength(40);
+  it("os lotes 1 e 2 estão lá: 79 modelos", () => {
+    expect(Object.keys(TABELA_MASTROS)).toHaveLength(79);
   });
 
   it("os lotes não se contradizem e todos os tipos de mastro são conhecidos", () => {
@@ -84,7 +115,9 @@ describe("as fichas carregadas", () => {
   });
 
   it("em cada linha, recolhido < aberto: h1 < h3 < h4", () => {
-    const erradas = todas.flatMap(({ modelo, tipo, linhas }) =>
+    // O simplex não estica: a altura de elevação fica abaixo da do mastro
+    // (EXV 10C: h3 662, h1 1140), por isso a regra não se lhe aplica.
+    const erradas = todas.filter(({ tipo }) => tipo !== "simplex").flatMap(({ modelo, tipo, linhas }) =>
       linhas.filter((l) => !(l.h1 < l.h3 && l.h3 < l.h4)).map((l) => `${modelo} ${tipo} h3 ${l.h3}`)
     );
     expect(erradas).toEqual([]);
@@ -127,9 +160,9 @@ describe("montarTabela — juntar lotes", () => {
   });
 
   it("um tipo de mastro que a aplicação não conhece fica registado, não entra", () => {
-    const { tabela, tiposDesconhecidos } = montarTabela([{ linhas: [linha({ tipo_mastro: "Duplex" })] }]);
+    const { tabela, tiposDesconhecidos } = montarTabela([{ linhas: [linha({ tipo_mastro: "Quadruplex" })] }]);
     expect(tabela.RX2016).toBeUndefined();
-    expect(tiposDesconhecidos).toEqual(["Duplex"]);
+    expect(tiposDesconhecidos).toEqual(["Quadruplex"]);
   });
 });
 
@@ -143,7 +176,7 @@ describe("calcularH1 — o que se grava", () => {
   });
 
   it("sem resposta da tabela grava em branco — um H1 antigo deixaria de ser desta máquina", () => {
-    expect(calcularH1({ modelo: "EXV 14", mastro: "triplex", h3: "4000" })).toEqual({ h1: "", h1_origem: "" });
+    expect(calcularH1({ modelo: "OPX 20", mastro: "triplex", h3: "4000" })).toEqual({ h1: "", h1_origem: "" });
     expect(calcularH1({ modelo: "RX 20-16", mastro: "", h3: "" })).toEqual({ h1: "", h1_origem: "" });
   });
 });
@@ -159,7 +192,7 @@ describe("h1DaMaquina — o que se mostra", () => {
   });
 
   it("sem H1 possível, nada", () => {
-    expect(h1DaMaquina({ modelo: "EXV 14", mastro: "triplex", h3: "4000" })).toBe(null);
+    expect(h1DaMaquina({ modelo: "OPX 20", mastro: "triplex", h3: "4000" })).toBe(null);
     expect(h1DaMaquina(null)).toBe(null);
   });
 

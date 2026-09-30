@@ -251,7 +251,7 @@ describe("H1 pela tabela de mastros", () => {
   });
 
   it("modelo sem tabela grava o H1 em branco", async () => {
-    await registarEntrada({ ...base, modelo: "EXV 14", specs: { mastro: "triplex", h3: "4000", acessorios: [] } });
+    await registarEntrada({ ...base, modelo: "OPX 20", specs: { mastro: "triplex", h3: "4000", acessorios: [] } });
     const maquina = registo.criados.find((c) => c.entidade === "Maquina").dados;
     expect(maquina).toMatchObject({ h1: "", h1_origem: "" });
   });

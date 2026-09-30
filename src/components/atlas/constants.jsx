@@ -54,7 +54,9 @@ export const SPEC_OPTIONS = {
   mastro: [
     { value: 'triplex',     label: 'Triplex',     icon: '🏗️' },
     { value: 'telescopico', label: 'Telescópico', icon: '📏' },
-    { value: 'niho',        label: 'Niho',        icon: '🔧' }
+    { value: 'niho',        label: 'Niho',        icon: '🔧' },
+    // Mastro de um só estágio, sem telescopar — o dos EXV mais baixos.
+    { value: 'simplex',     label: 'Simplex',     icon: '⬆️' }
   ],
   vias_mastro: [
     { value: '3', label: '3 Vias', icon: '3️⃣' },
@@ -85,7 +87,7 @@ export const SPEC_OPTIONS = {
 };
 
 export const SPEC_LABELS = {
-  mastro: { triplex: 'Triplex', telescopico: 'Telesc.', niho: 'Niho' },
+  mastro: { triplex: 'Triplex', telescopico: 'Telesc.', niho: 'Niho', simplex: 'Simplex' },
   vias_mastro: { '3': '3V', '4': '4V', '5': '5V' },
   joystick: { alavanca: 'Alav.', minilever: 'Mini.', '4plus': '4+', fingertrip: 'Fing.' },
   tipo_pneu: { preto: 'Pn.Preto', branco: 'Pn.Branco' },
