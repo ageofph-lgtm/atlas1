@@ -1,0 +1,188 @@
+/**
+ * Tabelas de mastros: do H3, que se lê na placa, ao H1, que só vinha do sistema.
+ *
+ * O H3 é a altura do mastro todo aberto e o H1 a do mastro recolhido. Para um
+ * modelo e um tipo de mastro, cada H3 só pode ter um H1 — é limitação física —,
+ * e as fichas técnicas STILL (VDI 2198, página "Tabela de mastros") dão os
+ * pares. Com elas, quem regista no pátio fica com o H1 sem ir ao sistema.
+ *
+ * As fichas estão transcritas em JSON na pasta `mastros/`. Lê-se todo o `.json`
+ * que lá estiver: a tabela completa atualizada substitui o ficheiro, e um lote
+ * à parte entra como mais um ficheiro — sem mexer neste código. Os testes
+ * verificam que os ficheiros não se contradizem.
+ */
+
+const LOTES = Object.values(
+  import.meta.glob("./mastros/*.json", { eager: true, import: "default" })
+);
+
+/** "RX 20-16P", "rx20-16p" e "RX 20 16 P" são o mesmo modelo. */
+export const normalizarModelo = (modelo) => String(modelo || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+// A designação comercial traz sufixos que não mudam o mastro ("RX 60-35 (Plus)/600|Li-Ion",
+// "EXV 14/Li-Ion"). Tiram-se antes de procurar, para a placa bater com a ficha.
+const semSufixos = (modelo) =>
+  String(modelo || "").toUpperCase().replace(/\(?\s*PLUS\s*\)?/g, "").replace(/[|/]?\s*LI-?\s*ION/g, "");
+
+// Os nomes das fichas e os da aplicação. A STILL chama NiHo ao mastro HiLo.
+// "duplex" = telescópico (2 estágios sem elevação livre), na linguagem da
+// oficina. Um HiLo também tem 2 estágios, mas distingue-se pelo cilindro
+// central de elevação livre e regista-se como "niho".
+const TIPOS_ALIAS = {
+  hilo: "niho", niho: "niho", triplex: "triplex", simplex: "simplex",
+  telescopico: "telescopico", "telescópico": "telescopico", duplex: "telescopico",
+};
+const tipoDe = (mastro) => TIPOS_ALIAS[String(mastro || "").trim().toLowerCase()];
+
+/**
+ * Junta os lotes numa tabela por modelo e tipo de mastro, com as linhas
+ * ordenadas por H3.
+ *
+ * O mesmo modelo pode vir em mais do que um bloco da ficha (ou em mais do que
+ * um lote). Linhas repetidas juntam-se; um mesmo H3 com H1 diferente é um
+ * conflito, e fica a primeira — os testes falham enquanto houver algum.
+ */
+export function montarTabela(lotes) {
+  const tabela = {};
+  const conflitos = [];
+  const tiposDesconhecidos = new Set();
+
+  for (const lote of lotes) {
+    for (const l of lote?.linhas || []) {
+      const tipo = tipoDe(l.tipo_mastro);
+      if (!tipo) {
+        tiposDesconhecidos.add(l.tipo_mastro);
+        continue;
+      }
+      const linha = {
+        h3: l.h3, h1: l.h1, h2: l.h2, h4: l.h4, fonte: l.fonte, igoIndisponivel: !!l.nao_disponivel_igo,
+        // H1 com a opção de elevação livre de 150 mm (só alguns EXV telescópicos).
+        h1El150: l.h1_elev_livre_150 ?? null,
+      };
+      for (const modelo of l.modelos_aplicaveis || []) {
+        const chave = normalizarModelo(modelo);
+        const entrada = (tabela[chave] ||= { modelo, tipos: {} });
+        const linhas = (entrada.tipos[tipo] ||= []);
+        const mesma = linhas.find((x) => x.h3 === linha.h3);
+        if (!mesma) {
+          linhas.push(linha);
+        } else if (mesma.h1 !== linha.h1 || mesma.h2 !== linha.h2 || mesma.h4 !== linha.h4 || mesma.h1El150 !== linha.h1El150) {
+          conflitos.push({ modelo, tipo, h3: linha.h3, fica: mesma, ignorada: linha });
+        }
+      }
+    }
+  }
+
+  for (const entrada of Object.values(tabela)) {
+    for (const linhas of Object.values(entrada.tipos)) linhas.sort((a, b) => a.h3 - b.h3);
+  }
+  return { tabela, conflitos, tiposDesconhecidos: [...tiposDesconhecidos] };
+}
+
+const procurarModelo = (modelo, tabela) =>
+  tabela[normalizarModelo(modelo)] ?? tabela[normalizarModelo(semSufixos(modelo))];
+
+const linhasDe = (modelo, mastro, tabela) => procurarModelo(modelo, tabela)?.tipos?.[tipoDe(mastro)];
+
+const MONTADA = montarTabela(LOTES);
+export const TABELA_MASTROS = MONTADA.tabela;
+export const PROBLEMAS_DA_TABELA = { conflitos: MONTADA.conflitos, tiposDesconhecidos: MONTADA.tiposDesconhecidos };
+
+/**
+ * Resolve o H1 a partir de modelo + tipo de mastro + H3.
+ *
+ * O tipo é obrigatório: no mesmo modelo o mesmo H3 aparece em tipos diferentes
+ * com H1 muito diferente (RX 60-25, H3 4590: HiLo 2925, Triplex 2175), e há H3
+ * de tipos diferentes a 20 mm uns dos outros. Por isso não há tolerância na
+ * procura: ou o H3 existe na ficha, ou é estimado e fica marcado como tal.
+ *
+ * Com `elevacaoLivre150`, usa-se o H1 da versão com elevação livre de 150 mm,
+ * quando a ficha a tem para este modelo e mastro; quando não tem, a opção não
+ * se aplica e fica o H1 normal (`elevacaoLivre150: false` no resultado).
+ *
+ * Devolve sempre um objeto com `origem`:
+ *  - "tabela":   o H3 existe na ficha; H1/H2/H4 são os valores oficiais
+ *  - "estimado": o H3 fica entre dois valores da ficha; H1 interpolado
+ *  - "modelo_desconhecido" | "tipo_indisponivel" | "fora_da_tabela" | "dados_em_falta": h1 = null
+ */
+export function resolverH1({ modelo, mastro, h3, elevacaoLivre150 = false }, tabela = TABELA_MASTROS) {
+  const valorH3 = Number(String(h3 ?? "").replace(/[^\d]/g, ""));
+  const tipo = tipoDe(mastro);
+  if (!modelo || !tipo || !valorH3) return { h1: null, origem: "dados_em_falta" };
+
+  const entrada = procurarModelo(modelo, tabela);
+  if (!entrada) return { h1: null, origem: "modelo_desconhecido" };
+
+  const linhas = entrada.tipos[tipo];
+  if (!linhas) {
+    return { h1: null, origem: "tipo_indisponivel", tiposDisponiveis: Object.keys(entrada.tipos) };
+  }
+
+  const el150 = !!elevacaoLivre150 && linhas.every((l) => l.h1El150 !== null);
+  const h1De = (l) => (el150 ? l.h1El150 : l.h1);
+
+  const exata = linhas.find((l) => l.h3 === valorH3);
+  if (exata) {
+    const { h2, h4, fonte, igoIndisponivel } = exata;
+    return { h1: h1De(exata), h2, h4, origem: "tabela", fonte, igoIndisponivel, elevacaoLivre150: el150 };
+  }
+
+  const i = linhas.findIndex((l) => l.h3 > valorH3);
+  if (i <= 0) {
+    // Abaixo do primeiro ou acima do último: não se extrapola, porque fora da
+    // ficha pode ser um mastro especial ou um H3 mal lido na placa.
+    return { h1: null, origem: "fora_da_tabela", intervalo: [linhas[0].h3, linhas[linhas.length - 1].h3] };
+  }
+  const [a, b] = [linhas[i - 1], linhas[i]];
+  const h1 = Math.round(h1De(a) + ((valorH3 - a.h3) * (h1De(b) - h1De(a))) / (b.h3 - a.h3));
+  return { h1, origem: "estimado", entre: [a.h3, b.h3], fonte: a.fonte, elevacaoLivre150: el150 };
+}
+
+/** H3 válidos para o modelo/tipo — para sugerir no formulário. */
+export function h3Disponiveis(modelo, mastro, tabela = TABELA_MASTROS) {
+  const linhas = linhasDe(modelo, mastro, tabela);
+  return linhas ? linhas.map((l) => l.h3) : [];
+}
+
+/**
+ * Se a ficha tem a versão com elevação livre de 150 mm para este modelo e
+ * mastro — é aí, e só aí, que o registo pergunta por ela.
+ */
+export function temElevacaoLivre150(modelo, mastro, tabela = TABELA_MASTROS) {
+  const linhas = linhasDe(modelo, mastro, tabela);
+  return !!linhas?.length && linhas.every((l) => l.h1El150 !== null);
+}
+
+/**
+ * O que se grava na Maquina.
+ *
+ * O H1 é sempre recalculado a partir de modelo + mastro + H3 (e da elevação
+ * livre de 150 mm, quando a ficha a tem) e nunca se escreve à mão: se o H3
+ * mudar e deixar de dar H1, o antigo apaga-se, porque já não seria o desta
+ * máquina.
+ *
+ * A elevação livre só se grava quando se aplica ao modelo e mastro: marcada
+ * num EXV telescópico e depois trocado o mastro para triplex, cai.
+ */
+export function calcularH1({ modelo, mastro, h3, elevacaoLivre150 = false }) {
+  const elevacao_livre_150 = !!elevacaoLivre150 && temElevacaoLivre150(modelo, mastro);
+  const r = resolverH1({ modelo, mastro, h3, elevacaoLivre150: elevacao_livre_150 });
+  if (r.h1 === null) return { h1: "", h1_origem: "", elevacao_livre_150 };
+  return { h1: String(r.h1), h1_origem: r.origem, elevacao_livre_150 };
+}
+
+/**
+ * O H1 a mostrar: o gravado, ou — nas máquinas registadas antes de haver
+ * tabelas — o que a tabela dá hoje. `null` quando não há nenhum.
+ */
+export function h1DaMaquina(maquina) {
+  if (!maquina) return null;
+  if (maquina.h1) return { h1: Number(maquina.h1), origem: maquina.h1_origem || "tabela" };
+  const r = resolverH1({
+    modelo: maquina.modelo, mastro: maquina.mastro, h3: maquina.h3, elevacaoLivre150: maquina.elevacao_livre_150,
+  });
+  return r.h1 === null ? null : { h1: r.h1, origem: r.origem };
+}
+
+/** "2160mm", ou "≈2110mm" quando é estimado. */
+export const formatarH1 = (r) => (r ? `${r.origem === "estimado" ? "≈" : ""}${r.h1}mm` : null);

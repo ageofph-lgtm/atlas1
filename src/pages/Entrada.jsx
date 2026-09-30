@@ -28,7 +28,7 @@ export default function Entrada({ currentUser }) {
   const [cicloFora, setCicloFora] = useState(null);
   const [reentradaConfirmada, setReentradaConfirmada] = useState(false);
   const [searching, setSearching] = useState(false);
-  const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
+  const [specs, setSpecs] = useState({ mastro: "", elevacao_livre_150: false, vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
   // As fotos vivem aqui até a máquina existir: só então têm onde ser gravadas.
   const [fotos, setFotos] = useState([]);
   const [categoria, setCategoria] = useState("");
@@ -188,7 +188,7 @@ export default function Entrada({ currentUser }) {
     setCicloNoPatio(null);
     setCicloFora(null);
     setReentradaConfirmada(false);
-    setSpecs({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
+    setSpecs({ mastro: "", elevacao_livre_150: false, vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
     setFotos([]);
     setCategoria("");
     setEstadoInicial("classificada");
@@ -283,7 +283,7 @@ export default function Entrada({ currentUser }) {
         <EntradaPassoCaracteristicas
             fotos={fotos}
             setFotos={setFotos}
-          specs={specs} setSpecs={setSpecs}
+          specs={specs} setSpecs={setSpecs} modelo={modelo}
           handleSpecSelect={handleSpecSelect} handleAcessorioToggle={handleAcessorioToggle}
           notas={notas} setNotas={setNotas}
           NOTA_LABELS={NOTA_LABELS} toggleNotaLabel={toggleNotaLabel}

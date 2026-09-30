@@ -4,11 +4,13 @@ import { SPEC_OPTIONS } from "@/components/atlas/constants";
 import OptionButton from "@/components/atlas/OptionButton";
 import FotosMaquina from "@/components/atlas/FotosMaquina";
 import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
+import H1DoMastro from "@/components/atlas/H1DoMastro";
+import ElevacaoLivre150 from "@/components/atlas/ElevacaoLivre150";
 
 /**
  * Passo 2 — as características. Numa máquina já conhecida vêm preenchidas.
  */
-export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
+export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, modelo, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
   return (
     <div className="space-y-5">
       <div>
@@ -18,11 +20,15 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABE
 
       <div>
         <h3 className="text-sm font-medium text-slate-300 mb-2">Mastro</h3>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {SPEC_OPTIONS.mastro.map((o) => (
             <OptionButton key={o.value} option={o} isSelected={specs.mastro === o.value} onClick={(v) => handleSpecSelect("mastro", v)} />
           ))}
         </div>
+        <ElevacaoLivre150
+          modelo={modelo} mastro={specs.mastro} valor={specs.elevacao_livre_150}
+          onChange={(v) => setSpecs((prev) => ({ ...prev, elevacao_livre_150: v }))}
+        />
       </div>
 
       <div>
@@ -33,9 +39,12 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABE
           value={specs.h3}
           onChange={(e) => setSpecs((prev) => ({ ...prev, h3: e.target.value }))}
           placeholder="ex. 4455"
+          list="h3-da-ficha-entrada"
           className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
         />
       </div>
+
+      <H1DoMastro modelo={modelo} mastro={specs.mastro} h3={specs.h3} elevacaoLivre150={specs.elevacao_livre_150} listaId="h3-da-ficha-entrada" />
 
       {/* Opcional: nem sempre se consegue ler, e quem regista no pátio não pode
           ficar bloqueado por causa disso. Entra depois pela edição da máquina. */}

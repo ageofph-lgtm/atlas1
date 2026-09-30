@@ -20,7 +20,11 @@
     },
     "mastro": {
       "type": "string",
-      "description": "Tipo de mastro (triplex, telescopico, niho)"
+      "description": "Tipo de mastro (triplex, telescopico, niho, simplex)"
+    },
+    "elevacao_livre_150": {
+      "type": "boolean",
+      "description": "Mastro com elevação livre de 150 mm (versão dos EXV telescópicos). Muda o H1; só se grava quando a tabela de mastros tem essa versão para o modelo e mastro."
     },
     "vias_mastro": {
       "type": "string",
@@ -37,6 +41,14 @@
     "h3": {
       "type": "string",
       "description": "Altura máxima do mastro em mm (H3)"
+    },
+    "h1": {
+      "type": "string",
+      "description": "Altura do mastro recolhido em mm (H1). Calculada pela tabela de mastros a partir de modelo + mastro + H3; não se escreve à mão."
+    },
+    "h1_origem": {
+      "type": "string",
+      "description": "De onde veio o H1: 'tabela' (valor da ficha) ou 'estimado' (H3 entre dois valores da ficha, interpolado). Vazio = sem H1."
     },
     "bateria": {
       "type": "string",

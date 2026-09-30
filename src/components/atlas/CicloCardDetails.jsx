@@ -10,6 +10,7 @@ import { podeGerirFotos } from "./fotosMaquina";
 import PedidosMaquina from "./PedidosMaquina";
 import FotoModal from "./FotoModal";
 import { momentoDe, maisRecentePrimeiro } from "@/components/atlas/momento";
+import { h1DaMaquina, formatarH1 } from "@/components/atlas/tabelaMastros";
 
 const fmt = (d) => (d ? format(new Date(d), "dd/MM HH:mm") : null);
 
@@ -77,9 +78,11 @@ export default function CicloCardDetails({ ciclo, maquina, canNotas, onAtualizad
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
           <SpecRow label="Modelo" value={maquina?.modelo} />
           <SpecRow label="Ano" value={maquina?.ano} />
-          <SpecRow label="Mastro" value={maquina?.mastro ? `${SPEC_LABELS.mastro?.[maquina.mastro] || maquina.mastro}${maquina.vias_mastro ? ` ${maquina.vias_mastro}V` : ""}` : null} />
-          <SpecRow label="H3" value={maquina?.h3 ? `${maquina.h3}mm` : null} />
+          <SpecRow label="Mastro" value={maquina?.mastro ? `${SPEC_LABELS.mastro?.[maquina.mastro] || maquina.mastro}${maquina.vias_mastro ? ` ${maquina.vias_mastro}V` : ""}${maquina.elevacao_livre_150 ? " · EL 150" : ""}` : null} />
           <SpecRow label="Bateria" value={maquina?.bateria ? (SPEC_LABELS.bateria?.[maquina.bateria] || maquina.bateria) : null} />
+          {/* H3 e H1 lado a lado: um é o mastro aberto, o outro recolhido. */}
+          <SpecRow label="H3" value={maquina?.h3 ? `${maquina.h3}mm` : null} />
+          <SpecRow label="H1" value={formatarH1(h1DaMaquina(maquina))} />
           <SpecRow label="Joystick" value={maquina?.joystick ? (SPEC_LABELS.joystick?.[maquina.joystick] || maquina.joystick) : null} />
           <SpecRow label="Pneus" value={maquina?.tipo_pneu ? (SPEC_LABELS.tipo_pneu?.[maquina.tipo_pneu] || maquina.tipo_pneu) : null} />
           <SpecRow label="Horímetro" value={maquina?.horimetro ? `${maquina.horimetro} h` : null} />

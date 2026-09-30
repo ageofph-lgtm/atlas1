@@ -6,6 +6,8 @@ import { SPEC_OPTIONS, CATEGORIA_CONFIG, CATEGORIA_CONE_MAP, CONE_COLORS, ESTADO
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { isCategoriaSemEstado, estadoEfetivo, ESTADOS_OFICINA, podeGerirEstadoOficina } from "@/components/atlas/cicloUtils";
 import { podeEditarCategoria, podeEditarEstado } from "@/components/hooks/usePermissions";
+import H1DoMastro from "@/components/atlas/H1DoMastro";
+import ElevacaoLivre150 from "@/components/atlas/ElevacaoLivre150";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -23,7 +25,7 @@ const OptionButton = ({ option, isSelected, onClick }) => (
 );
 
 export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, onClose, onSave, canDeleteMaquina, onDelete }) {
-  const [specs, setSpecs] = useState({ mastro: "", vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
+  const [specs, setSpecs] = useState({ mastro: "", elevacao_livre_150: false, vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
   const [categoria, setCategoria] = useState("");
   const [estado, setEstado] = useState("");
   const [tipoSaida, setTipoSaida] = useState("");
@@ -57,6 +59,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
     if (maquina) {
       setSpecs({
         mastro: maquina.mastro || "",
+        elevacao_livre_150: !!maquina.elevacao_livre_150,
         vias_mastro: maquina.vias_mastro || "",
         joystick: maquina.joystick || "",
         tipo_pneu: maquina.tipo_pneu || "",
@@ -253,11 +256,15 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
 
           <div>
             <h3 className="text-sm font-medium text-slate-300 mb-2">Mastro</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {SPEC_OPTIONS.mastro.map((o) => (
                 <OptionButton key={o.value} option={o} isSelected={specs.mastro === o.value} onClick={(v) => handleSpecSelect("mastro", v)} />
               ))}
             </div>
+            <ElevacaoLivre150
+              modelo={maquina?.modelo} mastro={specs.mastro} valor={specs.elevacao_livre_150}
+              onChange={(v) => setSpecs((prev) => ({ ...prev, elevacao_livre_150: v }))}
+            />
           </div>
 
           <div>
@@ -268,9 +275,12 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
               value={specs.h3}
               onChange={(e) => setSpecs((prev) => ({ ...prev, h3: e.target.value }))}
               placeholder="ex. 4455"
+              list="h3-da-ficha-edicao"
               className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
             />
           </div>
+
+          <H1DoMastro modelo={maquina?.modelo} mastro={specs.mastro} h3={specs.h3} elevacaoLivre150={specs.elevacao_livre_150} listaId="h3-da-ficha-edicao" />
 
           {/* Pode entrar aqui em qualquer altura: as máquinas já registadas não
               o têm, e obrigar a repetir o registo para o acrescentar não faria

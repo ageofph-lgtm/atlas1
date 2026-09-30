@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as XLSX from "xlsx";
-import { COLUNAS, construirLinhas, nomeFicheiro } from "@/components/atlas/exportarCiclos";
+import { COLUNAS, construirLinhas, construirFolha, nomeFicheiro, FORMATO_ESTIMADO } from "@/components/atlas/exportarCiclos";
 
 const ciclos = [
   {
@@ -22,12 +22,12 @@ const getMaquina = (c) => maquinas[c.id];
 const linhas = () => construirLinhas(ciclos, getMaquina);
 
 describe("colunas", () => {
-  it("leva as quatro specs que se perguntam ao telefone, e mais nenhumas", () => {
-    // H3, horímetro, bateria e joystick decidem se a máquina serve o cliente.
+  it("leva as specs que se perguntam ao telefone, e mais nenhumas", () => {
+    // H3, H1, horímetro, bateria e joystick decidem se a máquina serve o cliente.
     // O mastro, as vias, os pneus e os acessórios são ficha técnica: quem abre
     // a folha quer saber o que está no pátio.
     const rotulos = COLUNAS.map((c) => c.label.toLowerCase()).join(" ");
-    for (const dentro of ["h3", "horímetro", "bateria", "joystick"]) {
+    for (const dentro of ["h3", "h1", "horímetro", "bateria", "joystick"]) {
       expect(rotulos, dentro).toContain(dentro);
     }
     for (const fora of ["mastro", "vias", "pneu", "acessório"]) {
@@ -92,10 +92,7 @@ describe("construirLinhas", () => {
 describe("o ficheiro que sai", () => {
   // Não basta gerar sem rebentar: o que interessa é o que o Excel vai ler.
   const folhaGerada = () => {
-    const folha = XLSX.utils.json_to_sheet(linhas(), {
-      header: COLUNAS.map((c) => c.label),
-      cellDates: true,
-    });
+    const folha = construirFolha(XLSX, ciclos, getMaquina);
     const livro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(livro, folha, "Máquinas");
     const buffer = XLSX.write(livro, { type: "buffer", bookType: "xlsx" });
@@ -143,13 +140,51 @@ describe("o ficheiro que sai", () => {
   });
 });
 
+describe("coluna H1", () => {
+  const ciclo = { id: "c1", serie: "NS-1", categoria: "str", estado: "pronta" };
+  const linha = (m) => construirLinhas([ciclo], () => m)[0];
+
+  it("vem logo a seguir ao H3", () => {
+    const rotulos = COLUNAS.map((c) => c.label);
+    expect(rotulos.indexOf("H1 (mm)")).toBe(rotulos.indexOf("H3 (mm)") + 1);
+  });
+
+  it("sai como número: o gravado, ou o da tabela nas máquinas antigas", () => {
+    expect(linha({ modelo: "RX 20-16", mastro: "triplex", h3: "4920", h1: "2160", h1_origem: "tabela" })["H1 (mm)"]).toBe(2160);
+    expect(linha({ modelo: "RX 20-16", mastro: "triplex", h3: "4920" })["H1 (mm)"]).toBe(2160);
+  });
+
+  it("sem H1 possível, célula vazia", () => {
+    expect(linha({ modelo: "OPX 20", mastro: "triplex", h3: "4000" })["H1 (mm)"]).toBe(null);
+    expect(linha(null)["H1 (mm)"]).toBe(null);
+  });
+
+  it("o estimado continua número mas aparece com ≈ no Excel, e o da ficha não", () => {
+    const maquinas = {
+      a: { modelo: "RX 20-16", mastro: "telescopico", h3: "3080", h1: "2110", h1_origem: "estimado" },
+      b: { modelo: "RX 20-16", mastro: "triplex", h3: "4920", h1: "2160", h1_origem: "tabela" },
+    };
+    const folha = construirFolha(XLSX, [{ ...ciclo, id: "a" }, { ...ciclo, id: "b" }], (c) => maquinas[c.id]);
+    const livro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(livro, folha, "Máquinas");
+    const lido = XLSX.read(XLSX.write(livro, { type: "buffer", bookType: "xlsx" }), { cellNF: true, cellText: true });
+    const col = COLUNAS.findIndex((c) => c.label === "H1 (mm)");
+    const celula = (r) => lido.Sheets["Máquinas"][XLSX.utils.encode_cell({ r, c: col })];
+
+    expect(celula(1)).toMatchObject({ t: "n", v: 2110, z: FORMATO_ESTIMADO });
+    expect(celula(1).w).toBe("≈ 2110");
+    expect(celula(2)).toMatchObject({ t: "n", v: 2160 });
+    expect(celula(2).w).toBe("2160");
+  });
+});
+
 describe("nomeFicheiro", () => {
   it("leva a página e o dia", () => {
     expect(nomeFicheiro("inventario", new Date("2026-09-21T10:00:00Z"))).toBe("atlas-inventario-2026-09-21.xlsx");
   });
 });
 
-describe("as quatro colunas técnicas que decidem se a máquina serve", () => {
+describe("as colunas técnicas que decidem se a máquina serve", () => {
   const maquina = { modelo: "RX20-16", h3: "4455", horimetro: "3420", bateria: "litio", joystick: "minilever" };
   const linha = (m) => construirLinhas([{ id: "c1", serie: "NS-1", categoria: "str", estado: "pronta" }], () => m)[0];
 

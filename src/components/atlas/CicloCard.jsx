@@ -9,6 +9,7 @@ import ConeIcon from "./ConeIcon";
 import UtsBadge from "./UtsBadge";
 import CicloCardDetails from "./CicloCardDetails";
 import MaquinaNotas from "./MaquinaNotas";
+import { h1DaMaquina } from "./tabelaMastros";
 
 export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar, canDeleteMaquina, canAutorizar, canNotas, onEdit, onReservar, onDelete, onAutorizar, onAtualizado, onTogglePrioridade, onMarcarPronta, currentUser, canPedidos, canResponderPedidos, canApagarPedidos, canLimparRegistos, pedidos, onPedidosChanged, destaque = false, rolarParaVista = true }) {
   const [expanded, setExpanded] = useState(destaque);
@@ -36,6 +37,8 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   if (maquina?.joystick) specs.push(SPEC_LABELS.joystick?.[maquina.joystick] || maquina.joystick);
   if (maquina?.tipo_pneu) specs.push(SPEC_LABELS.tipo_pneu?.[maquina.tipo_pneu] || maquina.tipo_pneu);
   if (maquina?.h3) specs.push("H3 " + maquina.h3);
+  const h1 = h1DaMaquina(maquina);
+  if (h1) specs.push("H1 " + (h1.origem === "estimado" ? "≈" : "") + h1.h1);
   if (maquina?.bateria) specs.push(SPEC_LABELS.bateria?.[maquina.bateria] || maquina.bateria);
   if (maquina?.acessorios?.length) {
     maquina.acessorios.forEach((a) => specs.push(SPEC_LABELS.acessorios?.[a] || a));
