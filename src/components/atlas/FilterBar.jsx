@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Filter, RefreshCw, Loader2 } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { FILTER_OPTIONS, CONE_COLORS, MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS } from "@/components/atlas/constants";
 import { hasFiltrosAtivos } from "@/components/atlas/cicloUtils";
 
@@ -12,7 +12,7 @@ const FILTER_LABELS = {
   tipo_pneu: "Pneu",
 };
 
-export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, onSync, syncing, showCategoria = true, showEstado = true, placeholder }) {
+export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, showCategoria = true, showEstado = true, placeholder }) {
   const [showFilters, setShowFilters] = useState(false);
 
   // Páginas cujos painéis já separam por estado escondem esse filtro.
@@ -50,17 +50,6 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
             className="w-full pl-10 pr-4 py-2.5 glass border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
           />
         </div>
-        {onSync && (
-          <button
-            onClick={onSync}
-            disabled={syncing}
-            title="Sincronizar com o Watcher"
-            className="flex-shrink-0 px-3 py-2.5 glass border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/40 flex items-center gap-1.5 disabled:opacity-50"
-          >
-            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            <span className="text-xs font-medium hidden sm:inline">SINCRONIZAR</span>
-          </button>
-        )}
       </div>
 
       {/* Quick filters row */}

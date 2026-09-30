@@ -8,7 +8,7 @@ import AcoesEmMassa from "@/components/atlas/AcoesEmMassa";
 import { executarEmLote, resumirLote } from "@/components/atlas/executarEmLote";
 import { podeAutorizar } from "@/components/atlas/acoesCiclo";
 import { useToast } from "@/components/ui/use-toast";
-import { RefreshCw, Package, Bell, X } from "lucide-react";
+import { Package, Bell, X } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
 import CiclosView from "@/components/atlas/CiclosView";
 import ViewModeBar from "@/components/atlas/ViewModeBar";
@@ -53,7 +53,6 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [deleteMaquina, setDeleteMaquina] = useState(null);
   const [autorizarCicloState, setAutorizarCicloState] = useState(null);
   const [autorizando, setAutorizando] = useState(null);
-  const [syncing, setSyncing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   // Quando a leitura bate no travão, dizemo-lo: um limite calado faz os
   // relatórios mentir sem ninguém dar por isso.
@@ -95,20 +94,6 @@ export default function Inventario({ currentUser, userPermissions }) {
   }, []);
 
   useSyncWatcher(loadData);
-
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      const res = await base44.functions.invoke("atlasToWatcher", { action: "sync_status", autor });
-      const data = res?.data !== undefined ? res.data : res;
-      if (data.error) throw new Error(data.error);
-      toast({ title: "✓ Sincronizado com o Watcher", description: `${data.updated} atualizações` });
-      loadData();
-    } catch (err) {
-      toast({ variant: "destructive", title: "Erro no sync", description: err.message });
-    }
-    setSyncing(false);
-  };
 
   const handleTarefasConfirm = async ({ tarefas, isVps, isExpress, pedidosMigrados = [], alvos = [] }) => {
     const lista = alvos.length ? alvos : autorizarCicloState ? [autorizarCicloState] : [];
@@ -481,8 +466,6 @@ export default function Inventario({ currentUser, userPermissions }) {
         onSearchChange={setSearchQuery}
         filters={filters}
         onFilterChange={handleFilterChange}
-        onSync={handleSync}
-        syncing={syncing}
       />
 
       {/* Tabs */}
@@ -509,9 +492,6 @@ export default function Inventario({ currentUser, userPermissions }) {
             </button>
           );
         })}
-        <button onClick={loadData} className="ml-auto p-2 text-slate-400 hover:text-amber-400" title="Recarregar">
-          <RefreshCw className="w-4 h-4" />
-        </button>
       </div>
 
       <BarraOcupacao ciclos={ciclos} />
