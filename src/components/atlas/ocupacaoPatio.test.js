@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ocupacaoPatio, taxaUtilizacao, balancoPeriodo, paradasHaMuito, diasDesde } from "@/components/atlas/ocupacaoPatio";
+import { ocupacaoPatio, taxaUtilizacao, balancoPeriodo, paradasHaMuito, diasDesde, ciclosDoGrupo, GRUPOS_OCUPACAO } from "@/components/atlas/ocupacaoPatio";
 
 const c = (id, estado, extra = {}) => ({ id, serie: "NS-" + id, categoria: "str", estado, ...extra });
 
@@ -104,6 +104,53 @@ describe("cada estado no seu grupo", () => {
     const o = ocupacaoPatio(todos);
     expect(o.prontas + o.aguardamAutorizacao + o.emPreparacao + o.indefinidas).toBe(o.noPatio);
     expect(o.noPatio).toBe(7);
+  });
+});
+
+describe("ciclosDoGrupo — o que aparece ao carregar num número da barra", () => {
+  const parque = [
+    c(1, "pronta"),
+    c(2, "pronta", { reserva_cliente: "Transportes Águia" }),
+    c(3, "classificada"),
+    c(4, "entrada"),
+    c(5, "autorizada"),
+    c(6, "em_execucao"),
+    c(7, "classificada", { categoria: "sucata" }),
+    c(8, "em_aluguer", { data_saida: "2026-09-01T00:00:00Z" }),
+    c(9, "fechado"),
+  ];
+  const ids = (grupo) => ciclosDoGrupo(grupo, parque).map((x) => x.id);
+
+  it("cada número da barra é exatamente o tamanho da lista que mostra", () => {
+    // Clicar em "6 em preparação" e ver 5 máquinas seria pior do que não poder clicar.
+    const o = ocupacaoPatio(parque);
+    for (const grupo of Object.keys(GRUPOS_OCUPACAO)) {
+      expect(ciclosDoGrupo(grupo, parque), grupo).toHaveLength(o[grupo]);
+    }
+  });
+
+  it("mostra as máquinas certas de cada grupo", () => {
+    expect(ids("disponiveis")).toEqual([1]);
+    expect(ids("reservadas")).toEqual([2]);
+    expect(ids("aguardamAutorizacao")).toEqual([3, 4]);
+    expect(ids("emPreparacao")).toEqual([5, 6]);
+    expect(ids("indefinidas")).toEqual([7]);
+    expect(ids("fora")).toEqual([8]);
+    expect(ids("noPatio")).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("um ciclo fechado nunca aparece, em grupo nenhum", () => {
+    for (const grupo of Object.keys(GRUPOS_OCUPACAO)) expect(ids(grupo)).not.toContain(9);
+  });
+
+  it("um grupo que não existe não mostra nada, em vez de mostrar tudo", () => {
+    expect(ciclosDoGrupo("inventado", parque)).toEqual([]);
+    expect(ciclosDoGrupo(null, parque)).toEqual([]);
+  });
+
+  it("cada grupo tem o rótulo que aparece na barra", () => {
+    expect(GRUPOS_OCUPACAO.emPreparacao.rotulo).toBe("em preparação");
+    expect(GRUPOS_OCUPACAO.fora.rotulo).toBe("fora, em aluguer");
   });
 });
 

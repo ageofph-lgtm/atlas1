@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import BarraOcupacao from "@/components/atlas/BarraOcupacao";
+import { ciclosDoGrupo, GRUPOS_OCUPACAO } from "@/components/atlas/ocupacaoPatio";
 import AcoesEmMassa from "@/components/atlas/AcoesEmMassa";
 import { executarEmLote, resumirLote } from "@/components/atlas/executarEmLote";
 import { podeAutorizar } from "@/components/atlas/acoesCiclo";
@@ -44,6 +45,8 @@ export default function Inventario({ currentUser, userPermissions }) {
   const [maquinas, setMaquinas] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [activeTab, setActiveTab] = useState("todas");
+  // Um número da barra de ocupação que se carregou: mostra só essas máquinas.
+  const [grupo, setGrupo] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { modo, setModo, tamanho, setTamanho, ordenacao, setOrdenacao } = useViewPrefs("inventario");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
@@ -66,7 +69,7 @@ export default function Inventario({ currentUser, userPermissions }) {
   // acaba a decidir sobre máquinas erradas.
   useEffect(() => {
     setSelecao(new Set());
-  }, [activeTab, filters, searchQuery, modo]);
+  }, [activeTab, grupo, filters, searchQuery, modo]);
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -228,13 +231,28 @@ export default function Inventario({ currentUser, userPermissions }) {
   };
 
   const filteredCiclos = useMemo(() => {
-    const tabItems = getTabCiclos();
+    const tabItems = grupo ? ciclosDoGrupo(grupo, ciclosAtivos) : getTabCiclos();
     const filtered = tabItems.filter((c) => {
       const m = getMaquina(c);
       return passesFilters(c, m) && matchCicloSearch(c, m, searchQuery);
     });
     return sortCiclos(filtered);
-  }, [ciclosAtivos, maquinas, activeTab, filters, searchQuery]);
+  }, [ciclosAtivos, maquinas, activeTab, grupo, filters, searchQuery]);
+
+  /**
+   * Carregar num número da barra mostra exatamente essas máquinas.
+   *
+   * Por isso limpa a aba, os filtros e a pesquisa: com eles ativos, carregar em
+   * "6 em preparação" podia mostrar 4, e o número deixava de querer dizer o que
+   * diz. Depois de escolhido o grupo, filtrar e pesquisar refinam dentro dele.
+   */
+  const escolherGrupo = (novo) => {
+    setGrupo(novo);
+    if (!novo) return;
+    setActiveTab("todas");
+    setFilters(FILTROS_VAZIOS);
+    setSearchQuery("");
+  };
 
   // Só o que ainda está à vista: se um filtro escondeu uma máquina, ela não
   // pode continuar a contar para a ação em massa.
@@ -476,7 +494,7 @@ export default function Inventario({ currentUser, userPermissions }) {
             <button
               key={tab.key}
               disabled={disabled}
-              onClick={() => !disabled && setActiveTab(tab.key)}
+              onClick={() => { if (disabled) return; setActiveTab(tab.key); setGrupo(null); }}
               className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${
                 disabled
                   ? "border-transparent text-slate-600 cursor-not-allowed opacity-50"
@@ -494,7 +512,23 @@ export default function Inventario({ currentUser, userPermissions }) {
         })}
       </div>
 
-      <BarraOcupacao ciclos={ciclos} />
+      <BarraOcupacao ciclos={ciclos} grupo={grupo} onEscolher={escolherGrupo} />
+
+      {grupo && (
+        <div className="flex items-center gap-2 flex-wrap rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
+          <span className="text-slate-300">
+            A mostrar só as máquinas <span className="font-bold text-amber-400">{GRUPOS_OCUPACAO[grupo]?.rotulo}</span>
+            <span className="text-slate-500"> · {filteredCiclos.length}</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setGrupo(null)}
+            className="ml-auto flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-300 hover:bg-slate-700/50 hover:text-amber-400"
+          >
+            <X className="w-3.5 h-3.5" /> Mostrar todas
+          </button>
+        </div>
+      )}
 
       <AvisoTruncado truncado={truncado} />
 
