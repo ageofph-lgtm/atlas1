@@ -78,7 +78,40 @@
       "items": {
         "type": "string"
       },
-      "description": "Fotografias da máquina tiradas no pátio (máximo 4)"
+      "description": "Fotografias da máquina tiradas no pátio (máximo 4) — as mais atuais"
+    },
+    "fotos_momento": {
+      "type": "string",
+      "description": "De que movimento são as fotos atuais: 'entrada' (chegada) ou 'saida'. Vazio = de antes da rotação."
+    },
+    "fotos_data": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando foram tiradas as fotos atuais"
+    },
+    "fotos_anteriores": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "O conjunto de fotos anterior ao atual (máximo 4). Roda a cada movimento com fotos novas: guarda-se só um conjunto atrás."
+    },
+    "fotos_anteriores_momento": {
+      "type": "string",
+      "description": "De que movimento são as fotos anteriores: 'entrada' ou 'saida'"
+    },
+    "fotos_anteriores_data": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando foram tiradas as fotos anteriores"
+    },
+    "miniaturas": {
+      "type": "object",
+      "description": "Miniaturas (~5 KB) das fotos atuais e anteriores, por endereço da foto. As listas mostram estas; a foto inteira só abre ao clicar."
+    },
+    "foto_miniatura_url": {
+      "type": "string",
+      "description": "Miniatura da foto da placa, para a lista do inventário"
     }
   },
   "required": [

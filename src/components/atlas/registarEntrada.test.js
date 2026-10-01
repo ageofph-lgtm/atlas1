@@ -275,3 +275,40 @@ describe("H1 pela tabela de mastros", () => {
     expect(maquina).toMatchObject({ h1: "", h1_origem: "" });
   });
 });
+
+describe("fotos da chegada — rotação", () => {
+  const f = (n) => `https://s.co/${n}.jpg`;
+  const maquinaGravada = () => registo.criados.find((c) => c.entidade === "Maquina")?.dados;
+  const atualizada = (id) => registo.atualizados.find((x) => x.id === id)?.dados;
+
+  it("máquina nova: as fotos do registo são as da chegada, com as miniaturas", async () => {
+    await registarEntrada({ ...base, fotos: [f(1)], miniaturas: { [f(1)]: f("1-mini"), [f(9)]: f("sobra") } });
+    const m = maquinaGravada();
+    expect(m.fotos).toEqual([f(1)]);
+    expect(m.fotos_momento).toBe("entrada");
+    expect(m.fotos_data).toBeTruthy();
+    expect(m.miniaturas).toEqual({ [f(1)]: f("1-mini") });
+  });
+
+  it("reentrada com o cartão cheio: as da chegada entram e as da saída ficam como anteriores", async () => {
+    // Antes juntavam-se dentro do limite de quatro e, com o cartão cheio, as da
+    // chegada eram recusadas — ficava a máquina com as fotos de antes do aluguer.
+    const existente = {
+      id: "m3", serie: "NS-NOVA", modelo: "RX 60-25",
+      fotos: [f(1), f(2), f(3), f(4)], fotos_momento: "saida", fotos_data: "2026-09-02T09:00:00.000Z",
+    };
+    await registarEntrada({ ...base, existingMaquina: existente, fotos: [f(5), f(6)] });
+    expect(atualizada("m3")).toMatchObject({
+      fotos: [f(5), f(6)], fotos_momento: "entrada",
+      fotos_anteriores: [f(1), f(2), f(3), f(4)], fotos_anteriores_momento: "saida",
+    });
+  });
+
+  it("reentrada sem fotos novas não mexe nas que havia", async () => {
+    const existente = { id: "m4", serie: "NS-NOVA", fotos: [f(1)], fotos_anteriores: [f(0)] };
+    await registarEntrada({ ...base, existingMaquina: existente, fotos: [] });
+    const u = atualizada("m4");
+    expect(u).not.toHaveProperty("fotos");
+    expect(u).not.toHaveProperty("fotos_anteriores");
+  });
+});

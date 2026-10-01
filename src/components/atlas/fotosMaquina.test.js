@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   MAX_FOTOS, fotosDe, podeAdicionar, lugaresLivres, juntarFotos, removerFoto, podeGerirFotos,
-  subirFotos, avisoDeFotos,
+  subirFotos, avisoDeFotos, rodarFotos, camposDoMovimento, fotosAnterioresDe, miniaturaDe, podarMiniaturas, descreverConjunto,
 } from "@/components/atlas/fotosMaquina";
 
 const u = (n) => `https://s.co/${n}.jpg`;
@@ -164,5 +164,133 @@ describe("avisoDeFotos", () => {
     const aviso = avisoDeFotos({ recusadas: 1, falhadas: ["a"] });
     expect(aviso).toMatch(/não coube.*não subiu/);
     expect(aviso.endsWith(".")).toBe(true);
+  });
+});
+
+
+describe("rodarFotos — as atuais no cartão, as anteriores guardadas", () => {
+  const D1 = "2026-09-02T09:00:00.000Z";
+  const D2 = "2026-09-30T15:00:00.000Z";
+
+  it("a primeira vez, as fotos novas entram no cartão e não há anteriores", () => {
+    expect(rodarFotos({}, [u(1), u(2)], { momento: "entrada", agora: D1 }))
+      .toEqual({ fotos: [u(1), u(2)], fotos_momento: "entrada", fotos_data: D1 });
+  });
+
+  it("à saída, as da chegada passam a anteriores — dá para comparar como saiu com como voltou", () => {
+    const maquina = { fotos: [u(1), u(2)], fotos_momento: "entrada", fotos_data: D1 };
+    expect(rodarFotos(maquina, [u(3), u(4), u(5)], { momento: "saida", agora: D2 })).toEqual({
+      fotos: [u(3), u(4), u(5)], fotos_momento: "saida", fotos_data: D2,
+      fotos_anteriores: [u(1), u(2)], fotos_anteriores_momento: "entrada", fotos_anteriores_data: D1,
+    });
+  });
+
+  it("na volta seguinte guarda-se só o último conjunto: o mais antigo sai", () => {
+    let m = {};
+    m = { ...m, ...rodarFotos(m, [u(1)], { momento: "entrada", agora: "d1" }) };
+    m = { ...m, ...rodarFotos(m, [u(2)], { momento: "saida", agora: "d2" }) };
+    m = { ...m, ...rodarFotos(m, [u(3)], { momento: "entrada", agora: "d3" }) };
+    expect(fotosDe(m)).toEqual([u(3)]);
+    expect(fotosAnterioresDe(m)).toEqual([u(2)]);
+    expect(m.fotos_anteriores_momento).toBe("saida");
+    expect(JSON.stringify(m)).not.toContain(u(1));
+  });
+
+  it("um movimento sem fotos novas não roda nada", () => {
+    // Senão uma saída sem fotografias apagava as da chegada.
+    expect(rodarFotos({ fotos: [u(1)] }, [], { momento: "saida" })).toEqual({});
+    expect(rodarFotos({ fotos: [u(1)] }, ["", null], { momento: "saida" })).toEqual({});
+  });
+
+  it("com o cartão vazio, o arquivo que existia fica", () => {
+    const r = rodarFotos({ fotos: [], fotos_anteriores: [u(9)] }, [u(1)], { momento: "entrada" });
+    expect(r.fotos).toEqual([u(1)]);
+    expect(r).not.toHaveProperty("fotos_anteriores");
+  });
+
+  it("no máximo quatro novas, sem repetições", () => {
+    expect(rodarFotos({}, [u(1), u(1), u(2), u(3), u(4), u(5)], { momento: "saida" }).fotos).toEqual([u(1), u(2), u(3), u(4)]);
+  });
+
+  it("fotos de antes da rotação (sem momento) passam a anteriores sem rótulo", () => {
+    const r = rodarFotos({ fotos: [u(1)] }, [u(2)], { momento: "entrada", agora: D2 });
+    expect(r).toMatchObject({ fotos_anteriores: [u(1)], fotos_anteriores_momento: null, fotos_anteriores_data: null });
+  });
+});
+
+describe("miniaturas", () => {
+  it("usa a miniatura quando existe, senão a própria foto", () => {
+    const m = { miniaturas: { [u(1)]: u("1-mini") } };
+    expect(miniaturaDe(m, u(1))).toBe(u("1-mini"));
+    expect(miniaturaDe(m, u(2))).toBe(u(2));
+    expect(miniaturaDe(null, u(3))).toBe(u(3));
+  });
+
+  it("ficam só as das fotos que a máquina ainda mostra", () => {
+    const mapa = { [u(1)]: u("m1"), [u(2)]: u("m2"), [u(3)]: "lixo" };
+    expect(podarMiniaturas(mapa, [u(1), u(3)])).toEqual({ [u(1)]: u("m1") });
+    expect(podarMiniaturas(null, [u(1)])).toEqual({});
+  });
+});
+
+describe("descreverConjunto", () => {
+  it("diz de que movimento e de que dia são as fotos", () => {
+    expect(descreverConjunto("entrada", "2026-09-30T15:00:00")).toBe("Chegada · 30/09");
+    expect(descreverConjunto("saida", "2026-09-02T09:00:00")).toBe("Saída · 02/09");
+  });
+
+  it("sem saber nada, não inventa", () => {
+    expect(descreverConjunto(null, null)).toBe(null);
+    expect(descreverConjunto(undefined, "não é data")).toBe(null);
+  });
+});
+
+describe("subirFotos com miniaturas", () => {
+  const ficheiros = (n) => Array.from({ length: n }, (_, i) => ({ name: `f${i}.jpg`, i }));
+  let contador = 0;
+  const upload = async (f) => ({ file_url: `https://s.co/${f.tipo}-${f.i}-${contador++}.jpg` });
+
+  it("sobe a foto e a miniatura, e diz qual é de qual", async () => {
+    const r = await subirFotos(ficheiros(2), {
+      comprimir: async (f) => ({ ...f, tipo: "foto" }),
+      miniatura: async (f) => ({ ...f, tipo: "mini" }),
+      upload,
+    });
+    expect(r.urls).toHaveLength(2);
+    expect(Object.keys(r.miniaturas)).toEqual(r.urls);
+    expect(Object.values(r.miniaturas).every((m) => m.includes("/mini-"))).toBe(true);
+  });
+
+  it("se a miniatura falhar, a foto entra na mesma", async () => {
+    const r = await subirFotos(ficheiros(1), {
+      comprimir: async (f) => ({ ...f, tipo: "foto" }),
+      miniatura: async () => { throw new Error("canvas"); },
+      upload,
+    });
+    expect(r.urls).toHaveLength(1);
+    expect(r.falhadas).toEqual([]);
+    expect(r.miniaturas).toEqual({});
+  });
+});
+
+describe("camposDoMovimento — o que a entrada, a saída e o retorno gravam", () => {
+  it("roda e leva só as miniaturas das fotos que ficam", () => {
+    const maquina = { fotos: [u(1)], fotos_anteriores: [u(0)], miniaturas: { [u(0)]: u("m0"), [u(1)]: u("m1") } };
+    const r = camposDoMovimento(maquina, [u(2)], { [u(2)]: u("m2") }, { momento: "saida", agora: "d" });
+    expect(r.fotos).toEqual([u(2)]);
+    expect(r.fotos_anteriores).toEqual([u(1)]);
+    // u(0) saiu do arquivo: a miniatura dela também sai.
+    expect(r.miniaturas).toEqual({ [u(1)]: u("m1"), [u(2)]: u("m2") });
+  });
+
+  it("repetir uma saída que falhou a meio, com as mesmas fotos, não roda outra vez", () => {
+    // Se rodasse, as fotos novas iam para o arquivo e as anteriores verdadeiras perdiam-se.
+    const depois = { fotos: [u(2)], fotos_anteriores: [u(1)] };
+    expect(camposDoMovimento(depois, [u(2)], {}, { momento: "saida" })).toEqual({});
+  });
+
+  it("sem fotos novas não grava nada", () => {
+    expect(camposDoMovimento({ fotos: [u(1)] }, [], {}, { momento: "entrada" })).toEqual({});
+    expect(camposDoMovimento(null, [], {}, {})).toEqual({});
   });
 });

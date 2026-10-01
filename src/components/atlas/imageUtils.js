@@ -119,3 +119,12 @@ export async function comprimirFoto(file, { maxLado = 1600, qualidade = 0.82 } =
   if (!blob) return file;
   return new File([blob], (file.name || "foto").replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
 }
+
+/**
+ * Miniatura para as listas e grelhas: 160 px de lado maior, uns 5 KB.
+ *
+ * Os cartões mostram as fotos em quadrados pequenos. Com a foto inteira (uns
+ * 300 KB) em cada um, abrir o inventário descarregava dezenas de MB; com a
+ * miniatura, uns poucos. A foto inteira só abre quando alguém clica.
+ */
+export const criarMiniatura = (file) => comprimirFoto(file, { maxLado: 160, qualidade: 0.7 });

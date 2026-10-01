@@ -161,6 +161,20 @@ describe("fotos: que campos e que endereços", () => {
       .toEqual(["https://s.co/a.jpg", "https://s.co/b.jpg"]);
   });
 
+  it("leva também as fotos anteriores — são as que mostram como a máquina saiu", () => {
+    expect(urlsDeFotos({ Maquina: [{ fotos: ["https://s.co/chegada.jpg"], fotos_anteriores: ["https://s.co/saida.jpg"] }] }))
+      .toEqual(["https://s.co/chegada.jpg", "https://s.co/saida.jpg"]);
+  });
+
+  it("ao restaurar, troca também os endereços das anteriores", () => {
+    const r = trocarEnderecosDeFoto(
+      { fotos: ["https://s.co/a.jpg"], fotos_anteriores: ["https://s.co/b.jpg"] },
+      "Maquina",
+      { "https://s.co/a.jpg": "https://novo/a.jpg", "https://s.co/b.jpg": "https://novo/b.jpg" }
+    );
+    expect(r.fotos_anteriores).toEqual(["https://novo/b.jpg"]);
+  });
+
   it("não repete o mesmo endereço usado em dois sítios", () => {
     // bat.jpg aparece em dois ciclos: descarrega-se uma vez só.
     expect(urlsDeFotos(entities).filter((u) => u.endsWith("bat.jpg"))).toHaveLength(1);

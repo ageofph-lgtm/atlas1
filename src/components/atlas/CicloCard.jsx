@@ -96,7 +96,10 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
         </h3>
         {maquina?.foto_url && (
           <div className="w-10 h-10 rounded border border-slate-600 overflow-hidden flex-shrink-0">
-            <img src={maquina.foto_url} alt="" className="w-full h-full object-cover" />
+            {/* A miniatura (~5 KB), não a imagem de leitura da placa (~400 KB): com
+                centenas de cartões, era isto que pesava ao abrir o inventário.
+                As máquinas antigas sem miniatura só carregam quando aparecem. */}
+            <img src={maquina.foto_miniatura_url || maquina.foto_url} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
           </div>
         )}
       </div>
