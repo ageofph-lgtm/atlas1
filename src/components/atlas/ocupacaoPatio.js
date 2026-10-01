@@ -24,34 +24,55 @@ import {
  * Uma venda não conta para nenhuma: o ciclo fecha e a máquina deixa de ser
  * nossa. Só o aluguer mantém o ciclo aberto.
  */
-export function ocupacaoPatio(ciclos = []) {
-  const abertos = ciclos.filter((c) => !isHistorico(c));
+const estaFora = (c) => ESTADOS_FORA_DO_PATIO.includes(estadoEfetivo(c));
+const estaCa = (c) => !estaFora(c);
 
-  const fora = abertos.filter((c) => ESTADOS_FORA_DO_PATIO.includes(estadoEfetivo(c)));
-  const noPatio = abertos.filter((c) => !ESTADOS_FORA_DO_PATIO.includes(estadoEfetivo(c)));
-
-  const prontas = noPatio.filter((c) => estadoEfetivo(c) === "pronta");
-  const disponiveis = prontas.filter((c) => !c.reserva_cliente);
-  const reservadas = prontas.filter((c) => !!c.reserva_cliente);
-  const indefinidas = noPatio.filter((c) => estadoEfetivo(c) === "indefinido");
-
+/**
+ * Os grupos da barra de ocupação, cada um com a sua regra.
+ *
+ * As contas da barra e a lista que aparece ao carregar num número usam estas
+ * mesmas regras — o número clicado e as máquinas mostradas não podem divergir.
+ * Só entram ciclos abertos (ver `ciclosDoGrupo`).
+ */
+export const GRUPOS_OCUPACAO = {
+  noPatio: { rotulo: "nas instalações", pertence: estaCa },
+  disponiveis: { rotulo: "podem sair já", pertence: (c) => estaCa(c) && estadoEfetivo(c) === "pronta" && !c.reserva_cliente },
+  reservadas: { rotulo: "reservadas", pertence: (c) => estaCa(c) && estadoEfetivo(c) === "pronta" && !!c.reserva_cliente },
   // "Em preparação" é só o que está mesmo a ser preparado — com O.S. aberta no
   // Watcher. O que está classificado aguarda uma decisão da gestão e ainda não
   // entrou na oficina; contá-lo como preparação dizia que havia trabalho a
   // decorrer onde há trabalho à espera de começar.
-  const emPreparacao = noPatio.filter((c) => ESTADOS_EM_PREPARACAO.includes(estadoEfetivo(c)));
-  const aguardamAutorizacao = noPatio.filter((c) => ESTADOS_AGUARDAM_AUTORIZACAO.includes(estadoEfetivo(c)));
+  aguardamAutorizacao: { rotulo: "a aguardar autorização", pertence: (c) => estaCa(c) && ESTADOS_AGUARDAM_AUTORIZACAO.includes(estadoEfetivo(c)) },
+  emPreparacao: { rotulo: "em preparação", pertence: (c) => estaCa(c) && ESTADOS_EM_PREPARACAO.includes(estadoEfetivo(c)) },
+  indefinidas: { rotulo: "por definir", pertence: (c) => estaCa(c) && estadoEfetivo(c) === "indefinido" },
+  fora: { rotulo: "fora, em aluguer", pertence: estaFora },
+};
+
+/** As máquinas de um grupo da barra — só ciclos abertos. Grupo desconhecido: nenhuma. */
+export const ciclosDoGrupo = (grupo, ciclos = []) => {
+  const regra = GRUPOS_OCUPACAO[grupo]?.pertence;
+  return regra ? ciclos.filter((c) => !isHistorico(c) && regra(c)) : [];
+};
+
+export function ocupacaoPatio(ciclos = []) {
+  const lista = (grupo) => ciclosDoGrupo(grupo, ciclos);
+  const noPatio = lista("noPatio");
+  const fora = lista("fora");
+  const disponiveis = lista("disponiveis");
+  const reservadas = lista("reservadas");
+  const aguardamAutorizacao = lista("aguardamAutorizacao");
+  const emPreparacao = lista("emPreparacao");
 
   return {
     noPatio: noPatio.length,
     fora: fora.length,
     total: noPatio.length + fora.length,
-    prontas: prontas.length,
+    prontas: disponiveis.length + reservadas.length,
     disponiveis: disponiveis.length,
     reservadas: reservadas.length,
     aguardamAutorizacao: aguardamAutorizacao.length,
     emPreparacao: emPreparacao.length,
-    indefinidas: indefinidas.length,
+    indefinidas: lista("indefinidas").length,
     listas: { noPatio, fora, disponiveis, aguardamAutorizacao, emPreparacao },
   };
 }
