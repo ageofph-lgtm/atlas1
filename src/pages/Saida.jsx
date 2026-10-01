@@ -20,8 +20,9 @@ import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 import { notificarSaida, notificarRetorno } from "@/components/atlas/mensagens";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
-import FotosDaMaquina from "@/components/atlas/FotosDaMaquina";
-import { podeGerirFotos } from "@/components/atlas/fotosMaquina";
+import FotosMaquina from "@/components/atlas/FotosMaquina";
+import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
+import { podeGerirFotos, camposDoMovimento } from "@/components/atlas/fotosMaquina";
 
 export default function Saida({ currentUser }) {
   const { toast } = useToast();
@@ -38,6 +39,10 @@ export default function Saida({ currentUser }) {
   // Bateria e carregador que saem com a máquina, lidos da chapa de características.
   const [bateria, setBateria] = useState({ ns: "", foto_url: "" });
   const [carregador, setCarregador] = useState({ ns: "", foto_url: "" });
+  // As fotos do movimento ficam aqui até se confirmar: só então rodam no cartão
+  // (as novas passam a atuais, as que lá estavam ficam como anteriores).
+  const [fotosSaida, setFotosSaida] = useState({ fotos: [], miniaturas: {} });
+  const [fotosRetorno, setFotosRetorno] = useState({ fotos: [], miniaturas: {} });
   const [localizarSaida, setLocalizarSaida] = useState(false);
   const [localizarRetorno, setLocalizarRetorno] = useState(false);
   const [retornoModal, setRetornoModal] = useState(null);
@@ -111,6 +116,14 @@ export default function Saida({ currentUser }) {
     setTipoSaida("alugada");
     setBateria({ ns: ciclo.bateria_ns || "", foto_url: ciclo.bateria_foto_url || "" });
     setCarregador({ ns: ciclo.carregador_ns || "", foto_url: ciclo.carregador_foto_url || "" });
+    setFotosSaida({ fotos: [], miniaturas: {} });
+  };
+
+  /** Grava as fotos de um movimento na máquina, se as houver (ver `camposDoMovimento`). */
+  const gravarFotosDoMovimento = async (ciclo, conjunto, momento) => {
+    const maquina = getMaquina(ciclo);
+    const campos = camposDoMovimento(maquina, conjunto.fotos, conjunto.miniaturas, { momento });
+    if (maquina?.id && Object.keys(campos).length) await base44.entities.Maquina.update(maquina.id, campos);
   };
 
   const handleDarSaida = async () => {
@@ -138,6 +151,9 @@ export default function Saida({ currentUser }) {
       if (cliente && cliente !== saidaModal.reserva_cliente) {
         updateData.reserva_cliente = cliente;
       }
+      // As fotos primeiro: se a saída falhar a seguir e se repetir, as mesmas
+      // fotos não rodam outra vez (ver `rodarFotos`).
+      await gravarFotosDoMovimento(saidaModal, fotosSaida, "saida");
       await base44.entities.Ciclo.update(saidaModal.id, updateData);
       await base44.entities.EventoCiclo.create({
         ciclo_id: saidaModal.id,
@@ -160,6 +176,7 @@ export default function Saida({ currentUser }) {
       setTipoSaida("alugada");
       setBateria({ ns: "", foto_url: "" });
       setCarregador({ ns: "", foto_url: "" });
+      setFotosSaida({ fotos: [], miniaturas: {} });
       loadData();
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: err.message });
@@ -172,6 +189,7 @@ export default function Saida({ currentUser }) {
     setRetornoConeNumero("");
     setRetornoConeError("");
     setRetornoEstado("classificada");
+    setFotosRetorno({ fotos: [], miniaturas: {} });
   };
 
   const validateRetornoCone = async () => {
@@ -196,10 +214,19 @@ export default function Saida({ currentUser }) {
         setActing(null);
         return;
       }
+      // O retorno já ficou registado; uma falha a gravar as fotos não o desfaz,
+      // mas tem de se saber.
+      let fotosFalharam = false;
+      try {
+        await gravarFotosDoMovimento(retornoModal, fotosRetorno, "entrada");
+      } catch (_e) {
+        fotosFalharam = true;
+      }
       await notificarRetorno(retornoModal, { autor, dias: res.dias });
       toast({
         title: "✓ Retorno registado",
-        description: `${retornoModal.serie} — ${res.dias} dias · de volta ao pátio`,
+        description: `${retornoModal.serie} — ${res.dias} dias · de volta ao pátio`
+          + (fotosFalharam ? ". As fotos não ficaram gravadas: junte-as no cartão da máquina." : ""),
       });
       setRetornoModal(null);
       setRetornoConeNumero("");
@@ -424,6 +451,22 @@ export default function Saida({ currentUser }) {
               </div>
             </div>
 
+            {/* Como a máquina chega, fotografado enquanto está à frente de quem a
+                recebe. As fotos da saída ficam guardadas como anteriores, para
+                se poder comparar. */}
+            <div className="border-t border-slate-700 pt-3">
+              <FotosMaquina
+                fotos={fotosRetorno.fotos}
+                miniaturas={fotosRetorno.miniaturas}
+                onGuardar={(fotos, minis) => setFotosRetorno((p) => ({ fotos, miniaturas: { ...p.miniaturas, ...minis } }))}
+                podeGerir={podeGerirFotos(currentUser?.perfil)}
+                titulo={`Retorno ${retornoModal?.serie || ""}`}
+                cabecalho="Fotografias da chegada"
+                ajuda="Passam a ser as fotos do cartão. As da saída ficam guardadas como anteriores, para comparar."
+                subirFicheiro={subirParaOArmazenamento}
+              />
+            </div>
+
             <p className="text-xs text-slate-500">
               O aluguer fecha com os dias contados e abre-se um ciclo novo com a máquina de volta ao pátio — é assim
               que ela reaparece no inventário.
@@ -535,12 +578,17 @@ export default function Saida({ currentUser }) {
 
             {/* O estado em que a máquina sai fica registado enquanto ela ainda
                 está à frente de quem a entrega. Depois de sair já não se
-                fotografa. */}
+                fotografa. As fotos só rodam no cartão ao confirmar a saída. */}
             <div className="border-t border-slate-700 pt-3">
-              <FotosDaMaquina
-                maquina={saidaModal ? getMaquina(saidaModal) : null}
+              <FotosMaquina
+                fotos={fotosSaida.fotos}
+                miniaturas={fotosSaida.miniaturas}
+                onGuardar={(fotos, minis) => setFotosSaida((p) => ({ fotos, miniaturas: { ...p.miniaturas, ...minis } }))}
                 podeGerir={podeGerirFotos(currentUser?.perfil)}
-                onAtualizado={recarregarSilencioso}
+                titulo={`Saída ${saidaModal?.serie || ""}`}
+                cabecalho="Fotografias da saída"
+                ajuda="Passam a ser as fotos do cartão ao confirmar a saída. As que lá estão (as da chegada) ficam guardadas como anteriores."
+                subirFicheiro={subirParaOArmazenamento}
               />
             </div>
           </div>

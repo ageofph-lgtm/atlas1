@@ -102,11 +102,13 @@ export const ficheiroValido = (dados) =>
  * ficheiro por nada.
  *
  * As que ficam são as que vivem no cartão da máquina: a bateria e o carregador
- * que saíram com ela, e as fotografias do estado da máquina no pátio. Essas são
- * insubstituíveis — não se voltam a tirar depois de a máquina sair.
+ * que saíram com ela, e as fotografias do estado da máquina — as atuais e o
+ * conjunto anterior, que é o que permite comparar como saiu com como voltou.
+ * Essas são insubstituíveis — não se voltam a tirar depois de a máquina sair.
+ * As miniaturas não entram: refazem-se a partir das fotos.
  */
 export const CAMPOS_FOTO = {
-  Maquina: ["fotos"],
+  Maquina: ["fotos", "fotos_anteriores"],
   Ciclo: ["bateria_foto_url", "carregador_foto_url"],
 };
 

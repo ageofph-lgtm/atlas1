@@ -10,7 +10,7 @@ import ElevacaoLivre150 from "@/components/atlas/ElevacaoLivre150";
 /**
  * Passo 2 — as características. Numa máquina já conhecida vêm preenchidas.
  */
-export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, modelo, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
+export default function EntradaPassoCaracteristicas({ fotos, setFotos, miniaturas = {}, setMiniaturas, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, modelo, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
   return (
     <div className="space-y-5">
       <div>
@@ -115,8 +115,14 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, NOTA_LABE
       <div className="border-t border-slate-700 pt-4">
         <FotosMaquina
           fotos={fotos}
-          onGuardar={setFotos}
+          miniaturas={miniaturas}
+          onGuardar={(novas, minis) => {
+            setFotos(novas);
+            setMiniaturas?.((prev) => ({ ...prev, ...minis }));
+          }}
           titulo="Máquina a registar"
+          cabecalho="Fotografias da chegada"
+          ajuda="Passam a ser as fotos do cartão. Se a máquina já tinha fotos, essas ficam guardadas como anteriores."
           subirFicheiro={subirParaOArmazenamento}
         />
       </div>

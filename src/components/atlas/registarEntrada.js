@@ -2,7 +2,7 @@ import { base44 } from "@/api/base44Client";
 import { classificarCiclosAbertos, isCategoriaSemEstado } from "@/components/atlas/cicloUtils";
 import { CATEGORIA_CONE_MAP } from "@/components/atlas/constants";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
-import { juntarFotos } from "@/components/atlas/fotosMaquina";
+import { camposDoMovimento } from "@/components/atlas/fotosMaquina";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
 import { notificarEntrada } from "@/components/atlas/mensagens";
 import { exigirRede } from "@/components/atlas/rede";
@@ -25,8 +25,10 @@ export async function registarEntrada({
   modelo = "",
   ano = "",
   fotoUrl = "",
+  fotoMiniaturaUrl = "",
   specs = {},
   fotos = [],
+  miniaturas = {},
   categoria,
   estadoInicial = "classificada",
   coneCor: coneCorParam,
@@ -93,6 +95,7 @@ export async function registarEntrada({
       modelo,
       ano,
       foto_url: fotoUrl,
+      foto_miniatura_url: fotoMiniaturaUrl || "",
       mastro: specs.mastro || "",
       vias_mastro: specs.vias_mastro || "",
       joystick: specs.joystick || "",
@@ -102,7 +105,9 @@ export async function registarEntrada({
       ...calcularH1({ modelo, mastro: specs.mastro, h3: specs.h3, elevacaoLivre150: specs.elevacao_livre_150 }),
       bateria: specs.bateria || "",
       horimetro: specs.horimetro || "",
-      fotos: fotos || [],
+      // As fotos do registo são as da chegada.
+      fotos: [],
+      ...camposDoMovimento({}, fotos, miniaturas, { momento: "entrada" }),
       observacoes: notas || "",
     });
     maquinaId = nova.id;
@@ -115,6 +120,8 @@ export async function registarEntrada({
       modelo: modeloFinal,
       ano: ano || existingMaquina.ano,
       foto_url: fotoUrl || existingMaquina.foto_url,
+      // Placa nova, miniatura nova (ou nenhuma); placa igual, fica a que havia.
+      foto_miniatura_url: fotoUrl ? fotoMiniaturaUrl || "" : existingMaquina.foto_miniatura_url || "",
       mastro: mastroFinal,
       vias_mastro: specs.vias_mastro || existingMaquina.vias_mastro,
       joystick: specs.joystick || existingMaquina.joystick,
@@ -131,9 +138,10 @@ export async function registarEntrada({
       // Em branco não apaga o que já lá estava: o horímetro pode ter sido
       // apontado noutra entrada e quem regista agora pode não o ter lido.
       horimetro: specs.horimetro || existingMaquina.horimetro || "",
-      // As fotos de uma reentrada juntam-se às que a máquina já tinha, dentro
-      // do limite — as antigas mostram como ela estava da última vez.
-      fotos: juntarFotos(existingMaquina, fotos || []).fotos,
+      // As fotos da chegada passam a ser as do cartão, e as que lá estavam (as
+      // da saída) ficam guardadas como anteriores. Antes juntavam-se dentro do
+      // limite de quatro: com o cartão cheio, as da chegada eram recusadas.
+      ...camposDoMovimento(existingMaquina, fotos, miniaturas, { momento: "entrada" }),
       observacoes: notas,
     });
   }

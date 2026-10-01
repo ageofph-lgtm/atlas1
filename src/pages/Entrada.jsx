@@ -21,6 +21,7 @@ export default function Entrada({ currentUser }) {
   const [modelo, setModelo] = useState("");
   const [ano, setAno] = useState("");
   const [fotoUrl, setFotoUrl] = useState("");
+  const [fotoMiniaturaUrl, setFotoMiniaturaUrl] = useState("");
   const [existingMaquina, setExistingMaquina] = useState(null);
   const [passagens, setPassagens] = useState(0);
   const [ultimaSaida, setUltimaSaida] = useState(null);
@@ -31,6 +32,7 @@ export default function Entrada({ currentUser }) {
   const [specs, setSpecs] = useState({ mastro: "", elevacao_livre_150: false, vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
   // As fotos vivem aqui até a máquina existir: só então têm onde ser gravadas.
   const [fotos, setFotos] = useState([]);
+  const [miniaturas, setMiniaturas] = useState({});
   const [categoria, setCategoria] = useState("");
   const [estadoInicial, setEstadoInicial] = useState("classificada");
   const [coneCor, setConeCor] = useState("");
@@ -53,6 +55,7 @@ export default function Entrada({ currentUser }) {
     if (r.specs) setSpecs(r.specs);
     // As fotos já subiram para o armazenamento — perder o rascunho não as deve perder.
     if (Array.isArray(r.fotos)) setFotos(r.fotos);
+    if (r.miniaturas && typeof r.miniaturas === "object") setMiniaturas(r.miniaturas);
     if (r.categoria) setCategoria(r.categoria);
     if (r.estadoInicial) setEstadoInicial(r.estadoInicial);
     if (r.coneCor) setConeCor(r.coneCor);
@@ -65,8 +68,8 @@ export default function Entrada({ currentUser }) {
   useEffect(() => {
     // Só vale a pena guardar a partir do momento em que há série.
     if (!serie) return;
-    guardarRascunho("entrada", { serie, modelo, ano, specs, fotos, categoria, estadoInicial, coneCor, coneNumero, notas, step });
-  }, [serie, modelo, ano, specs, fotos, categoria, estadoInicial, coneCor, coneNumero, notas, step]);
+    guardarRascunho("entrada", { serie, modelo, ano, specs, fotos, miniaturas, categoria, estadoInicial, coneCor, coneNumero, notas, step });
+  }, [serie, modelo, ano, specs, fotos, miniaturas, categoria, estadoInicial, coneCor, coneNumero, notas, step]);
 
   const NOTA_LABELS = ["Duplicada", "Não funciona", "Garfos 2400", "Mau estado"];
   const toggleNotaLabel = (label) => {
@@ -129,7 +132,10 @@ export default function Entrada({ currentUser }) {
     if (data.serie) setSerie(data.serie);
     if (data.modelo) setModelo(data.modelo);
     if (data.ano) setAno(data.ano);
-    if (data.foto_url) setFotoUrl(data.foto_url);
+    if (data.foto_url) {
+      setFotoUrl(data.foto_url);
+      setFotoMiniaturaUrl(data.foto_miniatura_url || "");
+    }
   };
 
   const handleSpecSelect = (field, value) => {
@@ -182,6 +188,7 @@ export default function Entrada({ currentUser }) {
     setModelo("");
     setAno("");
     setFotoUrl("");
+    setFotoMiniaturaUrl("");
     setExistingMaquina(null);
     setPassagens(0);
     setUltimaSaida(null);
@@ -190,6 +197,7 @@ export default function Entrada({ currentUser }) {
     setReentradaConfirmada(false);
     setSpecs({ mastro: "", elevacao_livre_150: false, vias_mastro: "", joystick: "", tipo_pneu: "", acessorios: [], h3: "", bateria: "", horimetro: "" });
     setFotos([]);
+    setMiniaturas({});
     setCategoria("");
     setEstadoInicial("classificada");
     setConeCor("");
@@ -218,7 +226,7 @@ export default function Entrada({ currentUser }) {
     setIsSubmitting(true);
     try {
       const r = await registarEntrada({
-        serie, modelo, ano, fotoUrl, specs, fotos, categoria,
+        serie, modelo, ano, fotoUrl, fotoMiniaturaUrl, specs, fotos, miniaturas, categoria,
         estadoInicial, coneCor, coneNumero, notas,
         existingMaquina, reentradaConfirmada, autor,
       });
@@ -283,6 +291,8 @@ export default function Entrada({ currentUser }) {
         <EntradaPassoCaracteristicas
             fotos={fotos}
             setFotos={setFotos}
+            miniaturas={miniaturas}
+            setMiniaturas={setMiniaturas}
           specs={specs} setSpecs={setSpecs} modelo={modelo}
           handleSpecSelect={handleSpecSelect} handleAcessorioToggle={handleAcessorioToggle}
           notas={notas} setNotas={setNotas}

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Camera, Loader2, AlertCircle, Zap, RefreshCw, X, Check, ScanLine } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { prepareImage, cleanSerie, serieConfidence } from "./imageUtils";
+import { prepareImage, cleanSerie, serieConfidence, criarMiniatura } from "./imageUtils";
 
 const SCHEMA_A = {
   type: "object",
@@ -34,6 +34,7 @@ export default function PhotoCapture({ onSuccess }) {
   const [modelo, setModelo] = useState("");
   const [ano, setAno] = useState("");
   const [fotoUrl, setFotoUrl] = useState("");
+  const [fotoMiniaturaUrl, setFotoMiniaturaUrl] = useState("");
   const [confidence, setConfidence] = useState("none");
 
   const fileInputRef = useRef(null);
@@ -59,6 +60,12 @@ export default function PhotoCapture({ onSuccess }) {
     setStage("scanning");
     setError(null);
     try {
+      // A miniatura (a cores, ~5 KB) é o que o cartão mostra na lista; a imagem
+      // de leitura é a cinzento e pesada. Se a miniatura falhar, não faz mal.
+      const miniatura = criarMiniatura(selectedFile)
+        .then((f) => base44.integrations.Core.UploadPublicFile({ file: f }))
+        .then((r) => r?.file_url || "")
+        .catch(() => "");
       setScanStatus("A preparar imagem…");
       const [contrastFile, thresholdFile] = await Promise.all([
         prepareImage(selectedFile, "contrast"),
@@ -97,6 +104,7 @@ export default function PhotoCapture({ onSuccess }) {
       setModelo(best.modelo);
       setAno(best.ano);
       setFotoUrl(best.file_url);
+      setFotoMiniaturaUrl(await miniatura);
       setConfidence(serieConfidence(best.serie));
       setStage("review");
     } catch (err) {
@@ -110,7 +118,7 @@ export default function PhotoCapture({ onSuccess }) {
   };
 
   const confirm = () => {
-    onSuccess({ serie: serie.trim(), modelo: modelo.trim(), ano: ano.trim(), foto_url: fotoUrl });
+    onSuccess({ serie: serie.trim(), modelo: modelo.trim(), ano: ano.trim(), foto_url: fotoUrl, foto_miniatura_url: fotoMiniaturaUrl });
     reset();
   };
 
@@ -118,7 +126,7 @@ export default function PhotoCapture({ onSuccess }) {
     setSelectedFile(null);
     setPreviewUrl(null);
     setError(null);
-    setSerie(""); setModelo(""); setAno(""); setFotoUrl(""); setConfidence("none");
+    setSerie(""); setModelo(""); setAno(""); setFotoUrl(""); setFotoMiniaturaUrl(""); setConfidence("none");
     setStage("select");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Camera, Loader2, X, Images } from "lucide-react";
-import { comprimirFoto } from "@/components/atlas/imageUtils";
+import { comprimirFoto, criarMiniatura } from "@/components/atlas/imageUtils";
 import { subirFotos, avisoDeFotos, MAX_FOTOS } from "@/components/atlas/fotosMaquina";
 import FotoModal from "@/components/atlas/FotoModal";
 
@@ -14,8 +14,15 @@ import FotoModal from "@/components/atlas/FotoModal";
  *
  * Antes só existia no cartão, e para fotografar uma máquina era preciso ir ao
  * inventário procurá-la — mesmo tendo-a à frente no momento em que chega ou sai.
+ *
+ * Cada foto sobe com uma miniatura (~5 KB), e a grelha mostra a miniatura: a
+ * foto inteira só se descarrega quando alguém a abre. `onGuardar` recebe as
+ * fotos e as miniaturas novas (`{ urlDaFoto: urlDaMiniatura }`).
  */
-export default function FotosMaquina({ fotos = [], onGuardar, podeGerir = true, titulo = "", subirFicheiro }) {
+export default function FotosMaquina({
+  fotos = [], miniaturas = {}, onGuardar, podeGerir = true, titulo = "", subirFicheiro,
+  cabecalho = "Fotografias da máquina", rotulo = null, ajuda = null,
+}) {
   const [aGravar, setAGravar] = useState(false);
   const [erro, setErro] = useState("");
   const [aVer, setAVer] = useState(null);
@@ -34,9 +41,10 @@ export default function FotosMaquina({ fotos = [], onGuardar, podeGerir = true, 
       const r = await subirFotos(ficheiros, {
         jaTem: fotos.length,
         comprimir: comprimirFoto,
+        miniatura: criarMiniatura,
         upload: subirFicheiro,
       });
-      if (r.urls.length) await onGuardar([...fotos, ...r.urls]);
+      if (r.urls.length) await onGuardar([...fotos, ...r.urls], r.miniaturas);
       setErro(avisoDeFotos(r) || "");
     } catch (err) {
       setErro(err?.message || "Não foi possível guardar as fotografias.");
@@ -48,7 +56,7 @@ export default function FotosMaquina({ fotos = [], onGuardar, podeGerir = true, 
     setErro("");
     setAGravar(true);
     try {
-      await onGuardar(fotos.filter((u) => u !== url));
+      await onGuardar(fotos.filter((u) => u !== url), {});
     } catch (err) {
       setErro(err?.message || "Não foi possível apagar a fotografia.");
     }
@@ -60,8 +68,9 @@ export default function FotosMaquina({ fotos = [], onGuardar, podeGerir = true, 
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
-        <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">Fotografias da máquina</h4>
+        <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">{cabecalho}</h4>
         <span className="num text-[10px] text-slate-600">{fotos.length}/{MAX_FOTOS}</span>
+        {rotulo && <span className="text-[10px] text-slate-500">· {rotulo}</span>}
         {podeGerir && !cheio && (
           <button
             type="button"
@@ -88,7 +97,7 @@ export default function FotosMaquina({ fotos = [], onGuardar, podeGerir = true, 
                 onClick={(e) => { e.stopPropagation(); setAVer(url); }}
                 className="block w-full aspect-square rounded overflow-hidden border border-slate-700 hover:border-amber-500 transition-colors"
               >
-                <img src={url} alt="Fotografia da máquina" loading="lazy" className="w-full h-full object-cover" />
+                <img src={miniaturas[url] || url} alt="Fotografia da máquina" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </button>
               {podeGerir && (
                 <button
@@ -107,6 +116,7 @@ export default function FotosMaquina({ fotos = [], onGuardar, podeGerir = true, 
         </div>
       )}
 
+      {ajuda && <p className="text-[10px] text-slate-500 mt-1.5">{ajuda}</p>}
       {erro && <p className="text-[11px] text-amber-400 mt-1.5">{erro}</p>}
 
       <input
