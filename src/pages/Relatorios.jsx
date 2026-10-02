@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
-import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar, Tag, Warehouse, Scale, Percent, PauseCircle, Stamp, Wrench } from "lucide-react";
+import { RefreshCw, TrendingUp, TrendingDown, Clock, Calendar, Tag, Warehouse, Scale, Percent, PauseCircle, Stamp, Wrench, PencilLine } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -13,6 +13,8 @@ import { isVenda, isAluguer } from "@/components/atlas/cicloUtils";
 import BotaoExportar from "@/components/atlas/BotaoExportar";
 import BarraOcupacao from "@/components/atlas/BarraOcupacao";
 import { ocupacaoPatio, taxaUtilizacao, balancoPeriodo, paradasHaMuito } from "@/components/atlas/ocupacaoPatio";
+import CorrigirSaidaModal from "@/components/atlas/CorrigirSaidaModal";
+import { useToast } from "@/components/ui/use-toast";
 
 /** A partir de quantos dias uma máquina pronta e parada passa a ser capital parado. */
 const DIAS_PARADA = 30;
@@ -33,6 +35,11 @@ export default function Relatorios({ currentUser, userPermissions }) {
   // Os relatórios são a página onde um limite calado faz mais estragos:
   // as médias passariam a ser de uma fatia, a dizer que eram de tudo.
   const [truncado, setTruncado] = useState(false);
+  // Uma saída registada com o tipo errado corrige-se aqui, onde se vê o engano.
+  const [aCorrigir, setACorrigir] = useState(null);
+  const { toast } = useToast();
+  const isAdmin = currentUser?.perfil === "administrador";
+  const autor = currentUser?.full_name || currentUser?.perfil || "system";
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -207,7 +214,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
       <BarraOcupacao ciclos={ciclos} />
 
       {/* Backup / restore + manutenção — admin only */}
-      {currentUser?.perfil === "administrador" && (
+      {isAdmin && (
         <>
           <BackupPanel />
           <ManutencaoCiclosPanel />
@@ -367,12 +374,13 @@ export default function Relatorios({ currentUser, userPermissions }) {
                 <th className="text-left p-3 font-medium">Data saída</th>
                 <th className="text-left p-3 font-medium">Data retorno</th>
                 <th className="text-right p-3 font-medium">Dias</th>
+                {isAdmin && <th className="p-3" aria-label="Corrigir" />}
               </tr>
             </thead>
             <tbody>
               {historicoSaidas.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-slate-500">Sem saídas no período</td>
+                  <td colSpan={isAdmin ? 8 : 7} className="p-6 text-center text-slate-500">Sem saídas no período</td>
                 </tr>
               ) : (
                 historicoSaidas.map((c) => (
@@ -388,6 +396,19 @@ export default function Relatorios({ currentUser, userPermissions }) {
                     <td className="p-3 text-slate-400">{c.data_saida ? format(new Date(c.data_saida), "dd/MM/yyyy") : "—"}</td>
                     <td className="p-3 text-slate-400">{c.data_retorno ? format(new Date(c.data_retorno), "dd/MM/yyyy") : "—"}</td>
                     <td className="p-3 text-right text-amber-400 font-medium">{c.dias_alugada ?? "—"}</td>
+                    {isAdmin && (
+                      <td className="p-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setACorrigir(c)}
+                          title={`Passar a ${isVenda(c) ? "aluguer" : "venda"}`}
+                          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-amber-400"
+                        >
+                          <PencilLine className="w-3.5 h-3.5" />
+                          Corrigir
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -395,6 +416,17 @@ export default function Relatorios({ currentUser, userPermissions }) {
           </table>
         </div>
       </div>
+
+      <CorrigirSaidaModal
+        ciclo={aCorrigir}
+        ciclos={ciclos}
+        autor={autor}
+        onClose={() => setACorrigir(null)}
+        onCorrigida={(plano) => {
+          toast({ title: "✓ Saída corrigida", description: `${aCorrigir?.serie} — ${plano.nota}` });
+          loadData(true);
+        }}
+      />
     </div>
   );
 }

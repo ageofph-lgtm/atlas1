@@ -54,10 +54,31 @@ describe("matchCicloSearch", () => {
     expect(procura("duplex")).toBe(false);
   });
 
-  it("não procura pelo número do cone — os dígitos apanhariam séries e anos", () => {
-    // Para o cone existe o filtro próprio, com cor e número exatos.
-    const semDigitos = { ...ciclo, serie: "AB-CD", observacoes: "", reserva_cliente: "" };
-    expect(matchCicloSearch(semDigitos, { modelo: "EXV" }, "7")).toBe(false);
+  it("um número curto procura o cone, e só o cone", () => {
+    expect(procura("7")).toBe(true);
+    expect(procura("07")).toBe(true);
+    expect(procura("cone 7")).toBe(true);
+    // "21" está na série (F20321…), mas não é o cone desta máquina.
+    expect(procura("21")).toBe(false);
+  });
+
+  it("cor + número procura o cone exato, com a cor escrita por inteiro ou começada", () => {
+    expect(procura("amarelo 7")).toBe(true);
+    expect(procura("7 amarelo")).toBe(true);
+    expect(procura("am 7")).toBe(true);
+    expect(procura("azul 7")).toBe(false);
+  });
+
+  it("uma máquina sem cone não aparece numa pesquisa de cone", () => {
+    expect(matchCicloSearch({ ...ciclo, cone_cor: null, cone_numero: null }, maquina, "7")).toBe(false);
+    expect(matchCicloSearch({ ...ciclo, cone_numero: "" }, maquina, "0")).toBe(false);
+  });
+
+  it("números maiores e palavras que não são cor continuam a ser pesquisa normal", () => {
+    expect(procura("00397")).toBe(true);
+    expect(procura("RX 60")).toBe(true);
+    // "ver" tanto é verde como vermelho: não é cor de cone, é texto.
+    expect(matchCicloSearch({ ...ciclo, observacoes: "ver 7 dias" }, maquina, "ver 7")).toBe(true);
   });
 
   it("aguenta uma máquina em falta", () => {

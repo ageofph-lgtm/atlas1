@@ -8,6 +8,7 @@ import { isCategoriaSemEstado, estadoEfetivo, ESTADOS_OFICINA, podeGerirEstadoOf
 import { podeEditarCategoria, podeEditarEstado } from "@/components/hooks/usePermissions";
 import H1DoMastro from "@/components/atlas/H1DoMastro";
 import ElevacaoLivre150 from "@/components/atlas/ElevacaoLivre150";
+import { planearCorrecao, tipoDaSaida } from "@/components/atlas/corrigirSaida";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -54,6 +55,13 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
   const needsCone = !!effectiveConeCor;
   // Sucata/indefinida não têm estado de fluxo — ficam sempre em "indefinido".
   const semEstado = isCategoriaSemEstado(categoria);
+  // O tipo de saída só existe em quem saiu. A 02/10/2026 marcou-se "vendida"
+  // num ciclo do pátio (aberto por um retorno feito para desfazer um engano):
+  // a venda ficou num ciclo sem data de saída e nenhum indicador a contou.
+  const saiu = !!ciclo?.data_saida;
+  const correcaoSaida = isAdmin && saiu && tipoSaida && tipoSaida !== tipoDaSaida(ciclo)
+    ? planearCorrecao(ciclo, [], tipoSaida)
+    : null;
 
   useEffect(() => {
     if (maquina) {
@@ -70,7 +78,7 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
       });
       setCategoria(ciclo?.categoria || "");
       setEstado(estadoEfetivo(ciclo) || "");
-      setTipoSaida(ciclo?.tipo_saida || "");
+      setTipoSaida(ciclo?.data_saida ? tipoDaSaida(ciclo) : "");
       setClienteSaida(ciclo?.reserva_cliente || "");
       setDiasAlugada(ciclo?.dias_alugada ?? "");
       setConeNumero(ciclo?.cone_numero || "");
@@ -147,9 +155,12 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
         }
       }
       if (isAdmin) {
-        if (tipoSaida !== (ciclo?.tipo_saida || "")) cicloUpdates.tipo_saida = tipoSaida || null;
         if (clienteSaida !== (ciclo?.reserva_cliente || "")) cicloUpdates.reserva_cliente = clienteSaida;
-        if (diasAlugada !== (ciclo?.dias_alugada ?? "")) cicloUpdates.dias_alugada = diasAlugada === "" ? null : Number(diasAlugada);
+        if (saiu && diasAlugada !== (ciclo?.dias_alugada ?? "")) cicloUpdates.dias_alugada = diasAlugada === "" ? null : Number(diasAlugada);
+        // Mudar o tipo é a mesma correção dos Relatórios: passar a venda fecha
+        // o aluguer, passar a aluguer reabre-o. Vem depois do resto para o
+        // estado que ela pede prevalecer.
+        if (correcaoSaida?.ok) Object.assign(cicloUpdates, correcaoSaida.atualizar);
       }
       await onSave(specs, cicloUpdates, serieChanged ? serie.trim() : null);
       onClose();
@@ -406,32 +417,45 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
             <div className="space-y-4 border-t border-slate-700 pt-4">
               <h3 className="text-sm font-bold text-amber-400">Controlo de registo (admin)</h3>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-slate-400 mb-1.5 block">Tipo de Saída</label>
-                  <select
-                    value={tipoSaida}
-                    onChange={(e) => setTipoSaida(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm"
-                  >
-                    <option value="">—</option>
-                    <option value="alugada">Alugada</option>
-                    <option value="vendida">Vendida</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-400 mb-1.5 block">Dias Alugada</label>
-                  <input
-                    type="number"
-                    value={diasAlugada}
-                    onChange={(e) => setDiasAlugada(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm"
-                  />
-                </div>
-              </div>
+              {saiu ? (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-slate-400 mb-1.5 block">Tipo de Saída</label>
+                      <select
+                        value={tipoSaida}
+                        onChange={(e) => setTipoSaida(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm"
+                      >
+                        <option value="alugada">Alugada</option>
+                        <option value="vendida">Vendida</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-400 mb-1.5 block">Dias Alugada</label>
+                      <input
+                        type="number"
+                        value={diasAlugada}
+                        onChange={(e) => setDiasAlugada(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm"
+                      />
+                    </div>
+                  </div>
+                  {correcaoSaida && (
+                    <p className={`text-xs ${correcaoSaida.ok ? "text-slate-400" : "text-amber-300"}`}>
+                      {correcaoSaida.ok ? `Ao gravar: ${correcaoSaida.explicacao.join(" ")}` : correcaoSaida.motivo}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  Esta máquina não saiu: o tipo de saída (aluguer ou venda) escolhe-se na página Saída. Uma saída
+                  registada com o tipo errado corrige-se em Relatórios › Histórico de saídas.
+                </p>
+              )}
 
               <div>
-                <label className="text-xs font-medium text-slate-400 mb-1.5 block">Cliente da Saída</label>
+                <label className="text-xs font-medium text-slate-400 mb-1.5 block">{saiu ? "Cliente da Saída" : "Cliente da reserva"}</label>
                 <input
                   type="text"
                   value={clienteSaida}

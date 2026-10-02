@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ocupacaoPatio, taxaUtilizacao, balancoPeriodo, paradasHaMuito, diasDesde, ciclosDoGrupo, GRUPOS_OCUPACAO } from "@/components/atlas/ocupacaoPatio";
+import { ocupacaoPatio, taxaUtilizacao, balancoPeriodo, paradasHaMuito, diasDesde, ciclosDoGrupo, GRUPOS_OCUPACAO, paraSaida } from "@/components/atlas/ocupacaoPatio";
 
 const c = (id, estado, extra = {}) => ({ id, serie: "NS-" + id, categoria: "str", estado, ...extra });
 
@@ -244,5 +244,36 @@ describe("diasDesde", () => {
   it("sem data não inventa zero", () => {
     expect(diasDesde(null, agora)).toBe(null);
     expect(diasDesde(undefined, agora)).toBe(null);
+  });
+});
+
+describe("paraSaida", () => {
+  const parque = [
+    c(1, "pronta"),
+    c(2, "classificada"),
+    c(3, "em_execucao"),
+    c(4, "em_aluguer", { data_saida: "2026-09-01T00:00:00Z" }),
+    c(5, "fechado"),
+    c(6, "indefinido", { categoria: "sucata" }),
+    c(7, "retorno", { data_saida: "2026-09-01T00:00:00Z" }),
+  ];
+  const ids = (l) => l.map((x) => x.id);
+
+  it("qualquer máquina cá pode sair: as prontas à parte, as outras também aparecem", () => {
+    const s = paraSaida(parque);
+    expect(ids(s.prontas)).toEqual([1]);
+    expect(ids(s.outras)).toEqual([2, 3, 6]);
+  });
+
+  it("as alugadas são as que esperam retorno; fechadas e fora do pátio não saem outra vez", () => {
+    const s = paraSaida(parque);
+    expect(ids(s.alugadas)).toEqual([4]);
+    expect([...ids(s.prontas), ...ids(s.outras)]).not.toContain(5);
+    expect([...ids(s.prontas), ...ids(s.outras)]).not.toContain(7);
+  });
+
+  it("as que estão cá são as mesmas que a barra conta", () => {
+    const s = paraSaida(parque);
+    expect(s.prontas.length + s.outras.length).toBe(ocupacaoPatio(parque).noPatio);
   });
 });

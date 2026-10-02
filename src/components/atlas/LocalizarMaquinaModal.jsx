@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Camera, Loader2, AlertCircle, Search, List } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { estadoEfetivo } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, rotuloDoEstado } from "@/components/atlas/cicloUtils";
+import { matchCicloSearch } from "@/components/atlas/searchUtils";
 
 /**
  * Encontra a máquina pela placa e entrega-a — não regista nada.
@@ -13,7 +14,12 @@ import { estadoEfetivo } from "@/components/atlas/cicloUtils";
  * chapas da bateria e do carregador, o caminho rápido não. Agora a fotografia
  * é só uma forma de procurar; quem regista é sempre o mesmo modal do card.
  */
-export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, titulo, estadoAlvo, vazioTexto, Icone = Search, cor = "amber" }) {
+/**
+ * `carregar` substitui a lista por omissão (os ciclos em `estadoAlvo`). As que
+ * vierem noutro estado aparecem com ele à vista — é o caso da Saída, onde
+ * qualquer máquina do pátio pode sair.
+ */
+export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, titulo, estadoAlvo, carregar, vazioTexto, Icone = Search, cor = "amber" }) {
   const { toast } = useToast();
   // Começa na lista: escolher a máquina à mão é o caminho mais usado e não
   // depende de a placa estar legível. A fotografia fica ao lado, não por baixo.
@@ -38,6 +44,7 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
   }, [open]);
 
   const elegiveis = async () => {
+    if (carregar) return carregar();
     const lista = await base44.entities.Ciclo.filter({ estado: estadoAlvo });
     return lista.filter((c) => estadoEfetivo(c) === estadoAlvo);
   };
@@ -84,9 +91,8 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const filtradas = candidatas.filter((c) =>
-    !procura.trim() ? true : `${c.serie} ${c.reserva_cliente || ""}`.toLowerCase().includes(procura.trim().toLowerCase())
-  );
+  // A mesma pesquisa das páginas: série, cliente e cone ("12", "amarelo 12").
+  const filtradas = candidatas.filter((c) => matchCicloSearch(c, null, procura));
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -163,7 +169,7 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
                 type="text"
                 value={procura}
                 onChange={(e) => setProcura(e.target.value)}
-                placeholder="Série ou cliente…"
+                placeholder="Série, cone ou cliente…"
                 autoFocus
                 className="w-full pl-10 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
               />
@@ -178,6 +184,9 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
                   <span className="num text-sm font-bold text-slate-200">{c.serie}</span>
                   {c.cone_numero && <span className="text-xs text-slate-500 ml-2">cone {c.cone_cor} {c.cone_numero}</span>}
                   {c.reserva_cliente && <span className="text-xs text-cyan-400 ml-2">· {c.reserva_cliente}</span>}
+                  {estadoEfetivo(c) !== estadoAlvo && (
+                    <span className="text-[10px] font-bold uppercase text-amber-300 bg-amber-500/15 rounded px-1 py-0.5 ml-2">{rotuloDoEstado(c)}</span>
+                  )}
                 </button>
               ))}
               {filtradas.length === 0 && <p className="text-sm text-slate-500 text-center py-4">{vazioTexto}</p>}

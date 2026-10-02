@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX } from "lucide-react";
+import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX, AlertTriangle } from "lucide-react";
 import LocalizarMaquinaModal from "@/components/atlas/LocalizarMaquinaModal";
 import FilterBar from "@/components/atlas/FilterBar";
 import PlacaScanner from "@/components/atlas/PlacaScanner";
@@ -14,7 +14,9 @@ import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
-import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS, LIBERTAR_CONE } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS, LIBERTAR_CONE, rotuloDoEstado, ESTADOS_EM_PREPARACAO } from "@/components/atlas/cicloUtils";
+import { paraSaida } from "@/components/atlas/ocupacaoPatio";
+import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
 import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 import { notificarSaida, notificarRetorno } from "@/components/atlas/mensagens";
@@ -24,11 +26,32 @@ import FotosMaquina from "@/components/atlas/FotosMaquina";
 import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
 import { podeGerirFotos, camposDoMovimento } from "@/components/atlas/fotosMaquina";
 
+/** Os ciclos de que a página precisa: o pátio todo e as alugadas (ver `paraSaida`). */
+const lerParaSaida = async () => {
+  const lidos = await listarTudo(base44.entities.Ciclo);
+  return { ...paraSaida(lidos.registos), truncado: lidos.truncado };
+};
+
+/** O cone da máquina, para quem procurou por ele confirmar que é esta. */
+function ConeDe({ ciclo }) {
+  if (!ciclo?.cone_numero) return null;
+  const bg = CONE_COLORS.find((c) => c.value === ciclo.cone_cor)?.bg || "bg-slate-500";
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+      <span className={`w-2.5 h-2.5 rounded-full ${bg}`} />
+      cone {ciclo.cone_numero}
+    </span>
+  );
+}
+
 export default function Saida({ currentUser }) {
   const { toast } = useToast();
   const autor = currentUser?.full_name || currentUser?.perfil || "system";
 
   const [prontas, setProntas] = useState([]);
+  // As que estão cá mas não prontas: também podem sair, com um aviso.
+  const [outras, setOutras] = useState([]);
+  const [truncado, setTruncado] = useState(false);
   const [alugadas, setAlugadas] = useState([]);
   const [maquinas, setMaquinas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,11 +78,11 @@ export default function Saida({ currentUser }) {
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
-      const p = await base44.entities.Ciclo.filter({ estado: "pronta" });
-      // Sucata/indefinida não saem para aluguer — estadoEfetivo põe-nas em "indefinido".
-      setProntas(p.filter((c) => estadoEfetivo(c) === "pronta"));
-      const a = await base44.entities.Ciclo.filter({ estado: "em_aluguer" });
-      setAlugadas(a);
+      const lidos = await lerParaSaida();
+      setProntas(lidos.prontas);
+      setOutras(lidos.outras);
+      setAlugadas(lidos.alugadas);
+      setTruncado(lidos.truncado);
       const allMaquinas = (await listarTudo(base44.entities.Maquina)).registos;
       setMaquinas(allMaquinas);
     } catch (e) {
@@ -106,6 +129,7 @@ export default function Saida({ currentUser }) {
     });
 
   const filteredProntas = useMemo(() => aplicar(prontas), [prontas, maquinas, filters, searchQuery]);
+  const filteredOutras = useMemo(() => aplicar(outras), [outras, maquinas, filters, searchQuery]);
   const filteredAlugadas = useMemo(() => aplicar(alugadas), [alugadas, maquinas, filters, searchQuery]);
 
   const handleFilterChange = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
@@ -131,6 +155,9 @@ export default function Saida({ currentUser }) {
     setActing(saidaModal.id);
     try {
       const now = new Date().toISOString();
+      // Já não é sempre "pronta": sai de onde estava (ver `paraSaida`). Lido
+      // antes de gravar, para não depender do objeto que a gravação devolve.
+      const deEstado = saidaModal.estado || estadoEfetivo(saidaModal);
       // Uma máquina vendida não volta: o ciclo fecha já. Alugada fica a aguardar retorno.
       const vendida = tipoSaida === "vendida";
       const novoEstado = vendida ? "fechado" : "em_aluguer";
@@ -158,7 +185,7 @@ export default function Saida({ currentUser }) {
       await base44.entities.EventoCiclo.create({
         ciclo_id: saidaModal.id,
         serie: saidaModal.serie,
-        de_estado: "pronta",
+        de_estado: deEstado,
         para_estado: novoEstado,
         autor,
         nota: `${vendida ? "Venda" : "Saída para aluguer"}${cliente ? ` — ${cliente}` : ""}`,
@@ -248,6 +275,8 @@ export default function Saida({ currentUser }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {truncado && <div className="lg:col-span-2"><AvisoTruncado truncado /></div>}
+
       {/* Acções rápidas — o caminho normal desta página */}
       <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button
@@ -282,7 +311,7 @@ export default function Saida({ currentUser }) {
               <SearchX className="w-4 h-4 flex-shrink-0 opacity-60" />
               <span>
                 Pesquise ou aplique um filtro para ver as máquinas.
-                <span className="text-slate-400"> {prontas.length} prontas · {alugadas.length} em aluguer.</span>
+                <span className="text-slate-400"> {prontas.length} prontas · {outras.length} outras no pátio · {alugadas.length} em aluguer.</span>
               </span>
             </div>
           )}
@@ -318,9 +347,12 @@ export default function Saida({ currentUser }) {
                   <div className="mb-2">
                     <h3 className="num text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
                     <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
-                    {c.data_pronta && (
-                      <p className="text-xs text-slate-500 mt-1">Pronta desde: {format(new Date(c.data_pronta), "dd/MM HH:mm")}</p>
-                    )}
+                    <div className="flex items-center gap-3 flex-wrap mt-1">
+                      <ConeDe ciclo={c} />
+                      {c.data_pronta && (
+                        <p className="text-xs text-slate-500">Pronta desde: {format(new Date(c.data_pronta), "dd/MM HH:mm")}</p>
+                      )}
+                    </div>
                   </div>
                   {c.reserva_cliente && (
                     <div className="mb-2 bg-cyan-500/10 border border-cyan-500/30 rounded px-2 py-1 text-xs text-cyan-400">
@@ -342,6 +374,50 @@ export default function Saida({ currentUser }) {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* As que estão cá mas não prontas. Saem na mesma — vendidas tal como
+            estão, por exemplo —, mas com o estado à vista e um aviso no modal. */}
+        {filteredOutras.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <h2 className="text-sm font-bold uppercase tracking-wide text-amber-400">Outras no pátio — não prontas</h2>
+              <span className="text-xs text-slate-500">({filteredOutras.length} de {outras.length})</span>
+            </div>
+            <div className="space-y-3">
+              {filteredOutras.map((c) => {
+                const m = getMaquina(c);
+                return (
+                  <div key={c.id} className="glass border border-amber-500/20 rounded-lg p-4">
+                    <div className="mb-2">
+                      <h3 className="num text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
+                      <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
+                      <div className="flex items-center gap-3 flex-wrap mt-1">
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold uppercase bg-amber-500/15 text-amber-300">
+                          {rotuloDoEstado(c)}
+                        </span>
+                        <ConeDe ciclo={c} />
+                      </div>
+                    </div>
+                    {c.reserva_cliente && (
+                      <div className="mb-2 bg-cyan-500/10 border border-cyan-500/30 rounded px-2 py-1 text-xs text-cyan-400">
+                        RESERVADA · {c.reserva_cliente}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => openSaidaModal(c)}
+                      disabled={acting === c.id}
+                      className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-amber-500/40 text-amber-300 font-bold rounded-lg text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {acting === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                      Dar Saída
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -492,7 +568,11 @@ export default function Saida({ currentUser }) {
         onEncontrada={openSaidaModal}
         titulo="Procurar para dar saída"
         estadoAlvo="pronta"
-        vazioTexto="Nenhuma máquina pronta"
+        carregar={async () => {
+          const { prontas: p, outras: o } = await lerParaSaida();
+          return [...p, ...o];
+        }}
+        vazioTexto="Nenhuma máquina no pátio"
         Icone={Zap}
       />
       <LocalizarMaquinaModal
@@ -513,6 +593,18 @@ export default function Saida({ currentUser }) {
             <DialogTitle className="text-slate-100">Dar Saída — {saidaModal?.serie}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {saidaModal && estadoEfetivo(saidaModal) !== "pronta" && (
+              <div role="alert" className="flex items-start gap-2 text-amber-300 text-xs bg-amber-500/10 border border-amber-500/40 rounded-lg p-3">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>
+                  Esta máquina <span className="font-bold">não está pronta</span> — estado{" "}
+                  <span className="font-bold uppercase">{rotuloDoEstado(saidaModal)}</span>. Pode sair na mesma, para
+                  aluguer ou venda; confirme que é mesmo esta.
+                  {saidaModal.watcher_os_id && ESTADOS_EM_PREPARACAO.includes(estadoEfetivo(saidaModal)) &&
+                    " Tem O.S. aberta no Watcher: não fecha sozinha."}
+                </span>
+              </div>
+            )}
             <div>
               <Label className="text-slate-400 text-xs mb-1.5 block">Tipo de saída</Label>
               <div className="grid grid-cols-2 gap-2">

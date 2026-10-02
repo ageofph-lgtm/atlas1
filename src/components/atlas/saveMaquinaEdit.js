@@ -2,6 +2,7 @@ import { base44 } from "@/api/base44Client";
 import { notificarMudancaGestao } from "@/components/atlas/mensagens";
 import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 import { calcularH1 } from "@/components/atlas/tabelaMastros";
+import { notaDaCorrecao, tipoDaSaida } from "@/components/atlas/corrigirSaida";
 
 /**
  * Gravação partilhada do EditMaquinaModal (inventário + autorização).
@@ -41,6 +42,8 @@ export async function saveMaquinaEdit({ maquina, ciclo, specs, cicloUpdates = {}
         nota: `Categoria definida: ${cicloUpdates.categoria} → cone ${coneLabel}`,
       });
     }
+    // Uma correção de aluguer ↔ venda muda o estado; a nota diz porquê.
+    const corrigiuSaida = !!ciclo.data_saida && !!cicloUpdates.tipo_saida && cicloUpdates.tipo_saida !== tipoDaSaida(ciclo);
     if (cicloUpdates.estado && cicloUpdates.estado !== ciclo.estado) {
       await base44.entities.EventoCiclo.create({
         ciclo_id: ciclo.id,
@@ -48,7 +51,7 @@ export async function saveMaquinaEdit({ maquina, ciclo, specs, cicloUpdates = {}
         de_estado: ciclo.estado,
         para_estado: cicloUpdates.estado,
         autor,
-        nota: "Estado alterado manualmente",
+        nota: corrigiuSaida ? notaDaCorrecao(tipoDaSaida(ciclo), cicloUpdates.tipo_saida) : "Estado alterado manualmente",
       });
     }
     // O cone mudou: refletir na O.S. do Watcher (se houver uma aberta).
