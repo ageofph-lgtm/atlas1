@@ -54,6 +54,23 @@ export const ciclosDoGrupo = (grupo, ciclos = []) => {
   return regra ? ciclos.filter((c) => !isHistorico(c) && regra(c)) : [];
 };
 
+/**
+ * O que a página Saída mostra.
+ *
+ * Qualquer máquina que esteja cá pode sair, para aluguer ou venda. Até
+ * 02/10/2026 só as prontas apareciam, e uma máquina vendida tal como estava
+ * (sucata, recon por fazer) não tinha por onde sair. As prontas vêm à parte
+ * porque são o caso normal; as outras saem com um aviso.
+ */
+export const paraSaida = (ciclos = []) => {
+  const noPatio = ciclosDoGrupo("noPatio", ciclos);
+  return {
+    prontas: noPatio.filter((c) => estadoEfetivo(c) === "pronta"),
+    outras: noPatio.filter((c) => estadoEfetivo(c) !== "pronta"),
+    alugadas: ciclos.filter((c) => !isHistorico(c) && estadoEfetivo(c) === "em_aluguer"),
+  };
+};
+
 export function ocupacaoPatio(ciclos = []) {
   const lista = (grupo) => ciclosDoGrupo(grupo, ciclos);
   const noPatio = lista("noPatio");

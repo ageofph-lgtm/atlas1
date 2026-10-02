@@ -5,6 +5,8 @@ import {
   MODELO_FAMILIAS,
   MODELO_FAMILIA_OUTRAS,
   CONE_COLORS,
+  ESTADO_CONFIG,
+  CATEGORIA_CONFIG,
 } from "@/components/atlas/constants";
 
 export const isCategoriaSemEstado = (categoria) => CATEGORIAS_SEM_ESTADO.includes(categoria);
@@ -21,6 +23,16 @@ export const estadoEfetivo = (ciclo) => {
     return "indefinido";
   }
   return ciclo.estado;
+};
+
+/**
+ * Como se diz o estado de uma máquina a quem a vai movimentar. Uma sucata ou
+ * indefinida não tem estado de fluxo: diz-se a categoria, que é o que conta.
+ */
+export const rotuloDoEstado = (ciclo) => {
+  const estado = estadoEfetivo(ciclo);
+  if (estado === "indefinido" && ciclo?.categoria) return CATEGORIA_CONFIG[ciclo.categoria]?.label || "Indefinido";
+  return ESTADO_CONFIG[estado]?.label || estado || "—";
 };
 
 /** Modelo normalizado para comparação: maiúsculas, só letras e dígitos. */
