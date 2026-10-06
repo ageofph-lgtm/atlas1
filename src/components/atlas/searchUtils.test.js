@@ -54,12 +54,24 @@ describe("matchCicloSearch", () => {
     expect(procura("duplex")).toBe(false);
   });
 
-  it("um número curto procura o cone, e só o cone", () => {
+  it("um número curto encontra o cone", () => {
     expect(procura("7")).toBe(true);
     expect(procura("07")).toBe(true);
     expect(procura("cone 7")).toBe(true);
-    // "21" está na série (F20321…), mas não é o cone desta máquina.
-    expect(procura("21")).toBe(false);
+  });
+
+  it("um número curto também encontra a série que o tem — procurar pelo fim da série", () => {
+    // Medido a 06/10: "592" não encontrava a máquina cuja série acaba em 592.
+    const doFim = { ...ciclo, serie: "F20321Y00592", cone_cor: null, cone_numero: null };
+    expect(matchCicloSearch(doFim, maquina, "592")).toBe(true);
+    // "21" não é o cone desta máquina, mas está na série (F20321…).
+    expect(procura("21")).toBe(true);
+    expect(procura("999")).toBe(false);
+  });
+
+  it("com a palavra \"cone\" ou com a cor, é só o cone", () => {
+    expect(procura("cone 21")).toBe(false);
+    expect(procura("amarelo 21")).toBe(false);
   });
 
   it("cor + número procura o cone exato, com a cor escrita por inteiro ou começada", () => {
@@ -69,9 +81,10 @@ describe("matchCicloSearch", () => {
     expect(procura("azul 7")).toBe(false);
   });
 
-  it("uma máquina sem cone não aparece numa pesquisa de cone", () => {
-    expect(matchCicloSearch({ ...ciclo, cone_cor: null, cone_numero: null }, maquina, "7")).toBe(false);
-    expect(matchCicloSearch({ ...ciclo, cone_numero: "" }, maquina, "0")).toBe(false);
+  it("uma máquina sem cone não aparece numa pesquisa só de cone", () => {
+    expect(matchCicloSearch({ ...ciclo, cone_cor: null, cone_numero: null }, maquina, "cone 7")).toBe(false);
+    expect(matchCicloSearch({ ...ciclo, cone_cor: null, cone_numero: null }, maquina, "amarelo 7")).toBe(false);
+    expect(matchCicloSearch({ ...ciclo, cone_numero: "" }, maquina, "cone 0")).toBe(false);
   });
 
   it("números maiores e palavras que não são cor continuam a ser pesquisa normal", () => {

@@ -14,22 +14,26 @@ const corDoCone = (palavra) => {
 };
 
 /**
- * Se a pesquisa é por um cone: "12", "cone 12", "amarelo 12", "az 7".
+ * Se a pesquisa fala de um cone: "12", "cone 12", "amarelo 12", "az 7".
  *
- * Devolve `{ numero, cor }` (cor null quando não se disse) ou null quando a
- * pesquisa é outra coisa. Os cones são números de 1 a 3 algarismos; as séries
- * procuram-se por pedaços maiores ("00397"), e os anos e o H3 têm 4. Um número
- * curto sozinho era, na prática, sempre o cone — e trazia de volta todas as
- * séries que tivessem aqueles algarismos algures.
+ * Devolve `{ numero, cor, soCone }` ou null quando a pesquisa é outra coisa.
+ * Os cones são números de 1 a 3 algarismos.
+ *
+ * `soCone` diz se a pesquisa é só pelo cone. É quando se disse a cor ou a
+ * palavra "cone". Um número sozinho não chega: medido a 06/10/2026, procurar
+ * "592" deixou de encontrar a máquina cuja série acaba em 592, porque o número
+ * era tratado só como cone. Um número sozinho serve as duas coisas.
  */
 export const pesquisaDeCone = (query) => {
-  const palavras = String(query || "").toLowerCase().split(/\s+/).filter((p) => p && p !== "cone");
+  const todas = String(query || "").toLowerCase().split(/\s+/).filter(Boolean);
+  const disseCone = todas.includes("cone");
+  const palavras = todas.filter((p) => p !== "cone");
   const numeros = palavras.filter((p) => NUMERO_DE_CONE.test(p));
   if (numeros.length !== 1) return null;
   const resto = palavras.filter((p) => !NUMERO_DE_CONE.test(p));
-  if (resto.length === 0) return { numero: numeros[0], cor: null };
+  if (resto.length === 0) return { numero: numeros[0], cor: null, soCone: disseCone };
   const cor = resto.length === 1 ? corDoCone(resto[0]) : null;
-  return cor ? { numero: numeros[0], cor } : null;
+  return cor ? { numero: numeros[0], cor, soCone: true } : null;
 };
 
 /** "07" e "7" são o mesmo cone. */
@@ -38,13 +42,15 @@ const mesmoNumero = (a, b) => String(a ?? "").trim() !== "" && Number(a) === Num
 // Tokenized, case-insensitive search across ciclo + maquina fields.
 // OR logic: any token matches any field — easy to find by any term
 // (serie, modelo, triplex, niho, cliente, ...).
-// A pesquisa por cone ("12", "amarelo 12") é exata e só devolve esse cone —
-// ver `pesquisaDeCone`. O filtro de cone da barra continua a existir.
+// Cone: "12" encontra o cone 12 e também o que tiver "12" (a série que acaba
+// em 12, por exemplo); "amarelo 12" e "cone 12" só o cone. Ver `pesquisaDeCone`.
+// O filtro de cone da barra continua a existir.
 export const matchCicloSearch = (ciclo, maquina, query) => {
   if (!query || !query.trim()) return true;
   const cone = pesquisaDeCone(query);
   if (cone) {
-    return mesmoNumero(ciclo?.cone_numero, cone.numero) && (!cone.cor || ciclo?.cone_cor === cone.cor);
+    const doCone = mesmoNumero(ciclo?.cone_numero, cone.numero) && (!cone.cor || ciclo?.cone_cor === cone.cor);
+    if (doCone || cone.soCone) return doCone;
   }
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return true;
