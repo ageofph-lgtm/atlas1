@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   MAX_FOTOS, fotosDe, podeAdicionar, lugaresLivres, juntarFotos, removerFoto, podeGerirFotos,
   subirFotos, avisoDeFotos, rodarFotos, camposDoMovimento, fotosAnterioresDe, miniaturaDe, podarMiniaturas, descreverConjunto,
+  camposDaSubstituicao, conjuntoAtual,
 } from "@/components/atlas/fotosMaquina";
 
 const u = (n) => `https://s.co/${n}.jpg`;
@@ -292,5 +293,48 @@ describe("camposDoMovimento — o que a entrada, a saída e o retorno gravam", (
   it("sem fotos novas não grava nada", () => {
     expect(camposDoMovimento({ fotos: [u(1)] }, [], {}, { momento: "entrada" })).toEqual({});
     expect(camposDoMovimento(null, [], {}, {})).toEqual({});
+  });
+});
+
+describe("camposDaSubstituicao — substituir à mão, no cartão", () => {
+  const u = (n) => `https://x.app/f${n}.jpg`;
+  const cheia = {
+    fotos: [u(1), u(2), u(3), u(4)], fotos_momento: "saida", fotos_data: "2026-10-02T09:44:58Z",
+    fotos_anteriores: [u(9)], fotos_anteriores_momento: "entrada", fotos_anteriores_data: "2026-09-14T10:00:00Z",
+    miniaturas: { [u(1)]: u("1m"), [u(9)]: u("9m") },
+  };
+
+  it("um cartão cheio recebe fotos novas sem apagar nada à mão: as atuais passam a anteriores", () => {
+    const c = camposDaSubstituicao(cheia, [u(5), u(6)], { [u(5)]: u("5m") }, { agora: "2026-10-07T11:00:00Z" });
+    expect(c.fotos).toEqual([u(5), u(6)]);
+    expect(c.fotos_momento).toBe("atualizacao");
+    expect(c.fotos_data).toBe("2026-10-07T11:00:00Z");
+    expect(c.fotos_anteriores).toEqual([u(1), u(2), u(3), u(4)]);
+    expect(c.fotos_anteriores_momento).toBe("saida");
+    // A miniatura de uma foto que saiu do arquivo também sai.
+    expect(c.miniaturas).toEqual({ [u(5)]: u("5m"), [u(1)]: u("1m") });
+  });
+
+  it("sem fotos novas não mexe em nada", () => {
+    expect(camposDaSubstituicao(cheia, [])).toEqual({});
+  });
+
+  it("o conjunto fica descrito como atualização", () => {
+    expect(descreverConjunto("atualizacao", "2026-10-07T11:00:00")).toBe("Atualização · 07/10");
+  });
+});
+
+describe("conjuntoAtual — o que um movimento vai substituir", () => {
+  it("as fotos do cartão, com as miniaturas e de quando são", () => {
+    const m = { fotos: ["https://x.app/a.jpg", "lixo"], miniaturas: { "https://x.app/a.jpg": "https://x.app/am.jpg" }, fotos_momento: "saida", fotos_data: "2026-10-02T09:44:58" };
+    expect(conjuntoAtual(m)).toEqual({
+      fotos: ["https://x.app/a.jpg"],
+      miniaturas: { "https://x.app/a.jpg": "https://x.app/am.jpg" },
+      rotulo: "Saída · 02/10",
+    });
+  });
+
+  it("máquina nova: nada a substituir", () => {
+    expect(conjuntoAtual(null)).toEqual({ fotos: [], miniaturas: {}, rotulo: null });
   });
 });

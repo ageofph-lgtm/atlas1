@@ -87,6 +87,16 @@ export function camposDoMovimento(maquina, novas = [], miniaturasNovas = {}, opc
   };
 }
 
+/**
+ * Substituir à mão, no cartão: um conjunto novo, sem apagar uma a uma.
+ *
+ * É a mesma rotação dos movimentos — as que estavam passam a anteriores —, com
+ * o momento "atualizacao". Antes, para pôr fotos novas num cartão cheio, era
+ * preciso apagar as quatro antigas, e com elas perdia-se o termo de comparação.
+ */
+export const camposDaSubstituicao = (maquina, novas = [], miniaturasNovas = {}, opcoes = {}) =>
+  camposDoMovimento(maquina, novas, miniaturasNovas, { ...opcoes, momento: "atualizacao" });
+
 /** A miniatura de uma foto, quando existe; senão a própria foto. */
 export const miniaturaDe = (maquina, url) => maquina?.miniaturas?.[url] || url;
 
@@ -99,7 +109,7 @@ export function podarMiniaturas(miniaturas = {}, urls = []) {
   return Object.fromEntries(Object.entries(miniaturas || {}).filter(([url, mini]) => fica.has(url) && eEndereco(mini)));
 }
 
-const ROTULO_MOMENTO = { entrada: "Chegada", saida: "Saída" };
+const ROTULO_MOMENTO = { entrada: "Chegada", saida: "Saída", atualizacao: "Atualização" };
 const diaMes = (data) => {
   const d = data ? new Date(data) : null;
   return d && !Number.isNaN(d.getTime())
@@ -112,6 +122,17 @@ export function descreverConjunto(momento, data) {
   const partes = [ROTULO_MOMENTO[momento], diaMes(data)].filter(Boolean);
   return partes.length ? partes.join(" · ") : null;
 }
+
+/**
+ * As fotos que o cartão tem agora, para as mostrar num movimento antes de
+ * serem substituídas: `{ fotos, miniaturas, rotulo }`. Máquina nova ou sem
+ * fotos: lista vazia.
+ */
+export const conjuntoAtual = (maquina) => ({
+  fotos: fotosDe(maquina),
+  miniaturas: maquina?.miniaturas || {},
+  rotulo: descreverConjunto(maquina?.fotos_momento, maquina?.fotos_data),
+});
 
 /** Tira uma foto da lista. Um endereço que lá não esteja deixa tudo como estava. */
 export const removerFoto = (maquina, url) => fotosDe(maquina).filter((u) => u !== url);
