@@ -24,7 +24,7 @@ import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
 import FotosMaquina from "@/components/atlas/FotosMaquina";
 import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
-import { podeGerirFotos, camposDoMovimento } from "@/components/atlas/fotosMaquina";
+import { podeGerirFotos, camposDoMovimento, conjuntoAtual } from "@/components/atlas/fotosMaquina";
 
 /** Os ciclos de que a página precisa: o pátio todo e as alugadas (ver `paraSaida`). */
 const lerParaSaida = async () => {
@@ -540,6 +540,8 @@ export default function Saida({ currentUser }) {
                 cabecalho="Fotografias da chegada"
                 ajuda="Passam a ser as fotos do cartão. As da saída ficam guardadas como anteriores, para comparar."
                 subirFicheiro={subirParaOArmazenamento}
+                destaque
+                atuais={retornoModal ? conjuntoAtual(getMaquina(retornoModal)) : null}
               />
             </div>
 
@@ -681,6 +683,8 @@ export default function Saida({ currentUser }) {
                 cabecalho="Fotografias da saída"
                 ajuda="Passam a ser as fotos do cartão ao confirmar a saída. As que lá estão (as da chegada) ficam guardadas como anteriores."
                 subirFicheiro={subirParaOArmazenamento}
+                destaque
+                atuais={saidaModal ? conjuntoAtual(getMaquina(saidaModal)) : null}
               />
             </div>
           </div>

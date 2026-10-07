@@ -3,7 +3,7 @@ import { History } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { exigirRede } from "@/components/atlas/rede";
 import {
-  fotosDe, fotosAnterioresDe, miniaturaDe, podarMiniaturas, descreverConjunto,
+  fotosDe, fotosAnterioresDe, miniaturaDe, podarMiniaturas, descreverConjunto, camposDaSubstituicao,
 } from "@/components/atlas/fotosMaquina";
 import FotosMaquina from "@/components/atlas/FotosMaquina";
 import FotoModal from "@/components/atlas/FotoModal";
@@ -16,8 +16,9 @@ export const subirParaOArmazenamento = (file) =>
  * As fotografias de uma máquina que já existe: grava na hora.
  *
  * Usado no cartão do inventário. No registo de entrada e na saída as fotos são
- * de um movimento e rodam (ver `rodarFotos`); aqui, no pátio, juntam-se às
- * atuais — é para a foto que faltou, não para um conjunto novo.
+ * de um movimento e rodam (ver `rodarFotos`); aqui, no pátio, "tirar foto"
+ * junta-se às atuais — é para a foto que faltou. Para um conjunto novo há o
+ * "substituir": roda como num movimento, e as atuais ficam como anteriores.
  *
  * Por baixo, o conjunto anterior: só se descarrega quando alguém pede para o
  * ver, que é quando se quer comparar como a máquina saiu com como voltou.
@@ -37,6 +38,13 @@ export default function FotosDaMaquina({ maquina, podeGerir, onAtualizado }) {
     onAtualizado?.();
   };
 
+  const substituir = async (novas, miniaturasNovas = {}) => {
+    exigirRede("Substituir as fotografias");
+    const campos = camposDaSubstituicao(maquina, novas, miniaturasNovas);
+    if (Object.keys(campos).length) await base44.entities.Maquina.update(maquina.id, campos);
+    onAtualizado?.();
+  };
+
   return (
     <div>
       <FotosMaquina
@@ -44,6 +52,7 @@ export default function FotosDaMaquina({ maquina, podeGerir, onAtualizado }) {
         miniaturas={maquina?.miniaturas || {}}
         rotulo={descreverConjunto(maquina?.fotos_momento, maquina?.fotos_data)}
         onGuardar={guardar}
+        onSubstituir={substituir}
         podeGerir={podeGerir && !!maquina?.id}
         titulo={`Máquina ${maquina?.serie || ""}`}
         subirFicheiro={subirParaOArmazenamento}

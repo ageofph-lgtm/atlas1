@@ -4,15 +4,40 @@ import { SPEC_OPTIONS } from "@/components/atlas/constants";
 import OptionButton from "@/components/atlas/OptionButton";
 import FotosMaquina from "@/components/atlas/FotosMaquina";
 import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
+import { conjuntoAtual } from "@/components/atlas/fotosMaquina";
 import H1DoMastro from "@/components/atlas/H1DoMastro";
 import ElevacaoLivre150 from "@/components/atlas/ElevacaoLivre150";
 
 /**
- * Passo 2 — as características. Numa máquina já conhecida vêm preenchidas.
+ * Passo 2 — as fotografias e as características. Numa máquina já conhecida as
+ * características vêm preenchidas.
  */
-export default function EntradaPassoCaracteristicas({ fotos, setFotos, miniaturas = {}, setMiniaturas, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, modelo, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
+export default function EntradaPassoCaracteristicas({ fotos, setFotos, miniaturas = {}, setMiniaturas, existingMaquina = null, NOTA_LABELS, handleAcessorioToggle, handleSpecSelect, modelo, notas, setNotas, setSpecs, setStep, specs, toggleNotaLabel }) {
   return (
     <div className="space-y-5">
+      {/* A máquina está à frente de quem regista: é agora que se fotografa, e
+          não depois, à procura dela no inventário. Ainda não tem id, por isso
+          as fotos ficam em memória e são gravadas com ela.
+          Vem primeiro, e com o botão grande: medido a 07/10/2026, numa
+          reentrada ninguém deu pelo "tirar foto" pequeno no fim do passo, e a
+          máquina ficou com as fotos da saída. */}
+      <div className="glass border border-amber-500/30 rounded-lg p-3">
+        <FotosMaquina
+          fotos={fotos}
+          miniaturas={miniaturas}
+          onGuardar={(novas, minis) => {
+            setFotos(novas);
+            setMiniaturas?.((prev) => ({ ...prev, ...minis }));
+          }}
+          titulo="Máquina a registar"
+          cabecalho="Fotografias da chegada"
+          ajuda="Passam a ser as fotos do cartão. Se a máquina já tinha fotos, essas ficam guardadas como anteriores."
+          subirFicheiro={subirParaOArmazenamento}
+          destaque
+          atuais={conjuntoAtual(existingMaquina)}
+        />
+      </div>
+
       <div>
         <h2 className="text-lg font-bold text-slate-100 mb-1">Características</h2>
         <p className="text-sm text-slate-400">Selecione as specs da máquina</p>
@@ -107,24 +132,6 @@ export default function EntradaPassoCaracteristicas({ fotos, setFotos, miniatura
             );
           })}
         </div>
-      </div>
-
-      {/* A máquina está à frente de quem regista: é agora que se fotografa, e
-          não depois, à procura dela no inventário. Ainda não tem id, por isso
-          as fotos ficam em memória e são gravadas com ela. */}
-      <div className="border-t border-slate-700 pt-4">
-        <FotosMaquina
-          fotos={fotos}
-          miniaturas={miniaturas}
-          onGuardar={(novas, minis) => {
-            setFotos(novas);
-            setMiniaturas?.((prev) => ({ ...prev, ...minis }));
-          }}
-          titulo="Máquina a registar"
-          cabecalho="Fotografias da chegada"
-          ajuda="Passam a ser as fotos do cartão. Se a máquina já tinha fotos, essas ficam guardadas como anteriores."
-          subirFicheiro={subirParaOArmazenamento}
-        />
       </div>
 
       <div>

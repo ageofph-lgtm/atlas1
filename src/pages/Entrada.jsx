@@ -10,6 +10,7 @@ import { isCategoriaSemEstado } from "@/components/atlas/cicloUtils";
 import { registarEntrada } from "@/components/atlas/registarEntrada";
 import { procurarMaquina } from "@/components/atlas/procurarMaquina";
 import { guardarRascunho, lerRascunho, apagarRascunho } from "@/components/atlas/rascunho";
+import { conjuntoAtual } from "@/components/atlas/fotosMaquina";
 
 export default function Entrada({ currentUser }) {
   const { toast } = useToast();
@@ -293,6 +294,7 @@ export default function Entrada({ currentUser }) {
             setFotos={setFotos}
             miniaturas={miniaturas}
             setMiniaturas={setMiniaturas}
+          existingMaquina={existingMaquina}
           specs={specs} setSpecs={setSpecs} modelo={modelo}
           handleSpecSelect={handleSpecSelect} handleAcessorioToggle={handleAcessorioToggle}
           notas={notas} setNotas={setNotas}
@@ -312,6 +314,7 @@ export default function Entrada({ currentUser }) {
           coneNumero={coneNumero} setConeNumero={setConeNumero}
           coneError={coneError} setConeError={setConeError} validateCone={validateCone}
           reentradaConfirmada={reentradaConfirmada}
+          nFotos={fotos.length} fotosAntes={conjuntoAtual(existingMaquina)}
           canSubmit={canSubmit} isSubmitting={isSubmitting}
           handleSubmit={handleSubmit} setStep={setStep}
         />

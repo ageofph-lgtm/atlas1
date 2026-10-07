@@ -1,11 +1,17 @@
 import React from "react";
-import { Check, ArrowLeft, RotateCcw } from "lucide-react";
+import { Check, ArrowLeft, RotateCcw, Camera } from "lucide-react";
 import { CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
 
 /**
  * Passo 3 — categoria, cone e estado inicial. É o passo que grava.
  */
-export default function EntradaPassoClassificacao({ canChooseEstado, canSubmit, categoria, coneCor, coneError, coneNumero, estadoInicial, handleSubmit, isSubmitting, modelo, needsCone, reentradaConfirmada, semEstado, serie, setCategoria, setConeCor, setConeError, setConeNumero, setEstadoInicial, setStep, validateCone }) {
+export default function EntradaPassoClassificacao({ canChooseEstado, canSubmit, categoria, coneCor, coneError, coneNumero, estadoInicial, handleSubmit, isSubmitting, modelo, needsCone, reentradaConfirmada, semEstado, serie, setCategoria, setConeCor, setConeError, setConeNumero, setEstadoInicial, setStep, validateCone, nFotos = 0, fotosAntes = null }) {
+  // Antes de registar, diz-se o que acontece às fotos: sem fotos novas o cartão
+  // fica com as de antes, que numa reentrada são as da saída.
+  const voltarAsFotos = () => {
+    setStep(2);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   // Só o UTS deixa escolher a cor do cone: vermelho é o recomendado, mas a
   // falta de cones vermelhos físicos obriga a usar amarelo. As restantes
   // categorias têm a cor fixa pela categoria.
@@ -133,6 +139,30 @@ export default function EntradaPassoClassificacao({ canChooseEstado, canSubmit, 
             <RotateCcw className="w-3.5 h-3.5" />
             Reentrada — o aluguer anterior será fechado
           </p>
+        )}
+        {nFotos > 0 ? (
+          <p className="text-green-400 flex items-center gap-1.5 pt-1">
+            <Camera className="w-3.5 h-3.5" />
+            {nFotos} {nFotos === 1 ? "foto" : "fotos"} da chegada
+            {fotosAntes?.fotos?.length ? " — as de antes ficam guardadas como anteriores" : ""}
+          </p>
+        ) : (
+          <div className="flex items-start gap-2 text-amber-300 pt-1">
+            <Camera className="w-3.5 h-3.5 flex-shrink-0 mt-1" />
+            <p className="flex-1">
+              Sem fotos da chegada —{" "}
+              {fotosAntes?.fotos?.length
+                ? `o cartão fica com as de antes${fotosAntes.rotulo ? ` (${fotosAntes.rotulo})` : ""}.`
+                : "a máquina fica sem fotos."}
+            </p>
+            <button
+              type="button"
+              onClick={voltarAsFotos}
+              className="flex-shrink-0 text-xs font-bold text-amber-400 border border-amber-500/50 rounded-md px-2 py-1 hover:bg-amber-500/10"
+            >
+              Tirar fotos
+            </button>
+          </div>
         )}
       </div>
 
