@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Camera, LayoutGrid, ShieldCheck, Truck, LogOut, BarChart3, Bell, Handshake } from "lucide-react";
-import { User } from "@/entities/all";
+import { base44 } from "@/api/base44Client";
 import { usePermissions } from "@/components/hooks/usePermissions";
 import EcraEntrada from "./components/auth/EcraEntrada";
 import TrocarPerfil, { rotuloPerfil } from "./components/auth/TrocarPerfil";
@@ -97,7 +97,7 @@ export default function Layout({ children, currentPageName }) {
       // Com limite de tempo: sem ele, um pedido pendurado deixava este ecrã no
       // círculo a rodar para sempre, sem erro nem forma de sair.
       userData = await Promise.race([
-        User.me(),
+        base44.auth.me(),
         new Promise((_, rejeitar) => setTimeout(() => rejeitar(new Error("sem resposta")), 20000)),
       ]);
     } catch (_e) {
