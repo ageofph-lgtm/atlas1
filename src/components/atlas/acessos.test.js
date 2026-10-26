@@ -5,7 +5,7 @@ import {
 } from "@/components/atlas/acessos";
 
 describe("quem está na lista", () => {
-  it("cada um dos oito entra com o perfil que lhe foi dado", () => {
+  it("cada um dos nove entra com o perfil que lhe foi dado", () => {
     const esperado = {
       "carlos.goncalves@still.pt": "comercial",
       "nuno.lopes@still.pt": "comercial",
@@ -13,6 +13,7 @@ describe("quem está na lista", () => {
       "pedro.borges@still.pt": "comercial",
       "angelo.correia@kiongroup.com": "gestor_frota",
       "catarina.goncalves@still.pt": "gestor_frota",
+      "sarah.luca.ext@still.pt": "gestor_frota",
       "luis.sousa@still.pt": "logistica",
       "raphael.toledo@still.pt": "administrador",
     };

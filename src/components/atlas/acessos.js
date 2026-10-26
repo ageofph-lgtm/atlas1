@@ -36,6 +36,7 @@ export const ACESSOS = [
   { email: "pedro.borges@still.pt", nome: "Pedro Borges", perfis: ["comercial"] },
   { email: "angelo.correia@kiongroup.com", nome: "Angelo Correia", perfis: ["gestor_frota"] },
   { email: "catarina.goncalves@still.pt", nome: "Catarina Gonçalves", perfis: ["gestor_frota"] },
+  { email: "sarah.luca.ext@still.pt", nome: "Sarah Luca", perfis: ["gestor_frota"] },
   { email: "luis.sousa@still.pt", nome: "Luís Sousa", perfis: ["logistica"] },
   // Entra em administrador por defeito e pode passar a qualquer outro perfil,
   // para poder ver o programa pelos olhos de quem o usa.
