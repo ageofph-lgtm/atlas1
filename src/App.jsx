@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import FalhaAoArrancar from '@/components/FalhaAoArrancar';
 import AvisoAtualizacao from '@/components/AvisoAtualizacao';
+import OAuthConsent from '@/pages/OAuthConsent';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -66,6 +67,10 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      {/* Página de consentimento do servidor MCP. Fica fora do layout
+          autenticado de propósito: é a própria página que trata de quem ainda
+          não tem sessão, e um ecrã de entrada à frente cortava o pedido. */}
+      <Route path="/oauth/consent" element={<OAuthConsent />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
