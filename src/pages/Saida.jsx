@@ -375,7 +375,7 @@ export default function Saida({ currentUser }) {
                       )}
                     </div>
                   </div>
-                  {c.reserva_cliente && (
+                  {reservaAtiva(c) && (
                     <div className="mb-2 bg-cyan-500/10 border border-cyan-500/30 rounded px-2 py-1 text-xs text-cyan-400">
                       RESERVADA · {c.reserva_cliente}
                       {c.reserva_data && ` · ${format(new Date(c.reserva_data), "dd/MM")}`}
@@ -422,7 +422,7 @@ export default function Saida({ currentUser }) {
                         <ConeDe ciclo={c} />
                       </div>
                     </div>
-                    {c.reserva_cliente && (
+                    {reservaAtiva(c) && (
                       <div className="mb-2 bg-cyan-500/10 border border-cyan-500/30 rounded px-2 py-1 text-xs text-cyan-400">
                         RESERVADA · {c.reserva_cliente}
                       </div>

@@ -71,11 +71,11 @@ describe("minhasReservas", () => {
     expect(r[0].estado).toBe("em_execucao");
   });
 
-  it("uma máquina já alugada continua a ser a minha reserva", () => {
-    // O ciclo está aberto e ela volta: é dela que o comercial se tem de lembrar.
+  it("uma máquina já alugada deixou de ser a minha reserva", () => {
+    // A saída cumpre a reserva: o cliente passa a ser cliente do aluguer e
+    // conta em «Em aluguer», não aqui. É o mesmo critério da aba RESERVADAS.
     const r = minhasReservas([reserva({ estado: "em_aluguer", data_saida: "2026-09-01T00:00:00Z" })], carlos);
-    expect(r).toHaveLength(1);
-    expect(r[0].estado).toBe("em_aluguer");
+    expect(r).toEqual([]);
   });
 
   it("uma máquina vendida já não é uma reserva em curso", () => {

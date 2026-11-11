@@ -175,6 +175,13 @@ const DIA_MS = 24 * 60 * 60 * 1000;
 export const reservaAtiva = (ciclo) =>
   !!ciclo?.reserva_cliente && ciclo?.estado !== "fechado" && !ciclo?.data_saida;
 
+/**
+ * Houve reserva e ela cumpriu-se: o cliente fica gravado no ciclo, mas a
+ * máquina já saiu (ou o ciclo fechou). O nome continua a ser do cliente — o
+ * que muda é que já não é uma reserva de pé.
+ */
+export const reservaCumprida = (ciclo) => !!ciclo?.reserva_cliente && !reservaAtiva(ciclo);
+
 /** Dias inteiros desde que a reserva foi feita. Nulo quando a reserva não tem relógio. */
 export const diasDeReserva = (ciclo, agora = new Date()) => {
   if (!ciclo?.reserva_criada_em) return null;

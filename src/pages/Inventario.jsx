@@ -29,7 +29,7 @@ import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
 import { notificarReserva } from "@/components/atlas/mensagens";
 import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
-import { passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS, isHistorico, tabFilterCiclo } from "@/components/atlas/cicloUtils";
+import { passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS, isHistorico, tabFilterCiclo, reservaCumprida } from "@/components/atlas/cicloUtils";
 import { useViewPrefs } from "@/components/atlas/viewPrefs";
 
 export default function Inventario({ currentUser, userPermissions }) {
@@ -175,6 +175,13 @@ export default function Inventario({ currentUser, userPermissions }) {
   // Ciclos fechados não entram no inventário — a mesma série apareceria duas
   // vezes, uma fechada e outra ativa. O histórico está nos relatórios.
   const ciclosAtivos = useMemo(() => ciclos.filter((c) => !isHistorico(c)), [ciclos]);
+
+  // As que têm cliente gravado mas a máquina já saiu. É a explicação da aba
+  // RESERVADAS vazia: não se perderam reservas, elas cumpriram-se.
+  const reservasCumpridas = useMemo(
+    () => ciclos.filter((c) => !isHistorico(c) && reservaCumprida(c)).length,
+    [ciclos]
+  );
 
   // Vindo de uma mensagem, o inventário mostra só aquela máquina. Com centenas
   // de cards, rolar até ela e distingui-la do resto não era exequível.
@@ -553,10 +560,24 @@ export default function Inventario({ currentUser, userPermissions }) {
         selecao={selecao}
         onSelecao={setSelecao}
         vazio={
-          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-            <Package className="w-12 h-12 mb-3 opacity-30" />
-            <p>Nenhuma máquina encontrada</p>
-          </div>
+          activeTab === "reservadas" && !searchQuery ? (
+            <div className="flex flex-col items-center justify-center py-16 text-slate-500 text-center px-4">
+              <Package className="w-12 h-12 mb-3 opacity-30" />
+              <p>Nenhuma reserva por cumprir</p>
+              <p className="text-xs mt-1 max-w-md">
+                A reserva acaba quando a máquina sai: o cliente passa a ser cliente do aluguer e conta em
+                «Em aluguer».
+              </p>
+              {reservasCumpridas > 0 && (
+                <p className="text-xs mt-1 text-slate-400">Há {reservasCumpridas} máquinas nessa situação.</p>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+              <Package className="w-12 h-12 mb-3 opacity-30" />
+              <p>Nenhuma máquina encontrada</p>
+            </div>
+          )
         }
       />
 

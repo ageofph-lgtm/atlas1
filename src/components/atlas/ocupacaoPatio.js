@@ -6,6 +6,7 @@ import {
   isHistorico,
   isVenda,
   isAluguer,
+  reservaAtiva,
 } from "@/components/atlas/cicloUtils";
 
 /**
@@ -37,7 +38,7 @@ const estaCa = (c) => !estaFora(c);
 export const GRUPOS_OCUPACAO = {
   noPatio: { rotulo: "nas instalações", pertence: estaCa },
   disponiveis: { rotulo: "podem sair já", pertence: (c) => estaCa(c) && estadoEfetivo(c) === "pronta" && !c.reserva_cliente },
-  reservadas: { rotulo: "reservadas", pertence: (c) => estaCa(c) && estadoEfetivo(c) === "pronta" && !!c.reserva_cliente },
+  reservadas: { rotulo: "reservadas", pertence: (c) => estaCa(c) && estadoEfetivo(c) === "pronta" && reservaAtiva(c) },
   // "Em preparação" é só o que está mesmo a ser preparado — com O.S. aberta no
   // Watcher. O que está classificado aguarda uma decisão da gestão e ainda não
   // entrou na oficina; contá-lo como preparação dizia que havia trabalho a

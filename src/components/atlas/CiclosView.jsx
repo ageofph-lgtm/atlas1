@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "@/components/atlas/constants";
-import { estadoEfetivo, temCone, mostrarBadgeUts } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, temCone, mostrarBadgeUts, reservaAtiva } from "@/components/atlas/cicloUtils";
 import { GRELHA, CONE_TAMANHO, NS_CLASSE, CONE_NUM_CLASSE } from "@/components/atlas/viewPrefs";
 import ConeIcon from "@/components/atlas/ConeIcon";
 import UtsBadge from "@/components/atlas/UtsBadge";
@@ -208,7 +208,14 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                 <span className="num text-sm font-bold text-slate-100 break-all">{c.serie}</span>
                 {c.prioridade && <Prioridade />}
                 <span className="text-xs text-slate-500 truncate hidden sm:inline">{m?.modelo || "—"}</span>
-                {c.reserva_cliente && <span className="text-xs text-cyan-400 truncate hidden md:inline">· {c.reserva_cliente}</span>}
+                {c.reserva_cliente && (
+                  <span
+                    title={reservaAtiva(c) ? undefined : "Cliente da máquina (já saiu)"}
+                    className={`text-xs truncate hidden md:inline ${reservaAtiva(c) ? "text-cyan-400" : "text-slate-500"}`}
+                  >
+                    · {c.reserva_cliente}
+                  </span>
+                )}
                 <span className="ml-auto flex-shrink-0"><Estado ciclo={c} /></span>
               </button>
             );
@@ -291,7 +298,14 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                   <td className="px-3 py-2 whitespace-nowrap"><Estado ciclo={c} /></td>
                   <td className="px-3 py-2 text-xs whitespace-nowrap">
                     {c.reserva_cliente
-                      ? <span className="text-cyan-400">{c.reserva_cliente}</span>
+                      ? (
+                        <span
+                          title={reservaAtiva(c) ? undefined : "Cliente da máquina (já saiu)"}
+                          className={reservaAtiva(c) ? "text-cyan-400" : "text-slate-500"}
+                        >
+                          {c.reserva_cliente}
+                        </span>
+                      )
                       : <span className="text-slate-600">—</span>}
                   </td>
                   <td className="px-3 py-2 text-slate-500 text-xs whitespace-nowrap">

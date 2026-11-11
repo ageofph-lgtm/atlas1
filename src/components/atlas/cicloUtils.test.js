@@ -16,6 +16,7 @@ import {
   isAluguer,
   podeGerirEstadoOficina,
   cicloOcupaCone, temCone, LIBERTAR_CONE,
+  reservaAtiva, reservaCumprida,
 } from "@/components/atlas/cicloUtils";
 
 let base44;
@@ -107,6 +108,33 @@ describe("classificarCiclosAbertos — o guarda da máquina duplicada", () => {
     const antigo = { id: "v", estado: "pronta", data_entrada: "2026-01-01T00:00:00Z" };
     const { noPatio: p } = classificarCiclosAbertos([antigo, noPatio]);
     expect(p.id).toBe("a");
+  });
+});
+
+describe("reserva cumprida", () => {
+  const comCliente = { id: "r1", categoria: "str", estado: "pronta", reserva_cliente: "Transportes Águia" };
+
+  it("uma reserva por cumprir não está cumprida", () => {
+    expect(reservaAtiva(comCliente)).toBe(true);
+    expect(reservaCumprida(comCliente)).toBe(false);
+  });
+
+  it("uma máquina que já saiu cumpriu a reserva", () => {
+    const saiu = { ...comCliente, data_saida: "2026-09-01T00:00:00Z", estado: "em_aluguer" };
+    expect(reservaAtiva(saiu)).toBe(false);
+    expect(reservaCumprida(saiu)).toBe(true);
+  });
+
+  it("um ciclo fechado cumpriu a reserva", () => {
+    const fechado = { ...comCliente, estado: "fechado" };
+    expect(reservaAtiva(fechado)).toBe(false);
+    expect(reservaCumprida(fechado)).toBe(true);
+  });
+
+  it("sem cliente não há reserva nenhuma, cumprida ou não", () => {
+    const semCliente = { ...comCliente, reserva_cliente: null };
+    expect(reservaAtiva(semCliente)).toBe(false);
+    expect(reservaCumprida(semCliente)).toBe(false);
   });
 });
 

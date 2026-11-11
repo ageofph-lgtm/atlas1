@@ -1,4 +1,4 @@
-import { estadoEfetivo, isVenda, isAluguer, isHistorico } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, isVenda, isAluguer, isHistorico, reservaAtiva } from "@/components/atlas/cicloUtils";
 import { momentoDe, maisRecentePrimeiro } from "@/components/atlas/momento";
 
 /**
@@ -39,18 +39,17 @@ export const eMeuPedido = (pedido, pessoa) =>
 /**
  * As reservas desta pessoa que ainda estão de pé.
  *
- * "De pé" separa dois casos que parecem o mesmo e não são. Uma máquina **em
- * aluguer** continua a ser a reserva dela: o ciclo está aberto, a máquina volta,
- * e é dela que o comercial tem de se lembrar. Uma máquina **vendida** fechou o
- * ciclo — acabou, e contá-la aqui inflacionava a lista com trabalho que já não
- * existe. A distinção já está no `isHistorico`, que é o que decide isto em todo
- * o resto da aplicação.
+ * "De pé" é a mesma coisa que a aba RESERVADAS mostra: `reservaAtiva`. O que
+ * põe fim a uma reserva é a máquina sair, o ciclo fechar, a venda, ou apagar o
+ * cliente. Uma máquina que já saiu cumpriu a reserva — o cliente passa a ser o
+ * cliente do aluguer, e essa lista é outra.
  *
- * O que termina uma reserva é apagar o cliente, ou a venda. Não é a saída.
+ * Antes a saída não contava, e isso fazia esta lista discordar do resto da
+ * aplicação: o comercial via máquinas «em reserva» que a aba já não mostrava.
  */
 export function minhasReservas(ciclos = [], pessoa) {
   return ciclos
-    .filter((c) => c.reserva_cliente && !isHistorico(c) && eMinhaReserva(c, pessoa))
+    .filter((c) => reservaAtiva(c) && !isHistorico(c) && eMinhaReserva(c, pessoa))
     .map((c) => ({ ciclo: c, estado: estadoEfetivo(c) }))
     .sort(ordenarPorData);
 }
