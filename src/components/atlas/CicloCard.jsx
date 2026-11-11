@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Pencil, CalendarClock, Trash2, ChevronDown, ChevronUp, Zap, StickyNote, Check, MessageSquarePlus } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
-import { estadoEfetivo, isCategoriaSemEstado, mostrarBadgeUts } from "./cicloUtils";
+import { estadoEfetivo, isCategoriaSemEstado, mostrarBadgeUts, reservaAtiva, prazoDaReserva } from "./cicloUtils";
 import ConeIcon from "./ConeIcon";
 import UtsBadge from "./UtsBadge";
 import CicloCardDetails from "./CicloCardDetails";
@@ -30,6 +30,7 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   const catCfg = CATEGORIA_CONFIG[ciclo.categoria] || CATEGORIA_CONFIG.indefinida;
   const coneColor = CONE_COLORS.find((c) => c.value === ciclo.cone_cor);
   const hasCone = temCone(ciclo);
+  const prazo = reservaAtiva(ciclo) ? prazoDaReserva(ciclo) : null;
 
   const specs = [];
   if (maquina?.mastro) specs.push(SPEC_LABELS.mastro?.[maquina.mastro] || maquina.mastro);
@@ -148,14 +149,23 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
         </div>
       )}
 
-      {/* Reserva badge */}
-      {ciclo.reserva_cliente && (
-        <div className="mb-2 bg-cyan-500/10 border border-cyan-500/30 rounded px-2 py-1 text-xs text-cyan-400 flex items-center gap-1.5">
+      {/* Reserva badge — com o prazo que a função diária vigia */}
+      {reservaAtiva(ciclo) && (
+        <div className="mb-2 bg-cyan-500/10 border border-cyan-500/30 rounded px-2 py-1 text-xs text-cyan-400 flex items-center gap-1.5 flex-wrap">
           <CalendarClock className="w-3 h-3 flex-shrink-0" />
           <span className="font-medium">RESERVADA</span>
           <span className="text-cyan-400/70">· {ciclo.reserva_cliente}</span>
           {ciclo.reserva_data && (
             <span className="text-cyan-400/70">· {format(new Date(ciclo.reserva_data), "dd/MM")}</span>
+          )}
+          {prazo && (
+            <span
+              className={`ml-auto font-bold ${
+                prazo.tom === "fora" ? "text-red-400" : prazo.tom === "aviso" ? "text-amber-400" : "text-cyan-400/70"
+              }`}
+            >
+              {prazo.texto}
+            </span>
           )}
         </div>
       )}

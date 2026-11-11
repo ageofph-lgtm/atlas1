@@ -289,9 +289,13 @@ export default function Inventario({ currentUser, userPermissions }) {
         updateData.reserva_comercial = autor;
         // Guardamos o ID para lhe conseguir enviar as notificações desta máquina.
         updateData.reserva_comercial_id = currentUser?.id || "";
+        // O relógio das 3 semanas só arranca quando a reserva nasce. Editar o
+        // cliente ou a data de uma reserva que já existe não o reinicia.
+        if (!reservaCiclo.reserva_cliente) updateData.reserva_criada_em = new Date().toISOString();
       } else {
         updateData.reserva_comercial = null;
         updateData.reserva_comercial_id = "";
+        updateData.reserva_criada_em = null;
       }
       if (data.reserva_nota) {
         updateData.observacoes = data.reserva_nota;

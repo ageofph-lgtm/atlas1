@@ -1,0 +1,45 @@
+{
+  "name": "Expirar Reservas",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 7 * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Lisbon",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "expirar_reservas",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "expirar_reservas": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "expirarReservas",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Expirar reservas",
+            "description": "21 dias sem sa\u00edda"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Todos os dias \u00e0s 07:00 (Europe/Lisbon) fecha as reservas que passaram 21 dias sem a m\u00e1quina sair: limpa a reserva, deixa nota no hist\u00f3rico da m\u00e1quina e avisa a gest\u00e3o e o comercial."
+}

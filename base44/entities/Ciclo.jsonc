@@ -134,6 +134,11 @@
       "type": "string",
       "description": "ID do comercial que reservou \u2014 para lhe enviar as notifica\u00e7\u00f5es desta m\u00e1quina"
     },
+    "reserva_criada_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a reserva foi feita \u2014 ponto de partida do prazo de 3 semanas"
+    },
     "observacoes": {
       "type": "string",
       "description": "Observa\u00e7\u00f5es do ciclo"

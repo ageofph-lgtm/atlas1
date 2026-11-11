@@ -160,6 +160,44 @@ export const POR_FAZER_ESTADOS = [...ESTADOS_AGUARDAM_AUTORIZACAO, ...ESTADOS_EM
  */
 export const isHistorico = (ciclo) => estadoEfetivo(ciclo) === "fechado";
 
+/** Prazo combinado para uma reserva ser usada, em dias. */
+export const PRAZO_RESERVA_DIAS = 21;
+
+const DIA_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Tem reserva de pé: há cliente, o ciclo não fechou e a máquina ainda não saiu.
+ *
+ * Uma máquina que já saiu cumpriu a reserva. É o mesmo critério que a função
+ * diária de expiração usa, para a aba RESERVADAS mostrar exatamente o que pode
+ * expirar.
+ */
+export const reservaAtiva = (ciclo) =>
+  !!ciclo?.reserva_cliente && ciclo?.estado !== "fechado" && !ciclo?.data_saida;
+
+/** Dias inteiros desde que a reserva foi feita. Nulo quando a reserva não tem relógio. */
+export const diasDeReserva = (ciclo, agora = new Date()) => {
+  if (!ciclo?.reserva_criada_em) return null;
+  const inicio = new Date(ciclo.reserva_criada_em);
+  if (Number.isNaN(inicio.getTime())) return null;
+  return Math.max(0, Math.floor((agora.getTime() - inicio.getTime()) / DIA_MS));
+};
+
+/**
+ * O prazo da reserva em texto: quanto falta ou que já passou.
+ * Nulo quando a reserva não tem `reserva_criada_em` — sem ponto de partida não
+ * há prazo para mostrar.
+ */
+export const prazoDaReserva = (ciclo, agora = new Date()) => {
+  const dias = diasDeReserva(ciclo, agora);
+  if (dias === null) return null;
+  const restantes = PRAZO_RESERVA_DIAS - dias;
+  if (restantes < 0) return { texto: "reserva fora do prazo", tom: "fora" };
+  if (restantes === 0) return { texto: "expira hoje", tom: "aviso" };
+  if (restantes === 1) return { texto: "expira em 1 dia", tom: "aviso" };
+  return { texto: `expira em ${restantes} dias`, tom: restantes <= 3 ? "aviso" : "normal" };
+};
+
 /** Filtro das abas, partilhado pelo inventário e pelo histórico dos relatórios. */
 export const tabFilterCiclo = (tabKey, ciclo) => {
   const estado = estadoEfetivo(ciclo);
@@ -167,6 +205,7 @@ export const tabFilterCiclo = (tabKey, ciclo) => {
     case "todas": return true;
     case "por_fazer": return POR_FAZER_ESTADOS.includes(estado);
     case "prontas": return estado === "pronta";
+    case "reservadas": return reservaAtiva(ciclo);
     case "recon": return ciclo.categoria === "recon";
     case "uts": return ciclo.categoria === "uts";
     case "sucata": return ciclo.categoria === "sucata";

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX, AlertTriangle } from "lucide-react";
+import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX, AlertTriangle, CalendarClock } from "lucide-react";
 import LocalizarMaquinaModal from "@/components/atlas/LocalizarMaquinaModal";
 import FilterBar from "@/components/atlas/FilterBar";
 import PlacaScanner from "@/components/atlas/PlacaScanner";
@@ -14,7 +14,7 @@ import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
 import { format } from "date-fns";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
-import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS, LIBERTAR_CONE, rotuloDoEstado, ESTADOS_EM_PREPARACAO } from "@/components/atlas/cicloUtils";
+import { estadoEfetivo, passesCicloFilters, hasFiltrosAtivos, FILTROS_VAZIOS, LIBERTAR_CONE, rotuloDoEstado, ESTADOS_EM_PREPARACAO, reservaAtiva } from "@/components/atlas/cicloUtils";
 import { paraSaida } from "@/components/atlas/ocupacaoPatio";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { registarRetorno } from "@/components/atlas/registarRetorno";
@@ -74,6 +74,7 @@ export default function Saida({ currentUser }) {
   const [retornoEstado, setRetornoEstado] = useState("classificada");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(FILTROS_VAZIOS);
+  const [soReservadas, setSoReservadas] = useState(false);
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -120,17 +121,25 @@ export default function Saida({ currentUser }) {
 
   // A página é de acção rápida, não de catálogo: só listamos cards quando o
   // utilizador procura alguma coisa, para a lista toda não poluir o ecrã.
-  const aProcurar = !!searchQuery.trim() || hasFiltrosAtivos(filters);
+  // O chip RESERVADAS acende as listas: sem procura nem filtro elas estão fechadas.
+  const aProcurar = !!searchQuery.trim() || hasFiltrosAtivos(filters) || soReservadas;
+
+  // Reservadas que estão no pátio — as que já saíram cumpriram a reserva.
+  const totalReservadas = [...prontas, ...outras].filter(reservaAtiva).length;
 
   const aplicar = (items) =>
     items.filter((c) => {
       const m = getMaquina(c);
-      return passesCicloFilters(c, m, filters) && matchCicloSearch(c, m, searchQuery);
+      return (
+        passesCicloFilters(c, m, filters) &&
+        matchCicloSearch(c, m, searchQuery) &&
+        (!soReservadas || reservaAtiva(c))
+      );
     });
 
-  const filteredProntas = useMemo(() => aplicar(prontas), [prontas, maquinas, filters, searchQuery]);
-  const filteredOutras = useMemo(() => aplicar(outras), [outras, maquinas, filters, searchQuery]);
-  const filteredAlugadas = useMemo(() => aplicar(alugadas), [alugadas, maquinas, filters, searchQuery]);
+  const filteredProntas = useMemo(() => aplicar(prontas), [prontas, maquinas, filters, searchQuery, soReservadas]);
+  const filteredOutras = useMemo(() => aplicar(outras), [outras, maquinas, filters, searchQuery, soReservadas]);
+  const filteredAlugadas = useMemo(() => aplicar(alugadas), [alugadas, maquinas, filters, searchQuery, soReservadas]);
 
   const handleFilterChange = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
@@ -316,9 +325,21 @@ export default function Saida({ currentUser }) {
             </div>
           )}
           <button
+            onClick={() => setSoReservadas((v) => !v)}
+            title="Mostrar só as máquinas com reserva por cumprir"
+            className={`ml-auto flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-colors ${
+              soReservadas
+                ? "bg-cyan-500 border-cyan-500 text-slate-900"
+                : "bg-slate-800 border-slate-700 text-cyan-400 hover:border-cyan-500/50"
+            }`}
+          >
+            <CalendarClock className="w-4 h-4" />
+            Reservadas ({totalReservadas})
+          </button>
+          <button
             onClick={loadData}
             title="Recarregar"
-            className="ml-auto flex-shrink-0 p-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400"
+            className="flex-shrink-0 p-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -422,8 +443,9 @@ export default function Saida({ currentUser }) {
         )}
       </div>
 
-      {/* Panel B: Em Aluguer */}
-      <div className={aProcurar ? "" : "hidden"}>
+      {/* Panel B: Em Aluguer — com o chip RESERVADAS ligado não há nada aqui:
+          uma máquina que saiu já cumpriu a reserva. */}
+      <div className={aProcurar && !soReservadas ? "" : "hidden"}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-cyan-500" />
