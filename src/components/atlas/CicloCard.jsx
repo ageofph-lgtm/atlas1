@@ -1,4 +1,5 @@
 import { temCone } from "@/components/atlas/cicloUtils";
+import { avisoDoPrazo } from "@/components/atlas/reservas";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Pencil, CalendarClock, Trash2, ChevronDown, ChevronUp, Zap, StickyNote, Check, MessageSquarePlus } from "lucide-react";
@@ -52,6 +53,8 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
   const showEditBtn = canEditMaquina && onEdit;
   const showReservarBtn = canReservar && onReservar && estado === "pronta";
   const showGerirBtn = canReservar && onReservar && ciclo.reserva_cliente;
+  // Prazo da reserva: quantos dias faltam (ou há quanto passou) para as 3 semanas.
+  const prazo = avisoDoPrazo(ciclo);
   const showDeleteBtn = canDeleteMaquina && onDelete;
   const canAutorizeState = estado === "classificada" || estado === "manutencao";
   const showAutorizarBtn = canAutorizar && onAutorizar && canAutorizeState;
@@ -148,14 +151,30 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
         </div>
       )}
 
-      {/* Reserva badge */}
+      {/* Reserva badge — com o prazo à vista: uma reserva que ninguém usa ao fim
+          de 3 semanas cai sozinha, e quem olha para o cartão deve saber disso
+          antes de acontecer. */}
       {ciclo.reserva_cliente && (
-        <div className="mb-2 bg-cyan-500/10 border border-cyan-500/30 rounded px-2 py-1 text-xs text-cyan-400 flex items-center gap-1.5">
+        <div
+          className={`mb-2 rounded border px-2 py-1 text-xs flex flex-wrap items-center gap-1.5 ${
+            prazo?.tom === "expirada"
+              ? "bg-red-500/10 border-red-500/40 text-red-300"
+              : prazo?.tom === "ultimo"
+                ? "bg-amber-500/10 border-amber-500/40 text-amber-300"
+                : "bg-cyan-500/10 border-cyan-500/30 text-cyan-400"
+          }`}
+          data-testid={`reserva-${ciclo.serie}`}
+        >
           <CalendarClock className="w-3 h-3 flex-shrink-0" />
           <span className="font-medium">RESERVADA</span>
-          <span className="text-cyan-400/70">· {ciclo.reserva_cliente}</span>
+          <span className="opacity-70">· {ciclo.reserva_cliente}</span>
           {ciclo.reserva_data && (
-            <span className="text-cyan-400/70">· {format(new Date(ciclo.reserva_data), "dd/MM")}</span>
+            <span className="opacity-70">· {format(new Date(ciclo.reserva_data), "dd/MM")}</span>
+          )}
+          {prazo && (
+            <span className="ml-auto font-semibold" data-testid="prazo-reserva">
+              {prazo.texto}
+            </span>
           )}
         </div>
       )}

@@ -8,6 +8,7 @@ import {
   ESTADO_CONFIG,
   CATEGORIA_CONFIG,
 } from "@/components/atlas/constants";
+import { reservaAtiva } from "@/components/atlas/reservas";
 
 export const isCategoriaSemEstado = (categoria) => CATEGORIAS_SEM_ESTADO.includes(categoria);
 
@@ -167,6 +168,10 @@ export const tabFilterCiclo = (tabKey, ciclo) => {
     case "todas": return true;
     case "por_fazer": return POR_FAZER_ESTADOS.includes(estado);
     case "prontas": return estado === "pronta";
+    // Reservada = prometida a um cliente e ainda no pátio. É a mesma condição
+    // que o motor de expiração usa, para a aba mostrar exatamente o que pode
+    // perder a reserva ao fim de 3 semanas.
+    case "reservadas": return reservaAtiva(ciclo);
     case "recon": return ciclo.categoria === "recon";
     case "uts": return ciclo.categoria === "uts";
     case "sucata": return ciclo.categoria === "sucata";
