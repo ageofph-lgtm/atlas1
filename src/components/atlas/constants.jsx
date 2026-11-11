@@ -139,7 +139,6 @@ export const INVENTARIO_TABS = [
   { key: 'todas', label: 'TODAS' },
   { key: 'por_fazer', label: 'POR FAZER' },
   { key: 'prontas', label: 'PRONTAS' },
-  { key: 'reservadas', label: 'RESERVADAS' },
   { key: 'recon', label: 'RECON' },
   { key: 'uts', label: 'UTS' },
   { key: 'sucata', label: 'SUCATA' },

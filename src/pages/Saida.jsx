@@ -6,9 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX, AlertTriangle, CalendarClock } from "lucide-react";
+import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX, AlertTriangle } from "lucide-react";
 import LocalizarMaquinaModal from "@/components/atlas/LocalizarMaquinaModal";
-import { reservaAtiva } from "@/components/atlas/reservas";
 import FilterBar from "@/components/atlas/FilterBar";
 import PlacaScanner from "@/components/atlas/PlacaScanner";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
@@ -121,23 +120,17 @@ export default function Saida({ currentUser }) {
 
   // A página é de acção rápida, não de catálogo: só listamos cards quando o
   // utilizador procura alguma coisa, para a lista toda não poluir o ecrã.
-  // Atalho "RESERVADAS": a página só mostra listas quando há procura, mas quem
-  // está no balcão precisa de ver depressa as máquinas já prometidas a alguém.
-  const [verReservadas, setVerReservadas] = useState(false);
-  const aProcurar = verReservadas || !!searchQuery.trim() || hasFiltrosAtivos(filters);
+  const aProcurar = !!searchQuery.trim() || hasFiltrosAtivos(filters);
 
   const aplicar = (items) =>
     items.filter((c) => {
-      if (verReservadas && !reservaAtiva(c)) return false;
       const m = getMaquina(c);
       return passesCicloFilters(c, m, filters) && matchCicloSearch(c, m, searchQuery);
     });
 
-  const filteredProntas = useMemo(() => aplicar(prontas), [prontas, maquinas, filters, searchQuery, verReservadas]);
-  // Quantas é que estão prometidas: é o número que o chip mostra.
-  const reservadas = useMemo(() => [...prontas, ...outras].filter(reservaAtiva).length, [prontas, outras]);
-  const filteredOutras = useMemo(() => aplicar(outras), [outras, maquinas, filters, searchQuery, verReservadas]);
-  const filteredAlugadas = useMemo(() => aplicar(alugadas), [alugadas, maquinas, filters, searchQuery, verReservadas]);
+  const filteredProntas = useMemo(() => aplicar(prontas), [prontas, maquinas, filters, searchQuery]);
+  const filteredOutras = useMemo(() => aplicar(outras), [outras, maquinas, filters, searchQuery]);
+  const filteredAlugadas = useMemo(() => aplicar(alugadas), [alugadas, maquinas, filters, searchQuery]);
 
   const handleFilterChange = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
@@ -322,20 +315,6 @@ export default function Saida({ currentUser }) {
               </span>
             </div>
           )}
-          <button
-            type="button"
-            onClick={() => setVerReservadas((v) => !v)}
-            aria-pressed={verReservadas}
-            data-testid="ver-reservadas"
-            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold uppercase tracking-wide transition-colors ${
-              verReservadas
-                ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300"
-                : "bg-slate-800 border-slate-700 text-slate-400 hover:text-cyan-300"
-            }`}
-          >
-            <CalendarClock className="w-4 h-4" />
-            Reservadas ({reservadas})
-          </button>
           <button
             onClick={loadData}
             title="Recarregar"
