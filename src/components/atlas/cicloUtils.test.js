@@ -275,4 +275,24 @@ describe("o cone fica no pátio quando a máquina sai", () => {
     // Deixar a cor para trás dava uma máquina com cone de cor e sem número.
     expect(LIBERTAR_CONE).toEqual({ cone_cor: null, cone_numero: null });
   });
+
+  describe("aba RESERVADAS", () => {
+    const pronta = { id: "r1", serie: "NS-R1", categoria: "str", estado: "pronta", reserva_cliente: "ACME" };
+    const semReserva = { id: "r2", serie: "NS-R2", categoria: "str", estado: "pronta", reserva_cliente: null };
+
+    it("mostra só as máquinas com reserva", () => {
+      expect(tabFilterCiclo("reservadas", pronta)).toBe(true);
+      expect(tabFilterCiclo("reservadas", semReserva)).toBe(false);
+    });
+
+    it("a máquina que já saiu deixa de estar reservada, mesmo com o cliente gravado", () => {
+      // A reserva cumpriu-se na saída; enquanto estiver fora não ocupa a aba.
+      const saiu = { ...pronta, data_saida: "2026-11-01T09:00:00Z", estado: "em_aluguer" };
+      expect(tabFilterCiclo("reservadas", saiu)).toBe(false);
+    });
+
+    it("um ciclo fechado nunca aparece como reservado", () => {
+      expect(tabFilterCiclo("reservadas", { ...pronta, estado: "fechado" })).toBe(false);
+    });
+  });
 });

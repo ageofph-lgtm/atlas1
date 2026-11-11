@@ -126,6 +126,11 @@
       "format": "date",
       "description": "Data prevista de sa\u00edda da reserva"
     },
+    "reserva_criada_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a reserva foi feita \u2014 ponto de partida do prazo de 3 semanas. Sem este campo (registos antigos) a fun\u00e7\u00e3o expirarReservas cria-o na primeira passagem."
+    },
     "reserva_comercial": {
       "type": "string",
       "description": "Nome do comercial que fez a reserva"
