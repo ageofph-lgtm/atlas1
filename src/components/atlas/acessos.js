@@ -41,6 +41,9 @@ export const ACESSOS = [
   // Entra em administrador por defeito e pode passar a qualquer outro perfil,
   // para poder ver o programa pelos olhos de quem o usa.
   { email: "raphael.toledo@still.pt", nome: "Raphael Toledo", perfis: PERFIS },
+  // A conta de trabalho do Base44 — com que o Raphael abre o editor. Mesmos
+  // perfis da conta still.pt; são duas portas para a mesma pessoa.
+  { email: "ageofph@gmail.com", nome: "Raphael Toledo", perfis: PERFIS },
 ];
 
 /**

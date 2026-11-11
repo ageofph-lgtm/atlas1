@@ -5,7 +5,7 @@ import {
 } from "@/components/atlas/acessos";
 
 describe("quem está na lista", () => {
-  it("cada um dos nove entra com o perfil que lhe foi dado", () => {
+  it("cada uma das contas entra com o perfil que lhe foi dado", () => {
     const esperado = {
       "carlos.goncalves@still.pt": "comercial",
       "nuno.lopes@still.pt": "comercial",
@@ -16,6 +16,7 @@ describe("quem está na lista", () => {
       "sarah.luca.ext@still.pt": "gestor_frota",
       "luis.sousa@still.pt": "logistica",
       "raphael.toledo@still.pt": "administrador",
+      "ageofph@gmail.com": "administrador",
     };
     for (const [email, perfil] of Object.entries(esperado)) {
       expect(temAcesso(email), email).toBe(true);
@@ -85,14 +86,16 @@ describe("o perfil não é escolhido por quem entra", () => {
 });
 
 describe("quem pode trocar de perfil", () => {
-  it("só o Raphael, e por isso entra em administrador", () => {
-    expect(podeTrocarPerfil("raphael.toledo@still.pt")).toBe(true);
-    expect(perfilPadrao("raphael.toledo@still.pt")).toBe("administrador");
-    expect(perfisDe("raphael.toledo@still.pt")).toEqual(PERFIS);
+  it("as contas do Raphael, e por isso entram em administrador", () => {
+    for (const email of ["raphael.toledo@still.pt", "ageofph@gmail.com"]) {
+      expect(podeTrocarPerfil(email), email).toBe(true);
+      expect(perfilPadrao(email), email).toBe("administrador");
+      expect(perfisDe(email), email).toEqual(PERFIS);
+    }
   });
 
   it("os outros não têm nada para escolher", () => {
-    for (const a of ACESSOS.filter((x) => x.email !== "raphael.toledo@still.pt")) {
+    for (const a of ACESSOS.filter((x) => x.perfis.length === 1)) {
       expect(podeTrocarPerfil(a.email), a.email).toBe(false);
     }
   });
