@@ -17,6 +17,7 @@ import {
   podeGerirEstadoOficina,
   cicloOcupaCone, temCone, LIBERTAR_CONE,
   reservaAtiva, reservaCumprida,
+  cicloEmPatio, mostrarBotaoReservar,
 } from "@/components/atlas/cicloUtils";
 
 let base44;
@@ -302,5 +303,45 @@ describe("o cone fica no pátio quando a máquina sai", () => {
   it("LIBERTAR_CONE limpa os dois campos, não só o número", () => {
     // Deixar a cor para trás dava uma máquina com cone de cor e sem número.
     expect(LIBERTAR_CONE).toEqual({ cone_cor: null, cone_numero: null });
+  });
+});
+
+describe("botão Reservar do cartão", () => {
+  const cartao = (estado, extra = {}) =>
+    mostrarBotaoReservar({ ciclo: { serie: "516", estado, ...extra }, canReservar: true, onReservar: () => {} });
+
+  it("aparece a qualquer máquina que ainda esteja cá, mesmo em preparação", () => {
+    // Reservar uma máquina que ainda está em oficina é normal: o cliente já a
+    // quer, ela ainda não está pronta.
+    for (const estado of ["entrada", "indefinido", "classificada", "autorizada", "em_execucao", "pronta"]) {
+      expect(cartao(estado), estado).toBe(true);
+    }
+  });
+
+  it("não aparece a máquinas que já saíram", () => {
+    expect(cartao("em_aluguer")).toBe(false);
+    expect(cartao("retorno")).toBe(false);
+    // Saída registada é saída, mesmo que o estado ainda não tenha acompanhado.
+    expect(cartao("pronta", { data_saida: "2026-11-01T09:00:00.000Z" })).toBe(false);
+    expect(cartao("em_aluguer", { data_saida: "2026-11-01T09:00:00.000Z" })).toBe(false);
+    // Vendida também já não é nossa.
+    expect(cartao("pronta", { tipo_saida: "vendida" })).toBe(false);
+  });
+
+  it("não aparece em ciclos fechados", () => {
+    expect(cartao("fechado")).toBe(false);
+  });
+
+  it("continua a depender da permissão e de haver para onde o abrir", () => {
+    const ciclo = { serie: "516", estado: "pronta" };
+    expect(mostrarBotaoReservar({ ciclo, canReservar: false, onReservar: () => {} })).toBe(false);
+    expect(mostrarBotaoReservar({ ciclo, canReservar: true, onReservar: null })).toBe(false);
+  });
+
+  it("cicloEmPatio e reservaAtiva concordam sobre quem já saiu", () => {
+    const aindaCa = { reserva_cliente: "Transportes Águia", estado: "classificada" };
+    const saiu = { ...aindaCa, data_saida: "2026-11-01T09:00:00.000Z" };
+    expect(cicloEmPatio(aindaCa) && reservaAtiva(aindaCa)).toBe(true);
+    expect(cicloEmPatio(saiu) || reservaAtiva(saiu)).toBe(false);
   });
 });

@@ -166,14 +166,36 @@ export const PRAZO_RESERVA_DIAS = 21;
 const DIA_MS = 24 * 60 * 60 * 1000;
 
 /**
+ * A máquina ainda está cá: o ciclo não fechou e ela não saiu.
+ *
+ * É o mesmo critério da reserva de pé — e é de propósito. Uma máquina pode ser
+ * reservada a qualquer momento enquanto cá estiver, mesmo que ainda esteja em
+ * oficina, e uma reserva só deixa de valer quando a máquina sai ou o ciclo
+ * fecha. Ter isto escrito uma vez evita que o botão e a contagem discordem.
+ */
+export const cicloEmPatio = (ciclo) => !!ciclo && ciclo.estado !== "fechado" && !ciclo.data_saida;
+
+/**
  * Tem reserva de pé: há cliente, o ciclo não fechou e a máquina ainda não saiu.
  *
  * Uma máquina que já saiu cumpriu a reserva. É o mesmo critério que a função
  * diária de expiração usa, para a aba RESERVADAS mostrar exatamente o que pode
  * expirar.
  */
-export const reservaAtiva = (ciclo) =>
-  !!ciclo?.reserva_cliente && ciclo?.estado !== "fechado" && !ciclo?.data_saida;
+export const reservaAtiva = (ciclo) => !!ciclo?.reserva_cliente && cicloEmPatio(ciclo);
+
+/**
+ * Se o cartão mostra «Reservar». Basta a máquina estar cá: reservar uma
+ * máquina que ainda está em preparação é normal — o cliente já a quer, ela
+ * ainda não está pronta. Uma máquina que já saiu (aluguer, retorno ou venda)
+ * não se reserva, mesmo que o registo da saída lhe falte.
+ */
+export const mostrarBotaoReservar = ({ ciclo, canReservar, onReservar }) =>
+  !!canReservar &&
+  !!onReservar &&
+  cicloEmPatio(ciclo) &&
+  !ESTADOS_FORA_DO_PATIO.includes(ciclo.estado) &&
+  !isVenda(ciclo);
 
 /**
  * Houve reserva e ela cumpriu-se: o cliente fica gravado no ciclo, mas a

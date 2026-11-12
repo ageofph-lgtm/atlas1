@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Pencil, CalendarClock, Trash2, ChevronDown, ChevronUp, Zap, StickyNote, Check, MessageSquarePlus } from "lucide-react";
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG, CONE_COLORS, SPEC_LABELS } from "./constants";
-import { estadoEfetivo, isCategoriaSemEstado, mostrarBadgeUts, reservaAtiva, prazoDaReserva } from "./cicloUtils";
+import { estadoEfetivo, isCategoriaSemEstado, mostrarBadgeUts, reservaAtiva, prazoDaReserva, mostrarBotaoReservar } from "./cicloUtils";
 import ConeIcon from "./ConeIcon";
 import UtsBadge from "./UtsBadge";
 import CicloCardDetails from "./CicloCardDetails";
@@ -51,7 +51,7 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
       : null;
 
   const showEditBtn = canEditMaquina && onEdit;
-  const showReservarBtn = canReservar && onReservar && estado === "pronta";
+  const showReservarBtn = mostrarBotaoReservar({ ciclo, canReservar, onReservar });
   const showGerirBtn = canReservar && onReservar && ciclo.reserva_cliente;
   const showDeleteBtn = canDeleteMaquina && onDelete;
   const canAutorizeState = estado === "classificada" || estado === "manutencao";
