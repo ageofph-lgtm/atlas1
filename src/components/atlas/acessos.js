@@ -47,6 +47,15 @@ export const ACESSOS = [
 ];
 
 /**
+ * Os nomes dos comerciais — quem pode assinar uma reserva.
+ *
+ * A gestão reserva em nome de um deles, e a lista tem de sair daqui: é o mesmo
+ * sítio que decide quem é comercial, e assim não fica uma segunda lista a
+ * divergir desta.
+ */
+export const COMERCIAIS = ACESSOS.filter((a) => a.perfis.includes("comercial")).map((a) => a.nome);
+
+/**
  * Emails comparam-se em minúsculas e sem espaços.
  *
  * Quem escreve `Carlos.Goncalves@Still.pt` é a mesma pessoa, e um fornecedor de

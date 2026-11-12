@@ -183,14 +183,18 @@ export function notificarMudancaGestao(ciclo, { autor, categoriaAnterior, catego
 // ── Comerciais ───────────────────────────────────────────────────────────────
 
 /** Reserva feita por um comercial → chega à gestão. */
-export const notificarReserva = (ciclo, { autor, cliente, data, cancelada = false }) =>
+export const notificarReserva = (ciclo, { autor, cliente, data, cancelada = false, comercial = null }) =>
   enviarMensagem({
     destino: AUDIENCIAS.GESTAO,
     tipo: "reserva",
     titulo: `${cancelada ? "Reserva cancelada" : "Reserva"} — ${ciclo.serie}`,
     corpo: cancelada
       ? `${autor} cancelou a reserva de ${ciclo.serie}.`
-      : `${autor} reservou ${ciclo.serie}${cliente ? ` para ${cliente}` : ""}${data ? ` · saída prevista ${data}` : ""}.`,
+      : comercial
+        // A gestão reservou em nome de um comercial: quem assinou não é quem
+        // fica responsável, e a mensagem tem de dizer as duas coisas.
+        ? `${autor} reservou ${ciclo.serie} para ${comercial}${cliente ? ` · cliente ${cliente}` : ""}${data ? ` · saída prevista ${data}` : ""}.`
+        : `${autor} reservou ${ciclo.serie}${cliente ? ` para ${cliente}` : ""}${data ? ` · saída prevista ${data}` : ""}.`,
     serie: ciclo.serie,
     cicloId: ciclo.id,
     autor,

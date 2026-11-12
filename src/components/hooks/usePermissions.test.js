@@ -1,9 +1,32 @@
 import { describe, it, expect } from "vitest";
-import { canEditMaquinaRecord, podeEditarCategoria, podeEditarEstado } from "@/components/hooks/usePermissions";
+import { canEditMaquinaRecord, podeEditarCategoria, podeEditarEstado, permissoesDe } from "@/components/hooks/usePermissions";
 import { podeGerirEstadoOficina } from "@/components/atlas/cicloUtils";
 
 const u = (perfil) => ({ id: "u1", perfil });
 const ciclo = (estado, categoria = "str") => ({ id: "c1", estado, categoria });
+
+describe("reservas", () => {
+  it("a gestão de frota passou a reservar e a gerir reservas", () => {
+    expect(permissoesDe("gestor_frota").canReservar).toBe(true);
+    expect(permissoesDe("gestor_frota").canEditReserva).toBe(true);
+  });
+
+  it("os outros perfis ficam como estavam", () => {
+    for (const p of ["comercial", "administrador"]) {
+      expect(permissoesDe(p).canReservar, p).toBe(true);
+      expect(permissoesDe(p).canEditReserva, p).toBe(true);
+    }
+    for (const p of ["logistica", "visitante"]) {
+      expect(permissoesDe(p).canReservar, p).toBe(false);
+      expect(permissoesDe(p).canEditReserva, p).toBe(false);
+    }
+  });
+
+  it("perfil desconhecido cai em visitante, sem reservas", () => {
+    expect(permissoesDe("nao_existe")).toBe(permissoesDe("visitante"));
+    expect(permissoesDe(null).canReservar).toBe(false);
+  });
+});
 
 describe("quem abre a ficha de uma máquina", () => {
   it("gestão, logística e administração editam", () => {

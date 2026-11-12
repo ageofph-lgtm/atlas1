@@ -26,8 +26,8 @@ const ATLAS_PERMISSIONS = {
     canMinhaArea: false,
     canEditMaquina: true,
     canDeleteMaquina: true,
-    canReservar: false,
-    canEditReserva: false,
+    canReservar: true,
+    canEditReserva: true,
     canNotas: true,
     canPedidos: false,
     canResponderPedidos: true,
@@ -125,11 +125,20 @@ export const podeEditarEstado = (user, ciclo, podeGerirOficina) => {
   return podeGerirOficina(ciclo);
 };
 
+/**
+ * As permissões de um perfil, sem React à volta.
+ *
+ * A tabela é o que interessa testar, e um hook não se testa sem um renderer.
+ * Separar as duas coisas deixa o hook a ser só o `useMemo` e a regra ao alcance
+ * dos testes.
+ */
+export const permissoesDe = (userProfile) => {
+  if (!userProfile || !ATLAS_PERMISSIONS[userProfile]) {
+    return ATLAS_PERMISSIONS.visitante;
+  }
+  return ATLAS_PERMISSIONS[userProfile];
+};
+
 export const usePermissions = (userProfile) => {
-  return useMemo(() => {
-    if (!userProfile || !ATLAS_PERMISSIONS[userProfile]) {
-      return ATLAS_PERMISSIONS.visitante;
-    }
-    return ATLAS_PERMISSIONS[userProfile];
-  }, [userProfile]);
+  return useMemo(() => permissoesDe(userProfile), [userProfile]);
 };

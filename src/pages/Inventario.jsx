@@ -28,6 +28,7 @@ import { INVENTARIO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
 import { notificarReserva } from "@/components/atlas/mensagens";
+import { camposDeReserva } from "@/components/atlas/reservaPayload";
 import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
 import { passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS, isHistorico, tabFilterCiclo, reservaCumprida } from "@/components/atlas/cicloUtils";
 import { useViewPrefs } from "@/components/atlas/viewPrefs";
@@ -288,31 +289,18 @@ export default function Inventario({ currentUser, userPermissions }) {
   const handleReservaSave = async (data) => {
     if (!reservaCiclo) return;
     try {
-      const updateData = {
-        reserva_cliente: data.reserva_cliente,
-        reserva_data: data.reserva_data,
-      };
-      if (data.reserva_cliente) {
-        updateData.reserva_comercial = autor;
-        // Guardamos o ID para lhe conseguir enviar as notificações desta máquina.
-        updateData.reserva_comercial_id = currentUser?.id || "";
-        // O relógio das 3 semanas só arranca quando a reserva nasce. Editar o
-        // cliente ou a data de uma reserva que já existe não o reinicia.
-        if (!reservaCiclo.reserva_cliente) updateData.reserva_criada_em = new Date().toISOString();
-      } else {
-        updateData.reserva_comercial = null;
-        updateData.reserva_comercial_id = "";
-        updateData.reserva_criada_em = null;
-      }
-      if (data.reserva_nota) {
-        updateData.observacoes = data.reserva_nota;
-      }
+      // Quem assina, quando arranca o relógio das três semanas e o que se limpa
+      // ao cancelar vive em reservaPayload.js — são regras com casos e testam-se
+      // melhor fora do ecrã.
+      const updateData = camposDeReserva({ data, ciclo: reservaCiclo, autor, currentUser });
       await base44.entities.Ciclo.update(reservaCiclo.id, updateData);
       await notificarReserva(reservaCiclo, {
         autor,
         cliente: data.reserva_cliente,
         data: data.reserva_data,
         cancelada: !data.reserva_cliente,
+        // A gestão reserva em nome de outra pessoa: a mensagem diz por quem.
+        comercial: currentUser?.perfil === "comercial" ? null : data.reserva_comercial_nome || null,
       });
       toast({ title: "✓ Reserva guardada", description: `NS: ${reservaCiclo.serie}` });
       loadData();
@@ -374,6 +362,7 @@ export default function Inventario({ currentUser, userPermissions }) {
         onClose={() => setReservaCiclo(null)}
         onSave={handleReservaSave}
         canEdit={userPermissions?.canEditReserva}
+        pedirComercial={currentUser?.perfil !== "comercial"}
       />
       <EditMaquinaModal
         maquina={editMaquina}
