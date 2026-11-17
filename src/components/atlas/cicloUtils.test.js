@@ -58,6 +58,42 @@ describe("famílias de modelo", () => {
     expect(familiaDoModelo(modelo)).toBe(esperado);
   });
 
+  // EXV SF e EXV são gamas diferentes: o prefixo `exvsf` tem de ser testado
+  // primeiro, senão o `exv` apanha as duas.
+  it.each([
+    ["EXV-SF 14", "exv_sf"],
+    ["EXV SF 12", "exv_sf"],
+    ["EXVSF14", "exv_sf"],
+    ["EXV - SF 16I", "exv_sf"],
+    ["EXV – SF 14I", "exv_sf"],
+  ])("%s pertence a EXV SF", (modelo, esperado) => {
+    expect(familiaDoModelo(modelo)).toBe(esperado);
+  });
+
+  it.each([
+    ["EXV 10C", "exv"],
+    ["EXV12", "exv"],
+    ["EXV-12", "exv"],
+    ["EXV 14 C", "exv"],
+  ])("%s pertence a EXV, não a EXV SF", (modelo, esperado) => {
+    expect(familiaDoModelo(modelo)).toBe(esperado);
+  });
+
+  it("filtrar por EXV não traz os EXV SF, e vice-versa", () => {
+    expect(matchModeloFamilia({ modelo: "EXV-SF 14" }, ["exv"])).toBe(false);
+    expect(matchModeloFamilia({ modelo: "EXV 14" }, ["exv_sf"])).toBe(false);
+    expect(matchModeloFamilia({ modelo: "EXV 14" }, ["exv", "exv_sf"])).toBe(true);
+  });
+
+  it("famílias vizinhas ficam onde estavam", () => {
+    // Prefixos parecidos com exv/exvsf não podem ser apanhados pela regra nova.
+    expect(familiaDoModelo("EXU 20")).toBe("exu");
+    expect(familiaDoModelo("EXH 20")).toBe("exh");
+    expect(familiaDoModelo("RXE 20")).toBe("rxe");
+    expect(familiaDoModelo("RCE 20")).toBe("rce");
+    expect(familiaDoModelo("RX 20-16")).toBe("rx20");
+  });
+
   it("o que não encaixa em nenhuma família vai para 'outras'", () => {
     expect(familiaDoModelo("Empilhador qualquer")).toBe("outras");
     expect(familiaDoModelo("")).toBe("outras");

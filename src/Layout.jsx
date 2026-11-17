@@ -13,6 +13,7 @@ import { appParams } from "@/lib/app-params";
 import ThemeSwitcher from "./components/atlas/ThemeSwitcher";
 import CaixaMensagens from "./components/atlas/CaixaMensagens";
 import AvisoSemRede from "./components/atlas/AvisoSemRede";
+import NSSelecao from "./components/atlas/NSSelecao";
 import { useMensagens } from "@/hooks/useMensagens";
 import { podeUsarMensagens } from "@/components/atlas/mensagens";
 
@@ -174,6 +175,8 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
       <AvisoSemRede />
+      {/* NS apanhados com Ctrl+clique — o chip diz quantos e deixa limpar */}
+      <NSSelecao />
       {/* Top Navigation */}
       <nav className="atlas-nav fixed top-0 left-0 right-0 z-50 glass border-b border-slate-700">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">

@@ -8,6 +8,7 @@ import { estadoEfetivo, isCategoriaSemEstado, mostrarBadgeUts, reservaAtiva, pra
 import ConeIcon from "./ConeIcon";
 import UtsBadge from "./UtsBadge";
 import CicloCardDetails from "./CicloCardDetails";
+import CopyableNS from "@/components/ui/CopyableNS";
 import MaquinaNotas from "./MaquinaNotas";
 import { h1DaMaquina } from "./tabelaMastros";
 
@@ -92,9 +93,11 @@ export default function CicloCard({ ciclo, maquina, canEditMaquina, canReservar,
 
       {/* NS — visual hero + photo */}
       <div className="flex items-start justify-between gap-2 mb-1">
-        <h3 className="ns-num tracking-wider text-slate-100 leading-none break-all">
-          {ciclo.serie}
-        </h3>
+        <CopyableNS
+          as="h3"
+          serie={ciclo.serie}
+          className="ns-num tracking-wider text-slate-100 leading-none break-all"
+        />
         {maquina?.foto_url && (
           <div className="w-10 h-10 rounded border border-slate-600 overflow-hidden flex-shrink-0">
             {/* A miniatura (~5 KB), não a imagem de leitura da placa (~400 KB): com

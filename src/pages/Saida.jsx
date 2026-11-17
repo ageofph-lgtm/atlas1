@@ -22,6 +22,7 @@ import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 import { notificarSaida, notificarRetorno } from "@/components/atlas/mensagens";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
+import CopyableNS from "@/components/ui/CopyableNS";
 import FotosMaquina from "@/components/atlas/FotosMaquina";
 import { subirParaOArmazenamento } from "@/components/atlas/FotosDaMaquina";
 import { podeGerirFotos, camposDoMovimento, conjuntoAtual } from "@/components/atlas/fotosMaquina";
@@ -366,7 +367,7 @@ export default function Saida({ currentUser }) {
               return (
                 <div key={c.id} className="glass border border-green-500/20 rounded-lg p-4">
                   <div className="mb-2">
-                    <h3 className="num text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
+                    <CopyableNS as="h3" serie={c.serie} className="num text-2xl font-black tracking-wider text-slate-100 break-all" />
                     <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
                     <div className="flex items-center gap-3 flex-wrap mt-1">
                       <ConeDe ciclo={c} />
@@ -413,7 +414,7 @@ export default function Saida({ currentUser }) {
                 return (
                   <div key={c.id} className="glass border border-amber-500/20 rounded-lg p-4">
                     <div className="mb-2">
-                      <h3 className="num text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
+                      <CopyableNS as="h3" serie={c.serie} className="num text-2xl font-black tracking-wider text-slate-100 break-all" />
                       <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
                       <div className="flex items-center gap-3 flex-wrap mt-1">
                         <span className="px-1.5 py-0.5 rounded text-[11px] font-bold uppercase bg-amber-500/15 text-amber-300">
@@ -467,7 +468,7 @@ export default function Saida({ currentUser }) {
               return (
                 <div key={c.id} className="glass border border-cyan-500/20 rounded-lg p-4">
                   <div className="mb-2">
-                    <h3 className="num text-2xl font-black tracking-wider text-slate-100 break-all">{c.serie}</h3>
+                    <CopyableNS as="h3" serie={c.serie} className="num text-2xl font-black tracking-wider text-slate-100 break-all" />
                     <p className="text-sm text-slate-400">{m?.modelo || "—"} {m?.ano && `· ${m.ano}`}</p>
                     <p className="text-xs text-cyan-400 mt-1">
                       Saída: {c.data_saida ? format(new Date(c.data_saida), "dd/MM HH:mm") : "—"} · {dias} dias
@@ -498,7 +499,9 @@ export default function Saida({ currentUser }) {
       <Dialog open={!!retornoModal} onOpenChange={() => setRetornoModal(null)}>
         <DialogContent className="glass border-slate-700 text-slate-100 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">Registar Retorno — {retornoModal?.serie}</DialogTitle>
+            <DialogTitle className="text-slate-100">
+              Registar Retorno — <CopyableNS serie={retornoModal?.serie} />
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {retornoModal && CATEGORIA_CONE_MAP[retornoModal.categoria] && (
@@ -614,7 +617,9 @@ export default function Saida({ currentUser }) {
       <Dialog open={!!saidaModal} onOpenChange={() => setSaidaModal(null)}>
         <DialogContent className="glass border-slate-700 text-slate-100 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">Dar Saída — {saidaModal?.serie}</DialogTitle>
+            <DialogTitle className="text-slate-100">
+              Dar Saída — <CopyableNS serie={saidaModal?.serie} />
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {saidaModal && estadoEfetivo(saidaModal) !== "pronta" && (

@@ -191,6 +191,14 @@
     background: linear-gradient(90deg,#4a5057,#9aa2a9 18%,#5c646b 34%,#b4bcc3 52%,#525a61 70%,#8d959c 86%,#4a5057);
   }
 
+  /* NS apanhado para copiar — contorno discreto com o acento de cada tema.
+     Só sombra e fundo: nada que mexa no tamanho e faça a lista saltar. */
+  .ns-escolhido {
+    background: rgb(var(--acc) / .14);
+    box-shadow: 0 0 0 1px rgb(var(--acc) / .55);
+    border-radius: var(--rp);
+  }
+
   /* Numeric displays */
   .num { font-family: var(--fnum); }
   .ns-num { font-family: var(--fnum); font-size: var(--nss); font-weight: 700; }

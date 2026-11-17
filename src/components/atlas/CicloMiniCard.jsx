@@ -7,6 +7,7 @@ import { estadoEfetivo, isCategoriaSemEstado, mostrarBadgeUts } from "./cicloUti
 import ConeIcon from "./ConeIcon";
 import UtsBadge from "./UtsBadge";
 import CicloCardDetails from "./CicloCardDetails";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 /**
  * Versão compacta do CicloCard — mesma linguagem visual do inventário
@@ -45,7 +46,11 @@ export default function CicloMiniCard({ ciclo, maquina, canNotas, onAtualizado, 
         {/* NS + modelo */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <h4 className="num text-lg font-bold tracking-wider text-slate-100 break-all leading-none">{ciclo.serie}</h4>
+            <CopyableNS
+              as="h4"
+              serie={ciclo.serie}
+              className="num text-lg font-bold tracking-wider text-slate-100 break-all leading-none"
+            />
             {ciclo.prioridade && (
               <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0">
                 <AlertTriangle className="w-2.5 h-2.5" />

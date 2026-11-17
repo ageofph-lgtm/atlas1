@@ -152,17 +152,24 @@ export const INVENTARIO_TABS = [
 export const HISTORICO_TABS = [...INVENTARIO_TABS, { key: 'fechados', label: 'FECHADAS' }];
 
 // Famílias de modelo (nomenclatura STILL) — filtros rápidos do inventário.
-// `match` é comparado contra o modelo normalizado (maiúsculas, sem separadores).
+//
+// `match` procura o trecho no modelo normalizado (minúsculas, sem separadores).
+// `prefixo` compara só o início, e é mais específico: ganha aos `match`.
+//
+// A ordem importa. «EXV SF» tem de ser testado antes de «EXV» — os dois começam
+// por `exv`, e sem esta ordem um EXV-SF caía em EXV, juntando duas gamas que não
+// são a mesma máquina.
 export const MODELO_FAMILIAS = [
-  { value: 'rx20', label: 'RX20', match: ['RX20'] },
-  { value: 'rx60', label: 'RX60', match: ['RX60'] },
-  { value: 'exv',  label: 'EXV',  match: ['EXV'] },
-  { value: 'exu',  label: 'EXU',  match: ['EXU'] },
-  { value: 'rxe',  label: 'RXE',  match: ['RXE'] },
-  { value: 'rce',  label: 'RCE',  match: ['RCE'] },
-  { value: 'fmx',  label: 'FMX',  match: ['FMX'] },
-  { value: 'exh',  label: 'EXH',  match: ['EXH'] },
-  { value: 'opx',  label: 'OPX',  match: ['OPX'] },
+  { value: 'rx20', label: 'RX20', match: ['rx20'] },
+  { value: 'rx60', label: 'RX60', match: ['rx60'] },
+  { value: 'exv_sf', label: 'EXV SF', prefixo: 'exvsf' },
+  { value: 'exv',  label: 'EXV',  prefixo: 'exv' },
+  { value: 'exu',  label: 'EXU',  match: ['exu'] },
+  { value: 'rxe',  label: 'RXE',  match: ['rxe'] },
+  { value: 'rce',  label: 'RCE',  match: ['rce'] },
+  { value: 'fmx',  label: 'FMX',  match: ['fmx'] },
+  { value: 'exh',  label: 'EXH',  match: ['exh'] },
+  { value: 'opx',  label: 'OPX',  match: ['opx'] },
 ];
 
 // Pseudo-família: modelos que não caem em nenhuma das famílias acima.

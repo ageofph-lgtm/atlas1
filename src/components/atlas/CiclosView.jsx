@@ -7,6 +7,7 @@ import { estadoEfetivo, temCone, mostrarBadgeUts, reservaAtiva } from "@/compone
 import { GRELHA, CONE_TAMANHO, NS_CLASSE, CONE_NUM_CLASSE } from "@/components/atlas/viewPrefs";
 import ConeIcon from "@/components/atlas/ConeIcon";
 import UtsBadge from "@/components/atlas/UtsBadge";
+import CopyableNS from "@/components/ui/CopyableNS";
 import { COLUNAS_ORDENAVEIS, ordenarCiclos, proximaOrdenacao } from "@/components/atlas/ordenarCiclos";
 
 const Estado = ({ ciclo, mini = false }) => {
@@ -113,9 +114,10 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
               ) : (
                 <div style={{ height: coneSize }} className="flex items-center text-[9px] text-slate-600 uppercase">sem cone</div>
               )}
-              <span className={`num font-bold text-slate-100 break-all leading-tight text-center ${NS_CLASSE.grade[tamanho]}`}>
-                {c.serie}
-              </span>
+              <CopyableNS
+                serie={c.serie}
+                className={`num font-bold text-slate-100 break-all leading-tight text-center ${NS_CLASSE.grade[tamanho]}`}
+              />
               <span className="flex items-center gap-1">
                 {c.prioridade && <Prioridade />}
                 <Estado ciclo={c} mini />
@@ -155,7 +157,10 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1">
-                    <span className={`num font-bold text-slate-100 break-all leading-tight ${NS_CLASSE.mosaico[tamanho]}`}>{c.serie}</span>
+                    <CopyableNS
+                      serie={c.serie}
+                      className={`num font-bold text-slate-100 break-all leading-tight ${NS_CLASSE.mosaico[tamanho]}`}
+                    />
                     {c.prioridade && <Prioridade />}
                   </div>
                   <p className="text-[11px] text-slate-500 truncate">{m?.modelo || "—"}</p>
@@ -205,7 +210,7 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                   <span className="w-14 flex-shrink-0 text-[9px] text-slate-600 uppercase">s/cone</span>
                 )}
                 {mostrarBadgeUts(c) && <UtsBadge className="flex-shrink-0" />}
-                <span className="num text-sm font-bold text-slate-100 break-all">{c.serie}</span>
+                <CopyableNS serie={c.serie} className="num text-sm font-bold text-slate-100 break-all" />
                 {c.prioridade && <Prioridade />}
                 <span className="text-xs text-slate-500 truncate hidden sm:inline">{m?.modelo || "—"}</span>
                 {c.reserva_cliente && (
@@ -288,7 +293,7 @@ export default function CiclosView({ ciclos: ciclosRecebidos, getMaquina, modo, 
                     )}
                   </td>
                   <td className="px-3 py-2 num font-bold text-slate-100 whitespace-nowrap">
-                    {c.serie}
+                    <CopyableNS serie={c.serie} />
                     {c.prioridade && <span className="ml-1.5 align-middle"><Prioridade /></span>}
                   </td>
                   <td className="px-3 py-2 text-slate-400 whitespace-nowrap">{m?.modelo || "—"}</td>

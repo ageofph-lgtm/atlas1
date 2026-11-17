@@ -32,6 +32,7 @@ import { camposDeReserva } from "@/components/atlas/reservaPayload";
 import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
 import { passesCicloFilters, normalizarEstadosIndefinidos, FILTROS_VAZIOS, isHistorico, tabFilterCiclo, reservaCumprida } from "@/components/atlas/cicloUtils";
 import { useViewPrefs } from "@/components/atlas/viewPrefs";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 export default function Inventario({ currentUser, userPermissions }) {
   const { toast } = useToast();
@@ -437,7 +438,11 @@ export default function Inventario({ currentUser, userPermissions }) {
         <div className="flex items-center gap-2 text-xs glass border border-amber-500/30 rounded-lg px-3 py-2">
           <Bell className="w-4 h-4 text-amber-400 flex-shrink-0" />
           <span className="text-slate-300">
-            <span className="num font-bold text-slate-100">{serieAlvo || foco.ciclos[0]?.serie || "Máquina"}</span>
+            <CopyableNS
+              serie={serieAlvo || foco.ciclos[0]?.serie}
+              className="num font-bold text-slate-100"
+              fallback="Máquina"
+            />
             {foco.historico ? " — ciclo já fechado, vindo das mensagens." : ", vinda das mensagens."}
           </span>
           <button

@@ -6,6 +6,7 @@ import { listarTudo } from "@/components/atlas/carregarTudo";
 import AvisoTruncado from "@/components/atlas/AvisoTruncado";
 import { ESTADO_CONFIG } from "@/components/atlas/constants";
 import { momentoDe } from "@/components/atlas/momento";
+import CopyableNS from "@/components/ui/CopyableNS";
 import {
   minhasReservas, meusPedidos, contarPorEstado, kpisComercial,
   PERIODOS, inicioDoPeriodo, pedidosComEstado,
@@ -168,7 +169,7 @@ export default function MinhaArea({ currentUser }) {
               const cfg = ESTADO_CONFIG[estado] || ESTADO_CONFIG.entrada;
               return (
                 <div key={ciclo.id} className={`glass cat-${ciclo.categoria} border border-slate-700 rounded-lg px-3 py-2 flex items-center gap-3 flex-wrap`}>
-                  <span className="num text-sm font-bold text-slate-100">{ciclo.serie}</span>
+                  <CopyableNS serie={ciclo.serie} className="num text-sm font-bold text-slate-100" />
                   <span className="text-xs text-slate-500">{modeloDe(ciclo)}</span>
                   <span className="text-xs text-cyan-400 truncate">{ciclo.reserva_cliente}</span>
                   <span className="ml-auto flex items-center gap-3 flex-shrink-0">
@@ -196,7 +197,7 @@ export default function MinhaArea({ currentUser }) {
               return (
                 <div key={p.id} className="glass border border-slate-700 rounded-lg px-3 py-2">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="num text-sm font-bold text-slate-100">{p.serie}</span>
+                    <CopyableNS serie={p.serie} className="num text-sm font-bold text-slate-100" />
                     <span className="text-xs text-slate-400 flex-1 min-w-0">{p.texto}</span>
                     <span className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-[11px] text-slate-600">{data(momentoDe(p))}</span>

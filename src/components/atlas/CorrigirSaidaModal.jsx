@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { planearCorrecao, aplicarCorrecao, tipoDaSaida, NOME_TIPO_SAIDA } from "@/components/atlas/corrigirSaida";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 const ROTULO = { alugada: "ALUGUER", vendida: "VENDA" };
 const COR = { alugada: "bg-cyan-500/15 text-cyan-300", vendida: "bg-purple-500/15 text-purple-300" };
@@ -49,7 +50,9 @@ export default function CorrigirSaidaModal({ ciclo, ciclos = [], autor, onClose,
     <Dialog open={!!ciclo} onOpenChange={fechar}>
       <DialogContent className="glass border-slate-700 text-slate-100 max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-slate-100">Corrigir saída — {ciclo?.serie}</DialogTitle>
+          <DialogTitle className="text-slate-100">
+            Corrigir saída — <CopyableNS serie={ciclo?.serie} />
+          </DialogTitle>
         </DialogHeader>
 
         {ciclo && (

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar, User, FileText, Trash2, Handshake } from "lucide-react";
 import { format } from "date-fns";
 import { COMERCIAIS } from "@/components/atlas/acessos";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 /** Valor do select que abre o campo livre. */
 const OUTRO = "__outro__";
@@ -82,7 +83,7 @@ export default function ReservaModal({ ciclo, open, onClose, onSave, canEdit, pe
         <div className="space-y-4 py-2">
           <div>
             <Label className="text-slate-400 text-xs mb-1.5">NS</Label>
-            <p className="text-2xl font-black tracking-wider text-slate-100">{ciclo?.serie}</p>
+            <CopyableNS as="p" serie={ciclo?.serie} className="text-2xl font-black tracking-wider text-slate-100" />
           </div>
 
           <div>

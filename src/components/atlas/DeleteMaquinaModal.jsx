@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Trash2, Loader2 } from "lucide-react";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 export default function DeleteMaquinaModal({ maquina, open, onClose, onConfirm }) {
   const [confirmText, setConfirmText] = useState("");
@@ -39,7 +40,7 @@ export default function DeleteMaquinaModal({ maquina, open, onClose, onConfirm }
         <div className="space-y-4 py-2">
           <div>
             <p className="text-xs text-slate-500 mb-1">NS</p>
-            <p className="text-3xl font-black tracking-wider text-slate-100">{maquina?.serie}</p>
+            <CopyableNS as="p" serie={maquina?.serie} className="text-3xl font-black tracking-wider text-slate-100" />
           </div>
 
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">

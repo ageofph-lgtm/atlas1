@@ -9,6 +9,7 @@ import { podeEditarCategoria, podeEditarEstado } from "@/components/hooks/usePer
 import H1DoMastro from "@/components/atlas/H1DoMastro";
 import ElevacaoLivre150 from "@/components/atlas/ElevacaoLivre150";
 import { planearCorrecao, tipoDaSaida } from "@/components/atlas/corrigirSaida";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 const OptionButton = ({ option, isSelected, onClick }) => (
   <button
@@ -174,7 +175,9 @@ export default function EditMaquinaModal({ maquina, ciclo, currentUser, open, on
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="glass border-slate-700 text-slate-100 max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-slate-100">Editar Máquina — {maquina?.serie}</DialogTitle>
+          <DialogTitle className="text-slate-100">
+            Editar Máquina — <CopyableNS serie={maquina?.serie} />
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">

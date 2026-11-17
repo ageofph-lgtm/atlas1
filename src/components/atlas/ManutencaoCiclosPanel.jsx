@@ -5,6 +5,7 @@ import { Wrench, Loader2, Search, AlertTriangle, Trash2, CheckSquare, Square, Sh
 import { format } from "date-fns";
 import { ESTADO_CONFIG, CATEGORIA_CONFIG } from "@/components/atlas/constants";
 import { estadoEfetivo, classificarCiclosAbertos } from "@/components/atlas/cicloUtils";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 const fmt = (d) => (d ? format(new Date(d), "dd/MM/yy HH:mm") : "—");
 
@@ -213,7 +214,7 @@ export default function ManutencaoCiclosPanel() {
                       <td className="p-2">
                         {marcado ? <CheckSquare className="w-4 h-4 text-red-400" /> : <Square className="w-4 h-4 text-slate-600" />}
                       </td>
-                      <td className="p-2 num font-bold text-slate-200">{c.serie}</td>
+                      <td className="p-2 num font-bold text-slate-200"><CopyableNS serie={c.serie} /></td>
                       <td className="p-2">
                         <span className={`px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
                       </td>

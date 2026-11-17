@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, X, CheckSquare, Square, Loader2, Zap, MessageSquarePlus, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { textoTarefaDoPedido, PEDIDO_ESTADOS_POR_FAZER } from "@/components/atlas/pedidosOS";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 const PREDEFINED_TAREFAS = [
   { key: "preparacao", label: "Preparação geral" },
@@ -124,7 +125,7 @@ export default function TarefasModal({ open, ciclo, ciclos, onClose, onConfirm, 
           <p className="text-sm text-slate-400">
             {emMassa
               ? "As tarefas escolhidas aplicam-se a todas. Cada uma leva os seus próprios pedidos."
-              : `NS: ${ciclo?.serie}`}
+              : <>NS: <CopyableNS serie={ciclo?.serie} className="text-slate-200" /></>}
           </p>
         </DialogHeader>
 

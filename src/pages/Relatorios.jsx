@@ -14,6 +14,7 @@ import BotaoExportar from "@/components/atlas/BotaoExportar";
 import BarraOcupacao from "@/components/atlas/BarraOcupacao";
 import { ocupacaoPatio, taxaUtilizacao, balancoPeriodo, paradasHaMuito } from "@/components/atlas/ocupacaoPatio";
 import CorrigirSaidaModal from "@/components/atlas/CorrigirSaidaModal";
+import CopyableNS from "@/components/ui/CopyableNS";
 import { useToast } from "@/components/ui/use-toast";
 
 /** A partir de quantos dias uma máquina pronta e parada passa a ser capital parado. */
@@ -343,7 +344,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
           <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {stats.paradas.slice(0, 12).map(({ ciclo, dias }) => (
               <div key={ciclo.id} className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-2.5 py-2">
-                <span className="num text-sm font-bold text-slate-200 break-all">{ciclo.serie}</span>
+                <CopyableNS serie={ciclo.serie} className="num text-sm font-bold text-slate-200 break-all" />
                 <span className="text-xs text-slate-500 truncate">{getMaquina(ciclo)?.modelo || "—"}</span>
                 <span className="num ml-auto text-sm font-bold text-red-400 flex-shrink-0">{dias}d</span>
               </div>
@@ -385,7 +386,7 @@ export default function Relatorios({ currentUser, userPermissions }) {
               ) : (
                 historicoSaidas.map((c) => (
                   <tr key={c.id} className="border-b border-slate-700/50 hover:bg-slate-700/20">
-                    <td className="p-3 font-bold text-slate-200">{c.serie}</td>
+                    <td className="p-3 font-bold text-slate-200"><CopyableNS serie={c.serie} /></td>
                     <td className="p-3 text-slate-400">{c.modelo}</td>
                     <td className="p-3">
                       <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${isVenda(c) ? "bg-purple-500/15 text-purple-300" : "bg-cyan-500/15 text-cyan-300"}`}>

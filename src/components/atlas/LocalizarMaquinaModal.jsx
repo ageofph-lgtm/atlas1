@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { estadoEfetivo, rotuloDoEstado } from "@/components/atlas/cicloUtils";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
+import CopyableNS from "@/components/ui/CopyableNS";
 
 /**
  * Encontra a máquina pela placa e entrega-a — não regista nada.
@@ -181,7 +182,7 @@ export default function LocalizarMaquinaModal({ open, onClose, onEncontrada, tit
                   onClick={() => { onEncontrada(c); onClose(); }}
                   className={`w-full text-left p-2.5 bg-slate-900 border border-slate-700 rounded-lg ${T.borda} transition-colors`}
                 >
-                  <span className="num text-sm font-bold text-slate-200">{c.serie}</span>
+                  <CopyableNS serie={c.serie} className="num text-sm font-bold text-slate-200" />
                   {c.cone_numero && <span className="text-xs text-slate-500 ml-2">cone {c.cone_cor} {c.cone_numero}</span>}
                   {c.reserva_cliente && <span className="text-xs text-cyan-400 ml-2">· {c.reserva_cliente}</span>}
                   {estadoEfetivo(c) !== estadoAlvo && (

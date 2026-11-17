@@ -35,15 +35,30 @@ export const rotuloDoEstado = (ciclo) => {
   return ESTADO_CONFIG[estado]?.label || estado || "—";
 };
 
-/** Modelo normalizado para comparação: maiúsculas, só letras e dígitos. */
-const normalizeModelo = (modelo) => String(modelo || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+/**
+ * Modelo normalizado para comparação: minúsculas e sem separadores.
+ *
+ * Os separadores a tirar incluem os traços que o nome do modelo às vezes traz
+ * do Word («EXV – SF 14I»): sem isso, um EXV SF com travessão passava por EXV.
+ */
+export const normalizarModelo = (modelo) =>
+  String(modelo || "")
+    .toLowerCase()
+    .replace(/[\s\-\u2010-\u2015\u2212.]/g, "");
 
-/** Família de modelo a que a máquina pertence, ou "outras" se não corresponder a nenhuma. */
+/**
+ * Família de modelo a que a máquina pertence, ou "outras" se não corresponder.
+ *
+ * Os prefixos são testados antes dos trechos, e pela ordem da lista: é o que
+ * separa EXV SF de EXV, já que ambos começam por `exv`.
+ */
 export const familiaDoModelo = (modelo) => {
-  const norm = normalizeModelo(modelo);
+  const norm = normalizarModelo(modelo);
   if (!norm) return MODELO_FAMILIA_OUTRAS.value;
-  const familia = MODELO_FAMILIAS.find((f) => f.match.some((m) => norm.includes(m)));
-  return familia ? familia.value : MODELO_FAMILIA_OUTRAS.value;
+  const porPrefixo = MODELO_FAMILIAS.find((f) => f.prefixo && norm.startsWith(f.prefixo));
+  if (porPrefixo) return porPrefixo.value;
+  const porTrecho = MODELO_FAMILIAS.find((f) => f.match?.some((m) => norm.includes(m)));
+  return porTrecho ? porTrecho.value : MODELO_FAMILIA_OUTRAS.value;
 };
 
 /**
