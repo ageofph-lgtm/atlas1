@@ -8,6 +8,7 @@ import {
   ESTADO_CONFIG,
   CATEGORIA_CONFIG,
 } from "@/components/atlas/constants";
+import { capacidadeDoModelo, textoNormalizado } from "@/lib/modeloSearch";
 
 export const isCategoriaSemEstado = (categoria) => CATEGORIAS_SEM_ESTADO.includes(categoria);
 
@@ -40,11 +41,9 @@ export const rotuloDoEstado = (ciclo) => {
  *
  * Os separadores a tirar incluem os traços que o nome do modelo às vezes traz
  * do Word («EXV – SF 14I»): sem isso, um EXV SF com travessão passava por EXV.
+ * A regra vive em `modeloSearch.js`, que também corta o modelo em tokens.
  */
-export const normalizarModelo = (modelo) =>
-  String(modelo || "")
-    .toLowerCase()
-    .replace(/[\s\-\u2010-\u2015\u2212.]/g, "");
+export const normalizarModelo = (modelo) => textoNormalizado(modelo);
 
 /**
  * Família de modelo a que a máquina pertence, ou "outras" se não corresponder.
@@ -102,6 +101,8 @@ export const FILTROS_VAZIOS = {
   coneCor: "all",
   coneNumero: "",
   modelos: [],
+  // Capacidades dentro da família escolhida («EXV → 14»), ver FilterBar.
+  capacidades: [],
 };
 
 const FILTROS_SELECT = ["categoria", "estado", "mastro", "vias_mastro", "tipo_pneu", "coneCor"];
@@ -110,7 +111,8 @@ const FILTROS_SELECT = ["categoria", "estado", "mastro", "vias_mastro", "tipo_pn
 export const hasFiltrosAtivos = (filters = {}) =>
   FILTROS_SELECT.some((k) => filters[k] && filters[k] !== "all") ||
   !!(filters.coneNumero || "").trim() ||
-  (filters.modelos?.length || 0) > 0;
+  (filters.modelos?.length || 0) > 0 ||
+  (filters.capacidades?.length || 0) > 0;
 
 /**
  * Filtros da FilterBar aplicados a um par ciclo/máquina — partilhado pelo
@@ -128,6 +130,12 @@ export const passesCicloFilters = (ciclo, maquina, filters = {}) => {
   const coneNum = (filters.coneNumero || "").trim();
   if (coneNum && String(ciclo?.cone_numero ?? "") !== coneNum) return false;
   if (!matchModeloFamilia(maquina, filters.modelos)) return false;
+  // Sub-filtro de capacidade dentro da família (EXV → 14), em OR entre as escolhidas.
+  const capacidades = filters.capacidades || [];
+  if (capacidades.length) {
+    const capacidade = capacidadeDoModelo(maquina?.modelo);
+    if (!capacidade || !capacidades.includes(capacidade)) return false;
+  }
   return true;
 };
 

@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Search, Filter } from "lucide-react";
 import { FILTER_OPTIONS, CONE_COLORS, MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS } from "@/components/atlas/constants";
-import { hasFiltrosAtivos } from "@/components/atlas/cicloUtils";
+import { familiaDoModelo, hasFiltrosAtivos } from "@/components/atlas/cicloUtils";
+import { capacidadeDoModelo } from "@/lib/modeloSearch";
+
+const TODAS_AS_FAMILIAS = [...MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS];
 
 const ADVANCED_FILTERS = ["estado", "mastro", "vias_mastro", "tipo_pneu"];
 
@@ -12,15 +15,47 @@ const FILTER_LABELS = {
   tipo_pneu: "Pneu",
 };
 
-export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, showCategoria = true, showEstado = true, placeholder }) {
+export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, showCategoria = true, showEstado = true, placeholder, modelosDisponiveis = [] }) {
   const [showFilters, setShowFilters] = useState(false);
 
   // Páginas cujos painéis já separam por estado escondem esse filtro.
   const advancedFilters = showEstado ? ADVANCED_FILTERS : ADVANCED_FILTERS.filter((k) => k !== "estado");
 
   const modelos = filters.modelos || [];
-  const toggleModelo = (value) =>
+  const capacidadesAtivas = filters.capacidades || [];
+
+  const toggleModelo = (value) => {
     onFilterChange("modelos", modelos.includes(value) ? modelos.filter((v) => v !== value) : [...modelos, value]);
+    // A capacidade só faz sentido dentro de uma família: ao trocar de família, sai.
+    onFilterChange("capacidades", []);
+  };
+
+  const toggleCapacidade = (capacidade) =>
+    onFilterChange(
+      "capacidades",
+      capacidadesAtivas.includes(capacidade)
+        ? capacidadesAtivas.filter((c) => c !== capacidade)
+        : [...capacidadesAtivas, capacidade]
+    );
+
+  // Com uma só família escolhida, mostram-se as capacidades que existem nos
+  // dados (EXV → 10, 12, 14, 16, 20) e quantas máquinas há em cada uma.
+  const familiaAtiva = useMemo(() => {
+    if (modelos.length !== 1) return null;
+    return TODAS_AS_FAMILIAS.find((f) => f.value === modelos[0]) || null;
+  }, [modelos]);
+
+  const capacidades = useMemo(() => {
+    if (!familiaAtiva) return [];
+    const contagem = new Map();
+    modelosDisponiveis.forEach((modelo) => {
+      if (familiaDoModelo(modelo) !== familiaAtiva.value) return;
+      const capacidade = capacidadeDoModelo(modelo);
+      if (!capacidade) return;
+      contagem.set(capacidade, (contagem.get(capacidade) || 0) + 1);
+    });
+    return [...contagem.entries()].sort((a, b) => Number(a[0]) - Number(b[0]));
+  }, [familiaAtiva, modelosDisponiveis]);
 
   const activeAdvancedCount = advancedFilters.filter(
     (key) => filters[key] && filters[key] !== "all"
@@ -34,6 +69,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
     onFilterChange("coneCor", "all");
     onFilterChange("coneNumero", "");
     onFilterChange("modelos", []);
+    onFilterChange("capacidades", []);
   };
 
   return (
@@ -124,7 +160,7 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
 
         {/* Famílias de modelo — lado direito, combinam com os restantes filtros */}
         <div className="flex items-center gap-1 flex-wrap sm:ml-auto sm:justify-end">
-          {[...MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS].map((f) => {
+          {TODAS_AS_FAMILIAS.map((f) => {
             const active = modelos.includes(f.value);
             return (
               <button
@@ -141,6 +177,31 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
               </button>
             );
           })}
+
+          {/* Capacidades da família escolhida — «EXV → 14 (4)» */}
+          {capacidades.length > 1 && (
+            <div className="w-full flex items-center gap-1 flex-wrap sm:justify-end pt-1">
+              <span className="text-[10px] uppercase tracking-wide text-slate-600">{familiaAtiva.label}</span>
+              {capacidades.map(([capacidade, total]) => {
+                const ativa = capacidadesAtivas.includes(capacidade);
+                return (
+                  <button
+                    key={capacidade}
+                    onClick={() => toggleCapacidade(capacidade)}
+                    title={`${familiaAtiva.label} ${capacidade} — ${total} máquina${total === 1 ? "" : "s"}`}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap border transition-colors ${
+                      ativa
+                        ? "bg-amber-500 text-slate-900 border-amber-500"
+                        : "bg-slate-900/60 text-slate-400 border-slate-700 hover:border-slate-600 hover:text-slate-200"
+                    }`}
+                  >
+                    {capacidade}
+                    <span className={ativa ? "opacity-70 ml-1" : "opacity-50 ml-1"}>{total}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

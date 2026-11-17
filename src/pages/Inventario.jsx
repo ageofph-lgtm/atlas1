@@ -26,6 +26,7 @@ import { maisRecentePrimeiro } from "@/components/atlas/momento";
 import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { INVENTARIO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
+import { ordenarPorPesquisaDeModelo } from "@/lib/modeloSearch";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
 import { notificarReserva } from "@/components/atlas/mensagens";
 import { camposDeReserva } from "@/components/atlas/reservaPayload";
@@ -231,13 +232,17 @@ export default function Inventario({ currentUser, userPermissions }) {
   // Tab filter
   const getTabCiclos = () => ciclosAtivos.filter((c) => tabFilterCiclo(activeTab, c));
 
-  // Sort: priority first, then oldest
-  const sortCiclos = (items) => {
-    return [...items].sort((a, b) => {
-      if (a.prioridade !== b.prioridade) return a.prioridade ? -1 : 1;
-      return new Date(a.data_entrada || a.created_date) - new Date(b.data_entrada || b.created_date);
-    });
-  };
+  // Sort: priority first, then oldest. Numa pesquisa de modelo («exv 14») a
+  // correspondência exata passa à frente das variantes; o resto fica na ordem.
+  const sortCiclos = (items) =>
+    ordenarPorPesquisaDeModelo(
+      [...items].sort((a, b) => {
+        if (a.prioridade !== b.prioridade) return a.prioridade ? -1 : 1;
+        return new Date(a.data_entrada || a.created_date) - new Date(b.data_entrada || b.created_date);
+      }),
+      searchQuery,
+      getMaquina
+    );
 
   const filteredCiclos = useMemo(() => {
     const tabItems = grupo ? ciclosDoGrupo(grupo, ciclosAtivos) : getTabCiclos();
@@ -489,6 +494,7 @@ export default function Inventario({ currentUser, userPermissions }) {
         onSearchChange={setSearchQuery}
         filters={filters}
         onFilterChange={handleFilterChange}
+        modelosDisponiveis={maquinas.map((m) => m.modelo)}
       />
 
       {/* Tabs */}

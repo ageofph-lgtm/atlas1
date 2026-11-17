@@ -4,6 +4,7 @@ import CicloCard from "@/components/atlas/CicloCard";
 import FilterBar from "@/components/atlas/FilterBar";
 import { HISTORICO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
+import { ordenarPorPesquisaDeModelo } from "@/lib/modeloSearch";
 import { passesCicloFilters, tabFilterCiclo, FILTROS_VAZIOS, isHistorico, hasFiltrosAtivos } from "@/components/atlas/cicloUtils";
 
 /**
@@ -40,13 +41,17 @@ export default function HistoricoCiclos({ ciclos, getMaquina }) {
     () =>
       !aProcurar
         ? []
-        : ciclos
-            .filter((c) => tabFilterCiclo(activeTab, c) && passesAll(c))
-            .sort(
-              (a, b) =>
-                new Date(b.data_retorno || b.data_saida || b.data_entrada || b.created_date) -
-                new Date(a.data_retorno || a.data_saida || a.data_entrada || a.created_date)
-            ),
+        : ordenarPorPesquisaDeModelo(
+            ciclos
+              .filter((c) => tabFilterCiclo(activeTab, c) && passesAll(c))
+              .sort(
+                (a, b) =>
+                  new Date(b.data_retorno || b.data_saida || b.data_entrada || b.created_date) -
+                  new Date(a.data_retorno || a.data_saida || a.data_entrada || a.created_date)
+              ),
+            searchQuery,
+            getMaquina
+          ),
     [ciclos, activeTab, filters, searchQuery, aProcurar]
   );
 
@@ -64,6 +69,7 @@ export default function HistoricoCiclos({ ciclos, getMaquina }) {
         filters={filters}
         onFilterChange={handleFilterChange}
         placeholder="Procurar no histórico: série, modelo, specs, cone, cliente..."
+        modelosDisponiveis={ciclos.map((c) => getMaquina(c)?.modelo).filter(Boolean)}
       />
 
       <div className="flex items-center gap-1 border-b border-slate-700 overflow-x-auto no-scrollbar">

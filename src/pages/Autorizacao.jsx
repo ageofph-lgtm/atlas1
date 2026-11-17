@@ -21,6 +21,7 @@ import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
 import { useSyncWatcher } from "@/hooks/useSyncWatcher";
 import { canEditMaquinaRecord } from "@/components/hooks/usePermissions";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
+import { ordenarPorPesquisaDeModelo } from "@/lib/modeloSearch";
 import { saveMaquinaEdit } from "@/components/atlas/saveMaquinaEdit";
 import { definirPrioridade, marcarPronta } from "@/components/atlas/acoesCiclo";
 import { marcarPedidosNaOS } from "@/components/atlas/pedidosOS";
@@ -114,12 +115,17 @@ export default function Autorizacao({ currentUser, userPermissions }) {
     return counts;
   }, [aAutorizar, maquinas, filters, searchQuery]);
 
-  // Prioridade primeiro, depois as mais antigas.
+  // Prioridade primeiro, depois as mais antigas. Numa pesquisa de modelo a
+  // correspondência exata passa à frente das variantes.
   const sortCiclos = (items) =>
-    [...items].sort((a, b) => {
-      if (!!a.prioridade !== !!b.prioridade) return a.prioridade ? -1 : 1;
-      return new Date(a.data_entrada || a.created_date) - new Date(b.data_entrada || b.created_date);
-    });
+    ordenarPorPesquisaDeModelo(
+      [...items].sort((a, b) => {
+        if (!!a.prioridade !== !!b.prioridade) return a.prioridade ? -1 : 1;
+        return new Date(a.data_entrada || a.created_date) - new Date(b.data_entrada || b.created_date);
+      }),
+      searchQuery,
+      getMaquina
+    );
 
   const filteredCiclos = useMemo(
     () => sortCiclos(aAutorizar.filter((c) => (activeTab === "todas" || c.categoria === activeTab) && passesAll(c))),
@@ -273,6 +279,7 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         filters={filters}
         onFilterChange={handleFilterChange}
         showCategoria={false}
+        modelosDisponiveis={maquinas.map((m) => m.modelo)}
       />
 
       {/* Abas por tipo de máquina */}

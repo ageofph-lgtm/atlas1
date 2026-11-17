@@ -21,6 +21,7 @@ import { registarRetorno } from "@/components/atlas/registarRetorno";
 import { sincronizarConeNoWatcher } from "@/components/atlas/syncCone";
 import { notificarSaida, notificarRetorno } from "@/components/atlas/mensagens";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
+import { ordenarPorPesquisaDeModelo } from "@/lib/modeloSearch";
 import MaquinaNotas from "@/components/atlas/MaquinaNotas";
 import CopyableNS from "@/components/ui/CopyableNS";
 import FotosMaquina from "@/components/atlas/FotosMaquina";
@@ -128,15 +129,20 @@ export default function Saida({ currentUser }) {
   // Reservadas que estão no pátio — as que já saíram cumpriram a reserva.
   const totalReservadas = [...prontas, ...outras].filter(reservaAtiva).length;
 
+  // Numa pesquisa de modelo («exv 14») a correspondência exata vem à frente.
   const aplicar = (items) =>
-    items.filter((c) => {
-      const m = getMaquina(c);
-      return (
-        passesCicloFilters(c, m, filters) &&
-        matchCicloSearch(c, m, searchQuery) &&
-        (!soReservadas || reservaAtiva(c))
-      );
-    });
+    ordenarPorPesquisaDeModelo(
+      items.filter((c) => {
+        const m = getMaquina(c);
+        return (
+          passesCicloFilters(c, m, filters) &&
+          matchCicloSearch(c, m, searchQuery) &&
+          (!soReservadas || reservaAtiva(c))
+        );
+      }),
+      searchQuery,
+      getMaquina
+    );
 
   const filteredProntas = useMemo(() => aplicar(prontas), [prontas, maquinas, filters, searchQuery, soReservadas]);
   const filteredOutras = useMemo(() => aplicar(outras), [outras, maquinas, filters, searchQuery, soReservadas]);
@@ -314,6 +320,7 @@ export default function Saida({ currentUser }) {
           onFilterChange={handleFilterChange}
           showEstado={false}
           placeholder="Procurar máquina por série, modelo, specs, cone, cliente..."
+          modelosDisponiveis={maquinas.map((m) => m.modelo)}
         />
         <div className="flex items-center gap-2">
           {!aProcurar && (

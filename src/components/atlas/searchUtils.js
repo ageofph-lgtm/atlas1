@@ -1,4 +1,5 @@
 import { SPEC_LABELS, CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
+import { correspondeAoModelo, ehPesquisaDeModelo } from "@/lib/modeloSearch";
 
 const NUMERO_DE_CONE = /^\d{1,3}$/;
 
@@ -52,6 +53,13 @@ export const matchCicloSearch = (ciclo, maquina, query) => {
     const doCone = mesmoNumero(ciclo?.cone_numero, cone.numero) && (!cone.cor || ciclo?.cone_cor === cone.cor);
     if (doCone || cone.soCone) return doCone;
   }
+  // Uma pesquisa que parece um modelo — «exv 14», «rx60 25» — decide sozinha.
+  // Antes cada palavra era procurada em todos os campos e bastava uma encaixar:
+  // «exv» chegava para devolver toda a gama, com a 12 e a 16 pelo meio. Aqui a
+  // família e o número têm de bater com o modelo da máquina (ver modeloSearch.js).
+  // Pesquisa por série, cliente, cone, specs e números continua como era.
+  if (ehPesquisaDeModelo(query)) return correspondeAoModelo(maquina?.modelo, query);
+
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return true;
 
