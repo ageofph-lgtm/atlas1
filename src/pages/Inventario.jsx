@@ -16,6 +16,7 @@ import ViewModeBar from "@/components/atlas/ViewModeBar";
 import Ordenador from "@/components/atlas/Ordenador";
 import BotaoExportar from "@/components/atlas/BotaoExportar";
 import FilterBar from "@/components/atlas/FilterBar";
+import ResumoPesquisaMultipla from "@/components/atlas/ResumoPesquisaMultipla";
 import ReservaModal from "@/components/atlas/ReservaModal";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
 import DeleteMaquinaModal from "@/components/atlas/DeleteMaquinaModal";
@@ -252,6 +253,13 @@ export default function Inventario({ currentUser, userPermissions }) {
     });
     return sortCiclos(filtered);
   }, [ciclosAtivos, maquinas, activeTab, grupo, filters, searchQuery]);
+
+  // Universo do resumo de vários NS: filtros aplicados, mas de TODAS as abas —
+  // um NS que exista noutra aba não pode aparecer como não encontrado.
+  const ciclosParaResumo = useMemo(
+    () => ciclosAtivos.filter((c) => passesFilters(c, getMaquina(c))),
+    [ciclosAtivos, maquinas, filters]
+  );
 
   /**
    * Carregar num número da barra mostra exatamente essas máquinas.
@@ -496,6 +504,8 @@ export default function Inventario({ currentUser, userPermissions }) {
         onFilterChange={handleFilterChange}
         modelosDisponiveis={maquinas.map((m) => m.modelo)}
       />
+
+      <ResumoPesquisaMultipla searchQuery={searchQuery} ciclos={ciclosParaResumo} onSearchChange={setSearchQuery} />
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-slate-700 overflow-x-auto">

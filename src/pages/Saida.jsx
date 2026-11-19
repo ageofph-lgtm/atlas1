@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { RefreshCw, ArrowRight, ArrowLeft, Loader2, Package, User, Zap, SearchX, AlertTriangle, CalendarClock } from "lucide-react";
 import LocalizarMaquinaModal from "@/components/atlas/LocalizarMaquinaModal";
 import FilterBar from "@/components/atlas/FilterBar";
+import ResumoPesquisaMultipla from "@/components/atlas/ResumoPesquisaMultipla";
 import PlacaScanner from "@/components/atlas/PlacaScanner";
 import { validateConeNumber } from "@/components/atlas/coneUtils";
 import { CATEGORIA_CONE_MAP, CONE_COLORS } from "@/components/atlas/constants";
@@ -147,6 +148,12 @@ export default function Saida({ currentUser }) {
   const filteredProntas = useMemo(() => aplicar(prontas), [prontas, maquinas, filters, searchQuery, soReservadas]);
   const filteredOutras = useMemo(() => aplicar(outras), [outras, maquinas, filters, searchQuery, soReservadas]);
   const filteredAlugadas = useMemo(() => aplicar(alugadas), [alugadas, maquinas, filters, searchQuery, soReservadas]);
+
+  // Universo do resumo de vários NS: as três listas, com os filtros mas sem a pesquisa.
+  const ciclosParaResumo = useMemo(
+    () => [...prontas, ...outras, ...alugadas].filter((c) => passesCicloFilters(c, getMaquina(c), filters)),
+    [prontas, outras, alugadas, maquinas, filters]
+  );
 
   const handleFilterChange = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
@@ -322,6 +329,7 @@ export default function Saida({ currentUser }) {
           placeholder="Procurar máquina por série, modelo, specs, cone, cliente..."
           modelosDisponiveis={maquinas.map((m) => m.modelo)}
         />
+        <ResumoPesquisaMultipla searchQuery={searchQuery} ciclos={ciclosParaResumo} onSearchChange={setSearchQuery} />
         <div className="flex items-center gap-2">
           {!aProcurar && (
             <div className="flex items-center gap-2 text-xs text-slate-500 glass border border-slate-700 rounded-lg px-3 py-2 flex-1 min-w-0">

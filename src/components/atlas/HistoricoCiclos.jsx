@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { History, Package, SearchX } from "lucide-react";
 import CicloCard from "@/components/atlas/CicloCard";
 import FilterBar from "@/components/atlas/FilterBar";
+import ResumoPesquisaMultipla from "@/components/atlas/ResumoPesquisaMultipla";
 import { HISTORICO_TABS } from "@/components/atlas/constants";
 import { matchCicloSearch } from "@/components/atlas/searchUtils";
 import { ordenarPorPesquisaDeModelo } from "@/lib/modeloSearch";
@@ -35,6 +36,13 @@ export default function HistoricoCiclos({ ciclos, getMaquina }) {
     });
     return counts;
   }, [ciclos, filters, searchQuery]);
+
+  // Universo do resumo de vários NS: todos os ciclos com os filtros, sem pesquisa
+  // nem aba — no histórico uma máquina fechada continua a existir.
+  const ciclosParaResumo = useMemo(
+    () => ciclos.filter((c) => passesCicloFilters(c, getMaquina(c), filters)),
+    [ciclos, filters]
+  );
 
   // Mais recentes primeiro: num histórico interessa o que aconteceu há pouco.
   const resultados = useMemo(
@@ -71,6 +79,8 @@ export default function HistoricoCiclos({ ciclos, getMaquina }) {
         placeholder="Procurar no histórico: série, modelo, specs, cone, cliente..."
         modelosDisponiveis={ciclos.map((c) => getMaquina(c)?.modelo).filter(Boolean)}
       />
+
+      <ResumoPesquisaMultipla searchQuery={searchQuery} ciclos={ciclosParaResumo} onSearchChange={setSearchQuery} />
 
       <div className="flex items-center gap-1 border-b border-slate-700 overflow-x-auto no-scrollbar">
         {HISTORICO_TABS.map((tab) => (

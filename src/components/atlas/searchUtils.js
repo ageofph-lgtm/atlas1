@@ -1,5 +1,6 @@
 import { SPEC_LABELS, CATEGORIA_CONFIG, CONE_COLORS } from "@/components/atlas/constants";
 import { correspondeAoModelo, ehPesquisaDeModelo } from "@/lib/modeloSearch";
+import { listaDeSeries, serieCorresponde } from "@/lib/pesquisaMultipla";
 
 const NUMERO_DE_CONE = /^\d{1,3}$/;
 
@@ -48,6 +49,10 @@ const mesmoNumero = (a, b) => String(a ?? "").trim() !== "" && Number(a) === Num
 // O filtro de cone da barra continua a existir.
 export const matchCicloSearch = (ciclo, maquina, query) => {
   if (!query || !query.trim()) return true;
+  // Vários NS de uma vez («F20321Y00397, 516225N00592» ou um por linha):
+  // a máquina aparece se a série dela corresponder a qualquer um.
+  const series = listaDeSeries(query);
+  if (series) return series.some((ns) => serieCorresponde(ciclo?.serie, ns));
   const cone = pesquisaDeCone(query);
   if (cone) {
     const doCone = mesmoNumero(ciclo?.cone_numero, cone.numero) && (!cone.cor || ciclo?.cone_cor === cone.cor);

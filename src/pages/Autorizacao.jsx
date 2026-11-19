@@ -15,6 +15,7 @@ import Ordenador from "@/components/atlas/Ordenador";
 import BotaoExportar from "@/components/atlas/BotaoExportar";
 import CicloMiniCard from "@/components/atlas/CicloMiniCard";
 import FilterBar from "@/components/atlas/FilterBar";
+import ResumoPesquisaMultipla from "@/components/atlas/ResumoPesquisaMultipla";
 import EditMaquinaModal from "@/components/atlas/EditMaquinaModal";
 import TarefasModal from "@/components/atlas/TarefasModal";
 import { authorizeCiclo } from "@/components/atlas/authorizeCiclo";
@@ -130,6 +131,12 @@ export default function Autorizacao({ currentUser, userPermissions }) {
   const filteredCiclos = useMemo(
     () => sortCiclos(aAutorizar.filter((c) => (activeTab === "todas" || c.categoria === activeTab) && passesAll(c))),
     [aAutorizar, maquinas, activeTab, filters, searchQuery]
+  );
+
+  // Universo do resumo de vários NS: os filtros aplicados, sem a pesquisa de texto.
+  const ciclosParaResumo = useMemo(
+    () => aAutorizar.filter((c) => passesCicloFilters(c, getMaquina(c), filters)),
+    [aAutorizar, maquinas, filters]
   );
 
   const emAndamento = useMemo(
@@ -281,6 +288,8 @@ export default function Autorizacao({ currentUser, userPermissions }) {
         showCategoria={false}
         modelosDisponiveis={maquinas.map((m) => m.modelo)}
       />
+
+      <ResumoPesquisaMultipla searchQuery={searchQuery} ciclos={ciclosParaResumo} onSearchChange={setSearchQuery} />
 
       {/* Abas por tipo de máquina */}
       <div className="flex items-center gap-1 border-b border-slate-700 overflow-x-auto">

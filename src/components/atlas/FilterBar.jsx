@@ -1,8 +1,24 @@
-import React, { useState, useMemo } from "react";
-import { Search, Filter } from "lucide-react";
+import React, { useState, useMemo, useRef } from "react";
+import { Search, Filter, Camera, Loader2, X } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { useToast } from "@/components/ui/use-toast";
 import { FILTER_OPTIONS, CONE_COLORS, MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS } from "@/components/atlas/constants";
 import { familiaDoModelo, hasFiltrosAtivos } from "@/components/atlas/cicloUtils";
 import { capacidadeDoModelo } from "@/lib/modeloSearch";
+import { listaDeSeries, normalizarSerie } from "@/lib/pesquisaMultipla";
+
+// O que se pede ao leitor de fotos: todos os NS que estiverem à vista na imagem.
+const SCHEMA_DA_FOTO = {
+  type: "object",
+  properties: {
+    series: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "TODOS os números de série (NS) de máquinas/empilhadores visíveis na imagem: placas de identificação, etiquetas, listas em papel, folhas impressas, ecrãs ou capturas de ecrã. Normalmente 12 caracteres alfanuméricos, ex.: F20321Y00397, 516225N00592, W40185V00016. Um NS por elemento, sem espaços nem pontuação.",
+    },
+  },
+};
 
 const TODAS_AS_FAMILIAS = [...MODELO_FAMILIAS, MODELO_FAMILIA_OUTRAS];
 
@@ -16,7 +32,65 @@ const FILTER_LABELS = {
 };
 
 export default function FilterBar({ searchQuery, onSearchChange, filters, onFilterChange, showCategoria = true, showEstado = true, placeholder, modelosDisponiveis = [] }) {
+  const { toast } = useToast();
   const [showFilters, setShowFilters] = useState(false);
+  const fotoRef = useRef(null);
+  const [aLerFoto, setALerFoto] = useState(false);
+
+  // A pesquisa é uma lista de NS? («F20321Y00397, 516225N00592»)
+  const pesquisaMultipla = useMemo(() => listaDeSeries(searchQuery) !== null, [searchQuery]);
+
+  /**
+   * Colar uma lista copiada do Excel ou de um e-mail.
+   *
+   * Um input de texto apaga as mudanças de linha, e os NS colados uns aos
+   * outros viravam um só número. As linhas e tabs passam a vírgulas.
+   */
+  const handlePaste = (e) => {
+    const colado = e.clipboardData?.getData("text") || "";
+    if (!/[\n\r\t]/.test(colado)) return;
+    e.preventDefault();
+    const linhas = colado.split(/[\n\r\t]+/).map((l) => l.trim()).filter(Boolean);
+    const atual = String(searchQuery || "").trim();
+    onSearchChange([atual, ...linhas].filter(Boolean).join(", "));
+  };
+
+  /** Lê os NS das fotografias e junta-os aos que já estavam na pesquisa. */
+  const lerFotos = async (ficheiros) => {
+    if (!ficheiros.length) return;
+    setALerFoto(true);
+    try {
+      const listas = await Promise.all(
+        ficheiros.map(async (file) => {
+          const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+          const resultado = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url,
+            json_schema: SCHEMA_DA_FOTO,
+          });
+          return resultado?.output?.series || [];
+        })
+      );
+
+      const lidos = listas.flat().map(normalizarSerie).filter((s) => s.length >= 6 && /\d/.test(s));
+      if (!lidos.length) {
+        toast({ variant: "destructive", title: "Não encontrei nenhum NS na foto" });
+        return;
+      }
+
+      // O que já estava escrito não se perde ao juntar o que veio da foto.
+      const jaEscritos = listaDeSeries(searchQuery) || [];
+      const solto = normalizarSerie(searchQuery);
+      const termoSo = !jaEscritos.length && solto.length >= 6 && /\d/.test(solto) ? [solto] : [];
+      const juntos = [...new Set([...jaEscritos, ...termoSo, ...lidos])];
+
+      onSearchChange(juntos.join(", "));
+      toast({ title: `${lidos.length} NS lidos da foto` });
+    } catch (_e) {
+      toast({ variant: "destructive", title: "Não consegui ler a foto", description: "Tente outra vez." });
+    } finally {
+      setALerFoto(false);
+    }
+  };
 
   // Páginas cujos painéis já separam por estado escondem esse filtro.
   const advancedFilters = showEstado ? ADVANCED_FILTERS : ADVANCED_FILTERS.filter((k) => k !== "estado");
@@ -82,10 +156,48 @@ export default function FilterBar({ searchQuery, onSearchChange, filters, onFilt
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={placeholder || "Pesquisar série, modelo, specs, cone, cliente..."}
-            className="w-full pl-10 pr-4 py-2.5 glass border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm"
+            onPaste={handlePaste}
+            placeholder={placeholder || "Pesquisar série, modelo, cone, cliente… (vários NS: separe por vírgula)"}
+            className={`w-full pl-10 py-2.5 glass border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none text-sm ${
+              pesquisaMultipla ? "pr-10" : "pr-4"
+            }`}
           />
+          {pesquisaMultipla && (
+            <button
+              type="button"
+              onClick={() => onSearchChange("")}
+              title="Limpar pesquisa"
+              aria-label="Limpar pesquisa"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
+
+        {/* Pesquisar por foto: lê os NS das placas, etiquetas ou listas */}
+        <button
+          type="button"
+          onClick={() => fotoRef.current?.click()}
+          disabled={aLerFoto}
+          title="Pesquisar por foto"
+          aria-label="Pesquisar por foto"
+          className="flex-shrink-0 flex items-center justify-center px-3 glass border border-slate-700 rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/40 disabled:opacity-60 disabled:cursor-wait transition-colors"
+        >
+          {aLerFoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+        </button>
+        <input
+          ref={fotoRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const ficheiros = Array.from(e.target.files || []);
+            e.target.value = "";
+            lerFotos(ficheiros);
+          }}
+        />
       </div>
 
       {/* Quick filters row */}
